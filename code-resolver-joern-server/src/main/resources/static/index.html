@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码分析Demo</title>
+    <style>
+        /* 确保整个页面宽度足够，以便内容可以居中 */
+        body {
+            margin: 0;
+            padding: 20px; /* 可选，增加一些内边距 */
+            font-family: Arial, sans-serif; /* 设置字体，使中文显示更美观 */
+        }
+
+        /* 容器样式，用于包裹标题和按钮，并实现左右居中 */
+        .container {
+            width: 100%; /* 不是必需的，但可以保留以防万一 */
+            max-width: 600px; /* 可选，限制最大宽度使内容更集中 */
+            margin: 0 auto; /* 关键点：左右自动外边距以实现居中 */
+            text-align: center; /* 确保内部元素（如文本和按钮）也居中 */
+        }
+
+        /* 按钮样式 */
+        button {
+            margin: 10px; /* 按钮之间的间距 */
+            padding: 10px 20px; /* 按钮的内边距 */
+            font-size: 16px; /* 按钮的字体大小 */
+            cursor: pointer; /* 鼠标悬停时显示指针 */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>代码分析Demo</h1>
+    <button onclick="sendRequest('/joernMethodDown')">joern</button>
+    <button onclick="sendRequest('/tabbyMethodDown')">tabby</button>
+</div>
+
+<script>
+    function sendRequest(url) {
+        // 这里可以添加Ajax请求代码
+        console.log('Sending request to:', url);
+    }
+</script>
+
+</body>
+</html>

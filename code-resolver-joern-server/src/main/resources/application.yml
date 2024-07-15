@@ -1,0 +1,35 @@
+server:
+  port: 8081
+dubbo:
+  application:
+    name: joern-service-provider
+    qos-accept-foreign-ip: true
+    qos-port: 22223
+  registry:
+    protocol: zookeeper
+    address: 127.0.0.1:2181
+  protocol:
+    name: dubbo
+    port: 20881
+  metrics:
+    enable-jvm: true
+#  monitor:
+#    protocol: registry
+spring:
+  application:
+    name: spring-neo4j
+  mvc:
+    pathmatch:
+      #解决异常：swagger Failed to start bean 'documentationPluginsBootstrapper'; nested exception is java.lang.NullPointerException
+      #因为Springfox使用的路径匹配是基于AntPathMatcher的，而Spring Boot 2.6.X使用的是PathPatternMatcher
+      matching-strategy: ant_path_matcher
+  data:
+    neo4j:
+      database: javacode
+  neo4j:
+    authentication:
+      username: neo4j
+      password: chenqiujian123
+    uri: bolt://127.0.0.1:7687
+#开启包扫描，可替代 @EnableDubbo 注解
+##dubbo.scan.base-packages=com.zang.gmall
