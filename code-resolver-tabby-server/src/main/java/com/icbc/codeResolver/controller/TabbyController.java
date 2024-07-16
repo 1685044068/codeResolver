@@ -64,7 +64,7 @@ public class TabbyController {
      */
     @RequestMapping("/urlPath/{className}/{methodName}")
     @ResponseBody
-    public List<String> getUrlPath(@PathVariable String className,@PathVariable String methodName) {
+    public List<String> getUrlPath(@PathVariable("className") String className,@PathVariable("methodName") String methodName) {
         List<String> url = new ArrayList<>();
         url.add(className);
         url.add(methodName);
