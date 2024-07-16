@@ -22,18 +22,53 @@ public class JoernServiceImpl implements CodeResolverService {
     private Neo4jClient neo4jClient;
 
     @Override
-    public List<String> getMethodUp(String method) {
+    public List<String> getMethodUp(String methodName) {
         String cypherQuery = "MATCH p = (endNode:METHOD{NAME:$NAME})<-[:CALL|CONTAINS*]-(prevNodes:METHOD)  WHERE (prevNodes)<-[:CALL|CONTAINS]-() RETURN p";
-        List<MethodNode> res = findRelation(cypherQuery, method);
+        List<MethodNode> res = findRelation(cypherQuery, methodName);
         return pathToListUp(res);
     }
 
     @Override
-    public List<String> getMethodDown(String method) {
+    public List<String> getMethodDown(String methodName) {
         String cypherQuery = "MATCH p = (startNode:METHOD{NAME:$NAME})-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE (nextNodes)-[:CALL|CONTAINS]->() RETURN p";
-        List<MethodNode> res = findRelation(cypherQuery, method);
+        List<MethodNode> res = findRelation(cypherQuery, methodName);
         return pathToListDown(res);
     }
+
+    /**
+     * TODO 类溯源
+     * @param className
+     * @return
+     */
+    @Override
+    public List<String> getClassUp(String className) {
+        String cypherQuery="";
+        List<MethodNode> res=findRelation(cypherQuery,className);
+        return null;
+    }
+
+    /**
+     * TODO 类追踪
+     * @param className
+     * @return
+     */
+    @Override
+    public List<String> getClassDown(String className) {
+        String cypherQuery="";
+        List<MethodNode> res=findRelation(cypherQuery,className);
+        return null;
+    }
+
+    /**
+     * TODO url精确查找
+     * @param url
+     * @return
+     */
+    @Override
+    public List<String> getUrlPath(List<String> url) {
+        return null;
+    }
+
 
     @Override
     public List<String> getAllMethodRelation() {

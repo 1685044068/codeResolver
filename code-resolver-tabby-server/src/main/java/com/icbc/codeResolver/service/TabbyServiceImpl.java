@@ -7,6 +7,7 @@ import org.neo4j.driver.types.Path;
 import org.neo4j.driver.types.Relationship;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.core.Neo4jClient;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,7 +15,12 @@ import java.util.List;
 import java.util.Map;
 
 @DubboService(group = "tabby")
+@Component
 public class TabbyServiceImpl implements CodeResolverService {
+
+    @Autowired
+    private Neo4jClient neo4jClient;
+
 
     public static final String ALL_FORWARD_LINK_QUERY = "match (source:Method) where source.CLASSNAME STARTS WITH 'com.icbc' AND source.NAME <> '<init>'\n" +
             "match (target:Method) where target.CLASSNAME STARTS WITH 'com.icbc' AND target.NAME <> '<init>'\n" +
@@ -31,11 +37,6 @@ public class TabbyServiceImpl implements CodeResolverService {
             "RETURN p";
 
 
-
-    @Autowired
-    private Neo4jClient neo4jClient;
-
-
     @Override
     public List<String> getMethodUp(String method) {
         List<MethodNode> res = findRelation(REVERSE_LINK_FROM_METHOD_QUERY, method);
@@ -46,6 +47,36 @@ public class TabbyServiceImpl implements CodeResolverService {
     public List<String> getMethodDown(String method) {
         List<MethodNode> res = findRelation(FORWARD_LINK_FROM_METHOD_QUERY, method);
         return pathToList(res,true);
+    }
+
+    /**
+     * TODO 类溯源
+     * @param className
+     * @return
+     */
+    @Override
+    public List<String> getClassUp(String className) {
+        return null;
+    }
+
+    /**
+     * TODO 类追踪
+     * @param className
+     * @return
+     */
+    @Override
+    public List<String> getClassDown(String className) {
+        return null;
+    }
+
+    /**
+     * TODO url精确查找
+     * @param url
+     * @return
+     */
+    @Override
+    public List<String> getUrlPath(List<String> url) {
+        return null;
     }
 
     @Override

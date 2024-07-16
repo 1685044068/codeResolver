@@ -11,10 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/joern")
-public class JoernController {
-    @DubboReference(group = "joern")
-    CodeResolverService joernService;
+@RequestMapping(value = "/tabby")
+public class TabbyController {
+    @DubboReference(group = "tabby")
+    CodeResolverService tabbyService;
 
     /**
      * 方法追踪
@@ -22,9 +22,8 @@ public class JoernController {
      */
     @RequestMapping("/methodDown/{method}")
     @ResponseBody
-    public List<String> getMethodNodeDown(@PathVariable("method") String methodName) {
-        List<String> sbrList = joernService.getMethodDown(methodName);
-        return sbrList;
+    public List<String> getMethodNodeDown(@PathVariable("method") String method) {
+        return tabbyService.getMethodDown(method);
     }
 
     /**
@@ -33,9 +32,8 @@ public class JoernController {
      */
     @RequestMapping("/methodUp/{method}")
     @ResponseBody
-    public List<String> getMethodNodeUp(@PathVariable("method") String methodName) {
-        List<String> sbrList = joernService.getMethodUp(methodName);
-        return sbrList;
+    public List<String> getMethodNodeUp(@PathVariable("method") String method) {
+        return tabbyService.getMethodUp(method);
     }
 
     /**
@@ -45,7 +43,7 @@ public class JoernController {
     @RequestMapping("/classDown/{class}")
     @ResponseBody
     public List<String> getClassNodeDown(@PathVariable("class") String className) {
-        List<String> sbrList = joernService.getClassDown(className);
+        List<String> sbrList = tabbyService.getClassDown(className);
         return sbrList;
     }
 
@@ -56,7 +54,7 @@ public class JoernController {
     @RequestMapping("/classUp/{class}")
     @ResponseBody
     public List<String> getClassNodeUp(@PathVariable("class") String className) {
-        List<String> sbrList = joernService.getClassUp(className);
+        List<String> sbrList = tabbyService.getClassUp(className);
         return sbrList;
     }
 
@@ -70,16 +68,15 @@ public class JoernController {
         List<String> url = new ArrayList<>();
         url.add(className);
         url.add(methodName);
-        List<String> sbrList = joernService.getUrlPath(url);
+        List<String> sbrList = tabbyService.getUrlPath(url);
         return sbrList;
     }
-
 
 
 
     @RequestMapping("/methodAll")
     @ResponseBody
     public List<String> getMethodNodeAll() {
-        return joernService.getAllMethodRelation();
+        return tabbyService.getAllMethodRelation();
     }
 }
