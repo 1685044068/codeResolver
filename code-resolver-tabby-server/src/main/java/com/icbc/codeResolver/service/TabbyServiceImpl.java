@@ -7,12 +7,13 @@ import org.neo4j.driver.types.Path;
 import org.neo4j.driver.types.Relationship;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.core.Neo4jClient;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
+@Component
 @DubboService(group = "tabby")
 public class TabbyServiceImpl implements CodeResolverService {
 
@@ -48,6 +49,19 @@ public class TabbyServiceImpl implements CodeResolverService {
         return pathToList(res,true);
     }
 
+    @Override
+    public List<String> getUrlPath(List<String> url) {
+        String class_name=url.get(0)+".java";
+        String method_name=url.get(1);
+        String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE (NOT (nextNodes)-[:CONTAINS]->(:CALL)) and (startNode.NAME=$METHOD_NAME AND startNode.FILENAME ENDS WITH $CLASS_NAME) RETURN p";
+        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
+                .bind(method_name).to("METHOD_NAME")
+                .bind(class_name).to("CLASS_NAME")
+                .fetch()
+                .all();
+        //List<MethodNode> res = findRelation(result);
+        return new ArrayList<>();
+    }
     @Override
     public List<String> getAllMethodRelation() {
         Collection<Map<String, Object>> result = neo4jClient.query(ALL_FORWARD_LINK_QUERY)

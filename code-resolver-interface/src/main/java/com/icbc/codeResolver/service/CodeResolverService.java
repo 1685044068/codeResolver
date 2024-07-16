@@ -9,4 +9,6 @@ public interface CodeResolverService {
     public List<String> getMethodDown(String method);
 
     public List<String> getAllMethodRelation();
+
+    public List<String> getUrlPath(List<String> url);
 }

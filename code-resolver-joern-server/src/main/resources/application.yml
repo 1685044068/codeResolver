@@ -25,11 +25,11 @@ spring:
       matching-strategy: ant_path_matcher
   data:
     neo4j:
-      database: javacode
+      database: neo4j
   neo4j:
     authentication:
       username: neo4j
-      password: chenqiujian123
+      password: neo4j123
     uri: bolt://127.0.0.1:7687
 #开启包扫描，可替代 @EnableDubbo 注解
 ##dubbo.scan.base-packages=com.zang.gmall

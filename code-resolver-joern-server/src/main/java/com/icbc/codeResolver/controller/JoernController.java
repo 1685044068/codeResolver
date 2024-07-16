@@ -2,10 +2,12 @@ package com.icbc.codeResolver.controller;
 
 import com.icbc.codeResolver.service.CodeResolverService;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -34,4 +36,16 @@ public class JoernController {
         List<String> sbrList = joernService.getAllMethodRelation();
         return sbrList;
     }
+
+    @RequestMapping("/urlPath/{className}/{methodName}")
+    @ResponseBody
+    public List<String> getUrlPath(@PathVariable("className") String className, @PathVariable("methodName") String methodName) {
+        List<String> url = new ArrayList<>();
+        url.add(className);
+        url.add(methodName);
+        System.out.println(url.toString());
+        List<String> sbrList = joernService.getUrlPath(url);
+        return sbrList;
+    }
+
 }

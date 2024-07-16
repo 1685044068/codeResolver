@@ -8,7 +8,7 @@ spring:
   neo4j:
     authentication:
       username: neo4j
-      password: chenqiujian123
+      password: neo4j123
     uri: bolt://127.0.0.1:7687
 
 dubbo:
