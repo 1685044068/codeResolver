@@ -76,7 +76,16 @@ public class TabbyServiceImpl implements CodeResolverService {
      */
     @Override
     public List<String> getUrlPath(List<String> url) {
-        return null;
+        String class_name=url.get(0)+".java";
+        String method_name=url.get(1);
+        String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE (NOT (nextNodes)-[:CONTAINS]->(:CALL)) and (startNode.NAME=$METHOD_NAME AND startNode.FILENAME ENDS WITH $CLASS_NAME) RETURN p";
+        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
+                .bind(method_name).to("METHOD_NAME")
+                .bind(class_name).to("CLASS_NAME")
+                .fetch()
+                .all();
+        //List<MethodNode> res = findRelation(result);
+        return new ArrayList<>();
     }
 
     @Override

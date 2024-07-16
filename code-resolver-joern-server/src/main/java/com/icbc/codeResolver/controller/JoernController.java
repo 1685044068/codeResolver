@@ -75,8 +75,6 @@ public class JoernController {
     }
 
 
-
-
     @RequestMapping("/methodAll")
     @ResponseBody
     public List<String> getMethodNodeAll() {

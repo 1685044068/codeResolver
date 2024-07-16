@@ -4,7 +4,7 @@ server:
 spring:
   data:
     neo4j:
-      database: neo4j
+      database: mvc
   neo4j:
     authentication:
       username: neo4j
