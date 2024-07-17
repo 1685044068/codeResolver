@@ -25,7 +25,7 @@ spring:
       matching-strategy: ant_path_matcher
   data:
     neo4j:
-      database: neo4j
+      database: mybatis
   neo4j:
     authentication:
       username: neo4j

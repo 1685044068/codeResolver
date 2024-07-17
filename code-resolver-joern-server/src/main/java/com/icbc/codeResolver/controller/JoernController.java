@@ -37,15 +37,50 @@ public class JoernController {
         return sbrList;
     }
 
-    @RequestMapping("/urlPath/{className}/{methodName}")
+    @RequestMapping("/urlPathUp/{className}/{methodName}")
     @ResponseBody
-    public List<String> getUrlPath(@PathVariable("className") String className, @PathVariable("methodName") String methodName) {
+    public List<String> getUrlPathUp(@PathVariable("className") String className, @PathVariable("methodName") String methodName) {
         List<String> url = new ArrayList<>();
         url.add(className);
         url.add(methodName);
-        System.out.println(url.toString());
-        List<String> sbrList = joernService.getUrlPath(url);
+        List<String> sbrList = joernService.getUrlPathUp(url);
         return sbrList;
     }
+    @RequestMapping("/urlPathDown/{className}/{methodName}")
+    @ResponseBody
+    public List<String> getUrlPathDown(@PathVariable("className") String className, @PathVariable("methodName") String methodName) {
+        List<String> url = new ArrayList<>();
+        url.add(className);
+        url.add(methodName);
+        List<String> sbrList = joernService.getUrlPathDown(url);
+        return sbrList;
+    }
+    @RequestMapping("/urlPathAbstract/{className}/{methodName}")
+    @ResponseBody
+    public List<String> getUrlPathAbstract(@PathVariable("className") String className, @PathVariable("methodName") String methodName) {
+        List<String> url = new ArrayList<>();
+        url.add(className);
+        url.add(methodName);
+        List<String> sbrList = joernService.getUrlPathAbstract(url);
+        return sbrList;
+    }
+
+    @RequestMapping("/urlPathDetailDown/{className}/{methodName}/{code}")
+    @ResponseBody
+    public List<String> getUrlPathDetailDown(@PathVariable("className") String className, @PathVariable("methodName") String methodName,@PathVariable("code") String code) {
+        List<String> url = new ArrayList<>();
+        url.add(className);
+        url.add(methodName);
+        url.add(code);
+        List<String> sbrList = joernService.getUrlPathDetailDown(url);
+        return sbrList;
+    }
+    @RequestMapping("/SqlMember/{member}")
+    @ResponseBody
+    public List<String> getUrlPath(@PathVariable("member") String member) {
+        List<String> sbrList = joernService.getSqlMember(member);
+        return sbrList;
+    }
+
 
 }

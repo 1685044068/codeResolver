@@ -10,5 +10,12 @@ public interface CodeResolverService {
 
     public List<String> getAllMethodRelation();
 
-    public List<String> getUrlPath(List<String> url);
+    public List<String> getUrlPathUp(List<String> url);
+    public List<String> getUrlPathDown(List<String> url);
+
+    public List<String> getSqlMember(String properies);
+
+    public List<String> getUrlPathAbstract(List<String> url);
+    public List<String> getUrlPathDetailUp(List<String> url);
+    public List<String> getUrlPathDetailDown(List<String> url);
 }
