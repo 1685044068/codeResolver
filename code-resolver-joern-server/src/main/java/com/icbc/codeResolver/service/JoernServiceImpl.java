@@ -65,16 +65,27 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<String> getUrlPath(List<String> url) {
-        String class_name=url.get(0)+".java";
-        String method_name=url.get(1);
-        String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE (NOT (nextNodes)-[:CONTAINS]->(:CALL)) and (startNode.NAME=$METHOD_NAME AND startNode.FILENAME ENDS WITH $CLASS_NAME) RETURN p";
+        String first=url.get(0);
+        String left=url.get(1);
+        String name="RequestMapping";
+        String like="Mapping";
+        String cypherQuery = "MATCH (n:ANNOTATION)<-[:AST]-(c:TYPE_DECL)-[:AST]->(m:METHOD)-[:AST]->(n1:ANNOTATION) WHERE n.NAME =$NAME" +
+                "  AND n.CODE contains $FIRST" +
+                "  AND n1.NAME contains $LIKE" +
+                "  AND n1.CODE contains $LEFT" +
+                " WITH m" +
+                " MATCH p=(m)-[:CALL|CONTAINS*]->(nextNodes:METHOD)" +
+                " WHERE NOT (nextNodes)-[:CONTAINS]->(:CALL)" +
+                " RETURN p";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
-                .bind(method_name).to("METHOD_NAME")
-                .bind(class_name).to("CLASS_NAME")
+                .bind(first).to("FIRST")
+                .bind(left).to("LEFT")
+                .bind(name).to("NAME")
+                .bind(like).to("LIKE")
                 .fetch()
                 .all();
         List<MethodNode> res = findRelation(result);
-        return pathToListDownPara(res,url.get(0));
+        return pathToList(res,true);
     }
 
     @Override

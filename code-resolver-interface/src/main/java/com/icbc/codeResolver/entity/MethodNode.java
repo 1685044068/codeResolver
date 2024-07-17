@@ -5,7 +5,7 @@ import lombok.Data;
 import java.io.Serializable;
 
 @Data
-public class MethodNode implements Serializable {
+public class MethodNode extends BaseNode implements Serializable {
 
     public String label;
     public String name;
