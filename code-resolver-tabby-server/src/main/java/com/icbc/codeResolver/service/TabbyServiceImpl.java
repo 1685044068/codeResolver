@@ -63,10 +63,6 @@ public class TabbyServiceImpl implements CodeResolverService {
 //        return new ArrayList<>();
 //    }
 
-    @Override
-    public List<String> getSqlMember(String properies){
-        return null;
-    }
 
     @Override
     public List<String> getUrlPathAbstract(List<String> url) {
@@ -80,6 +76,11 @@ public class TabbyServiceImpl implements CodeResolverService {
 
     @Override
     public List<String> getUrlPathDetailDown(List<String> url) {
+        return null;
+    }
+
+    @Override
+    public List<String> getSqlMember(String table, String member) {
         return null;
     }
 

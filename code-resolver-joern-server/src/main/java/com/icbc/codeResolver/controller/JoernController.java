@@ -75,10 +75,10 @@ public class JoernController {
         List<String> sbrList = joernService.getUrlPathDetailDown(url);
         return sbrList;
     }
-    @RequestMapping("/SqlMember/{member}")
+    @RequestMapping("/sqlMember/{table}/{member}")
     @ResponseBody
-    public List<String> getUrlPath(@PathVariable("member") String member) {
-        List<String> sbrList = joernService.getSqlMember(member);
+    public List<String> getSqlMember(@PathVariable("table") String table,@PathVariable("member") String member) {
+        List<String> sbrList = joernService.getSqlMember(table.toLowerCase(),member);
         return sbrList;
     }
 

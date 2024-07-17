@@ -71,6 +71,8 @@ public class JoernServiceImpl implements CodeResolverService {
         return pathToList(res,true);
     }
 
+
+
     @Override
     public List<String> getUrlPathUp(List<String> url) {
         String class_name=url.get(0)+".java";
@@ -142,37 +144,43 @@ public class JoernServiceImpl implements CodeResolverService {
         return pathToList(res,true);
     }
 
-    //根据注解字段查找调用链
+    //根据表名和表字段字段查找调用链
     @Override
-    public List<String> getSqlMember(String member) {
-        String cypherQuery = "match (n:ANNOTATION)<-[:AST]-(m:METHOD) where (n.CODE starts with '@Insert' or n.CODE starts with '@Delete' or n.CODE starts with '@Select' or n.CODE starts with '@Update') return n,m";
+    public List<String> getSqlMember(String table,String member) {
+        String cypherQuery = "match (n:ANNOTATION)<-[:AST]-(m:METHOD) where (n.CODE starts with '@Insert(' or n.CODE starts with '@Delete(' or n.CODE starts with '@Select(' or n.CODE starts with '@Update(') return n,m";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
                 .fetch()
                 .all();
         List<Map<String, Object>> resultList = new ArrayList<>(result);
         List<MethodNode> ans = new ArrayList<>();
         String label = null;
+        InternalNode annotation_node=null;
+        InternalNode method_node=null;
         for (Map<String, Object> record : resultList){
-            Node annotation_node=(Node) record.get('n');
-            Node method_node=(Node) record.get('m');
+            Object nodeObject = record.get("n");
+            if (nodeObject instanceof InternalNode) {
+                annotation_node = (InternalNode) nodeObject;
+            }
+            nodeObject = record.get("m");
+            if (nodeObject instanceof InternalNode) {
+                method_node = (InternalNode) nodeObject;
+            }
             String code=annotation_node.get("CODE").asString();
             MethodNode head = new MethodNode("1", "1");
 
-            if(code.contains("#{"+member+"}")){
+            boolean x=code.contains(member) ||code.contains("*");
+            boolean y=code.contains("from "+table)||code.contains("update "+table)||code.contains("insert into "+table);
+            if((code.contains("from "+table)||code.contains("update "+table)||code.contains("insert into "+table))&&(code.contains(member) ||code.contains("*"))){
                 label=annotation_node.labels().iterator().next();
                 head = new MethodNode(label, annotation_node.get("NAME").asString());
 
-//                cur.next = new MethodNode(label, );
-//                cur = cur.next;
-//                label=method_node.labels().iterator().next();
-//                cur.next = new MethodNode(label, method_node.get("NAME").asString());
-//                cur = cur.next;
                 //然后向上搜索
                 String method_name=method_node.get("NAME").asString();
                 MethodNode cur = head;
-                cypherQuery = "MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.NAME=$method_name) RETURN p";
+                cypherQuery = "MATCH p = (n:ANNOTATION)<-[:AST]-(endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.NAME=$method_name) and n.CODE=$CODE RETURN p";
                 result = neo4jClient.query(cypherQuery)
                         .bind(method_name).to("method_name")
+                        .bind(code).to("CODE")
                         .fetch()
                         .all();
                 List<MethodNode> res = findRelation(result);//这里的res是以$method_name结尾的方法调用
@@ -182,7 +190,7 @@ public class JoernServiceImpl implements CodeResolverService {
         }
 
         //List<MethodNode> res = findRelation(result);
-        return null;
+        return pathToList(ans,false);
     }
 
     public List<MethodNode> findRelation(Collection<Map<String, Object>> result) {
