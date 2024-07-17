@@ -13,6 +13,7 @@
         <module>code-resolver-interface</module>
         <module>code-resolver-joern-server</module>
         <module>code-resolver-tabby-server</module>
+        <module>code-resolver-upload-server</module>
     </modules>
 
     <properties>
