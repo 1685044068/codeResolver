@@ -71,8 +71,6 @@ public class JoernServiceImpl implements CodeResolverService {
         return pathToList(res,true);
     }
 
-
-
     @Override
     public List<String> getUrlPathUp(List<String> url) {
         String class_name=url.get(0)+".java";
@@ -191,6 +189,31 @@ public class JoernServiceImpl implements CodeResolverService {
 
         //List<MethodNode> res = findRelation(result);
         return pathToList(ans,false);
+    }
+
+    //根据url，找Mapping注解，解析到对应方法，展示向下调用链
+    @Override
+    public List<String> getUrlPathMethod(String first,String left) {
+        System.out.println(first);
+        String name="RequestMapping";
+        String like="Mapping";
+        String cypherQuery = "MATCH (n:ANNOTATION)<-[:AST]-(c:TYPE_DECL)-[:AST]->(m:METHOD)-[:AST]->(n1:ANNOTATION) WHERE n.NAME =$NAME" +
+                "  AND n.CODE contains $FIRST" +
+                "  AND n1.NAME contains $LIKE" +
+                "  AND n1.CODE contains $LEFT" +
+                " WITH m" +
+                " MATCH p=(m)-[:CALL|CONTAINS*]->(nextNodes:METHOD)" +
+                " WHERE NOT (nextNodes)-[:CONTAINS]->(:CALL)" +
+                " RETURN p";
+        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
+                .bind(first).to("FIRST")
+                .bind(left).to("LEFT")
+                .bind(name).to("NAME")
+                .bind(like).to("LIKE")
+                .fetch()
+                .all();
+        List<MethodNode> res = findRelation(result);
+        return pathToList(res,true);
     }
 
     public List<MethodNode> findRelation(Collection<Map<String, Object>> result) {

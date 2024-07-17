@@ -2,10 +2,7 @@ package com.icbc.codeResolver.controller;
 
 import com.icbc.codeResolver.service.CodeResolverService;
 import org.apache.dubbo.config.annotation.DubboReference;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,6 +76,17 @@ public class JoernController {
     @ResponseBody
     public List<String> getSqlMember(@PathVariable("table") String table,@PathVariable("member") String member) {
         List<String> sbrList = joernService.getSqlMember(table.toLowerCase(),member);
+        return sbrList;
+    }
+
+    @RequestMapping(value = "/urlPathMethod",method = RequestMethod.GET)
+    @ResponseBody
+    public List<String> getUrlPathMethod(@RequestParam("url") String url) {
+        System.out.println(url);
+        String[] urlField = url.split("/");
+        String Info=url.substring(urlField[1].length()+1,url.length());
+        System.out.println("/"+urlField[1]+"    "+Info);
+        List<String> sbrList = joernService.getUrlPathMethod("/"+urlField[1],Info);
         return sbrList;
     }
 
