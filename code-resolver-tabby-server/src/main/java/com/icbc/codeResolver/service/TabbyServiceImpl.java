@@ -38,42 +38,17 @@ public class TabbyServiceImpl implements CodeResolverService {
 
 
     @Override
-    public List<String> getMethodUp(String method) {
+    public List<String> getMethodUp(String className,String method) {
         List<MethodNode> res = findRelation(REVERSE_LINK_FROM_METHOD_QUERY, method);
         return pathToList(res,false);
     }
 
     @Override
-    public List<String> getMethodDown(String method) {
+    public List<String> getMethodDown(String className,String method) {
         List<MethodNode> res = findRelation(FORWARD_LINK_FROM_METHOD_QUERY, method);
         return pathToList(res,true);
     }
 
-    /**
-     * TODO 类溯源
-     * @param className
-     * @return
-     */
-    @Override
-    public List<String> getClassUp(String className) {
-        return null;
-    }
-
-    /**
-     * TODO 类追踪
-     * @param className
-     * @return
-     */
-    @Override
-    public List<String> getClassDown(String className) {
-        return null;
-    }
-
-    /**
-     * TODO url精确查找
-     * @param url
-     * @return
-     */
     @Override
     public List<String> getUrlPath(List<String> url) {
         String class_name=url.get(0)+".java";
@@ -89,45 +64,8 @@ public class TabbyServiceImpl implements CodeResolverService {
     }
 
     @Override
-    public List<String> getAllMethodRelation() {
-        Collection<Map<String, Object>> result = neo4jClient.query(ALL_FORWARD_LINK_QUERY)
-                .fetch()
-                .all();
-        List<Map<String, Object>> resultList = new ArrayList<>(result);
-        List<MethodNode> ans = new ArrayList<>();
-        String label = null;
-        // 输出路径内容
-        for (Map<String, Object> record : resultList) {
-            Path path = (Path) record.get("p");
-            MethodNode head = new MethodNode("1", "1");
-            MethodNode cur = head;
-            int x = 0;
-            for (Path.Segment segment : path) {
-                Node startNode = null;
-                if (x == 0) {
-                    startNode = segment.start();
-                    for (String item : startNode.labels()) {
-                        label = item;
-                    }
-                    cur.next = new MethodNode(label, startNode.get("NAME").asString());
-                    cur = cur.next;
-                    x = 1;
-                }
-                Relationship relationship = segment.relationship();
-                Node endNode = segment.end();
-                cur.next = new MethodNode(label, endNode.get("NAME").asString());
-                cur = cur.next;
-                if (x == 1) {
-                    System.out.print(startNode.labels() + " - " + startNode.get("NAME") + "->");
-                    x = 2;
-                }
-                System.out.print(relationship.type() + "->");
-                System.out.print(endNode.labels() + " - " + endNode.get("NAME") + "->");
-
-            }
-            ans.add(head.next);
-        }
-        return pathToList(ans,true);
+    public List<String> getDataBaseInfo(String dataBaseName, String tableName, String fieldName) {
+        return null;
     }
 
 

@@ -2,6 +2,7 @@ package com.icbc.codeResolver.service;
 
 import com.icbc.codeResolver.entity.MethodNode;
 import org.apache.dubbo.config.annotation.DubboService;
+import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Path;
 import org.neo4j.driver.types.Relationship;
@@ -21,54 +22,44 @@ public class JoernServiceImpl implements CodeResolverService {
     @Autowired
     private Neo4jClient neo4jClient;
 
-    @Override
-    public List<String> getMethodUp(String methodName) {
-        String cypherQuery = "MATCH p = (endNode:METHOD{NAME:$NAME})<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where not (prevNodes)<-[:CALL]-() RETURN p";
-        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
-                .bind(methodName).to("NAME")
-                .fetch()
-                .all();
-        List<MethodNode> res = findRelation(result);
-        return pathToListUp(res);
-    }
-
-    @Override
-    public List<String> getMethodDown(String methodName) {
-        String cypherQuery = "MATCH p = (startNode:METHOD {NAME:$NAME })-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE NOT (nextNodes)-[:CONTAINS]->(:CALL) RETURN p";
-        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
-                .bind(methodName).to("NAME")
-                .fetch()
-                .all();
-        List<MethodNode> res = findRelation(result);
-        return pathToListDown(res);
-    }
-
     /**
-     * TODO 类溯源
+     * TODO 等待修改
      * @param className
+     * @param methodName
      * @return
      */
     @Override
-    public List<String> getClassUp(String className) {
-        String cypherQuery="";
-//        List<MethodNode> res=findRelation(cypherQuery,className);
-        return null;
+    public List<String> getMethodUp(String className,String methodName) {
+        String cypherQuery = "MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.NAME=$METHOD_NAME AND endNode.FILENAME ENDS WITH $CLASS_NAME) RETURN p";
+        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
+                .bind(methodName).to("METHOD_NAME")
+                .bind(className).to("CLASS_NAME")
+                .fetch()
+                .all();
+        List<MethodNode> res = findRelation(result);
+        return pathToList(res,false);
     }
 
+
     /**
-     * TODO 类追踪
      * @param className
+     * @param methodName
      * @return
      */
     @Override
-    public List<String> getClassDown(String className) {
-        String cypherQuery="";
-//        List<MethodNode> res=findRelation(cypherQuery,className);
-        return null;
+    public List<String> getMethodDown(String className,String methodName) {
+        String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE (NOT (nextNodes)-[:CONTAINS]->(:CALL)) and (startNode.NAME=$METHOD_NAME AND startNode.FILENAME ENDS WITH $CLASS_NAME) RETURN p";
+        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
+                .bind(methodName).to("METHOD_NAME")
+                .bind(className).to("CLASS_NAME")
+                .fetch()
+                .all();
+        List<MethodNode> res = findRelation(result);
+        return pathToList(res,true);
     }
 
     /**
-     * TODO url精确查找
+     * url精确查找
      * @param url
      * @return
      */
@@ -86,16 +77,52 @@ public class JoernServiceImpl implements CodeResolverService {
         return pathToListDownPara(res,url.get(0));
     }
 
-
     @Override
-    public List<String> getAllMethodRelation() {
-        String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->( endNode:METHOD) WHERE NOT (endNode)-[:CONTAINS]->(:CALL) AND NOT (startNode)<-[:CALL]-() RETURN p limit 100";
+    public List<String> getDataBaseInfo(String dataBaseName, String tableName, String fieldName) {
+        String cypherQuery = "match (n:ANNOTATION)<-[:AST]-(m:METHOD) where (n.CODE starts with '@Insert(' or n.CODE starts with '@Delete(' or n.CODE starts with '@Select(' or n.CODE starts with '@Update(') return n,m";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
                 .fetch()
                 .all();
-        List<MethodNode> res = findRelation(result);
-        return pathToListDown(res);
+        List<Map<String, Object>> resultList = new ArrayList<>(result);
+        List<MethodNode> ans = new ArrayList<>();
+        String label = null;
+        InternalNode annotation_node=null;
+        InternalNode method_node=null;
+        for (Map<String, Object> record : resultList){
+            Object nodeObject = record.get("n");
+            if (nodeObject instanceof InternalNode) {
+                annotation_node = (InternalNode) nodeObject;
+            }
+            nodeObject = record.get("m");
+            if (nodeObject instanceof InternalNode) {
+                method_node = (InternalNode) nodeObject;
+            }
+            String code=annotation_node.get("CODE").asString();
+            MethodNode head = new MethodNode("1", "1");
+
+            boolean x=code.contains(fieldName) ||code.contains("*");
+            boolean y=code.contains("from "+tableName)||code.contains("update "+tableName)||code.contains("insert into "+tableName);
+            if((code.contains("from "+tableName)||code.contains("update "+tableName)||code.contains("insert into "+tableName))&&(code.contains(fieldName) ||code.contains("*"))){
+                label=annotation_node.labels().iterator().next();
+                head = new MethodNode(label, annotation_node.get("NAME").asString());
+                //然后向上搜索
+                String method_name=method_node.get("NAME").asString();
+                MethodNode cur = head;
+                cypherQuery = "MATCH p = (n:ANNOTATION)<-[:AST]-(endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.NAME=$method_name) and n.CODE=$CODE RETURN p";
+                result = neo4jClient.query(cypherQuery)
+                        .bind(method_name).to("method_name")
+                        .bind(code).to("CODE")
+                        .fetch()
+                        .all();
+                List<MethodNode> res = findRelation(result);//这里的res是以$method_name结尾的方法调用
+                ans.addAll(res);
+            }
+
+        }
+        //List<MethodNode> res = findRelation(result);
+        return pathToList(ans,false);
     }
+
 
     public List<MethodNode> findRelation(Collection<Map<String, Object>> result) {
         List<Map<String, Object>> resultList = new ArrayList<>(result);
@@ -127,35 +154,6 @@ public class JoernServiceImpl implements CodeResolverService {
     }
 
 
-    public List<String> pathToListDown(List<MethodNode> path) {
-        List<String> sbrList = new ArrayList<>();
-        for (int i = 0; i < path.size(); i++) {
-            StringBuilder stringBuilder = new StringBuilder();
-            MethodNode r = path.get(i);
-            while (r != null) {
-                stringBuilder.append(r.name+'('+r.label+')'+"->");
-                r = r.next;
-            }
-            sbrList.add(stringBuilder.substring(0, stringBuilder.length() - 2));
-        }
-        return sbrList;
-    }
-
-    public List<String> pathToListUp(List<MethodNode> path) {
-        List<String> sbrList = new ArrayList<>();
-        for (int i = 0; i < path.size(); i++) {
-            StringBuilder stringBuilder = new StringBuilder();
-            MethodNode r = path.get(i);
-            while (r != null) {
-                stringBuilder.append(r.name+'('+r.label+')'+"<-");
-
-                r = r.next;
-            }
-            sbrList.add(stringBuilder.substring(0, stringBuilder.length() - 2));
-        }
-        return sbrList;
-    }
-
     public List<String> pathToListDownPara(List<MethodNode> path,String s) {
         List<String> sbrList = new ArrayList<>();
         for (int i = 0; i < path.size(); i++) {
@@ -169,5 +167,29 @@ public class JoernServiceImpl implements CodeResolverService {
         }
         return sbrList;
     }
+
+
+
+    public List<String> pathToList(List<MethodNode> path,boolean direction) {
+        String spiltChar = direction?"->":"<-";
+        List<String> sbrList = new ArrayList<>();
+        for (int i = 0; i < path.size(); i++) {
+            StringBuilder stringBuilder = new StringBuilder();
+            MethodNode r = path.get(i);
+            while (r != null) {
+                stringBuilder.append('('+r.label+')'+r.name+spiltChar);
+                r = r.next;
+            }
+            sbrList.add(stringBuilder.substring(0,stringBuilder.length()-2));
+        }
+        return sbrList;
+    }
+
+
+
+
+
+
+
 
 }
