@@ -17,63 +17,33 @@ public class TabbyController {
      * 方法追踪
      * @return
      */
-    @GetMapping("/methodDown/{method}")
+    @GetMapping("/methodDown/{className}/{methodName}")
     @ResponseBody
-    public List<String> getMethodNodeDown(@PathVariable("method") String method) {
-        return tabbyService.getMethodDown(method);
+    public List<String> getMethodNodeDown(@PathVariable("className") String className,@PathVariable("methodName") String methodName) {
+        return tabbyService.getMethodDown(className,methodName);
     }
 
     /**
      * 方法溯源
      * @return
      */
-    @GetMapping("/methodUp/{method}")
+    @GetMapping("/methodDown/{className}/{methodName}")
     @ResponseBody
-    public List<String> getMethodNodeUp(@PathVariable("method") String method) {
-        return tabbyService.getMethodUp(method);
+    public List<String> getMethodNodeUp(@PathVariable("className") String className,@PathVariable("methodName") String methodName) {
+        return tabbyService.getMethodUp(className,methodName);
     }
 
-    /**
-     * 类追踪
-     * @return
-     */
-    @GetMapping("/classDown/{class}")
-    @ResponseBody
-    public List<String> getClassNodeDown(@PathVariable("class") String className) {
-        List<String> sbrList = tabbyService.getClassDown(className);
-        return sbrList;
-    }
-
-    /**
-     * 类溯源
-     * @return
-     */
-    @GetMapping("/classUp/{class}")
-    @ResponseBody
-    public List<String> getClassNodeUp(@PathVariable("class") String className) {
-        List<String> sbrList = tabbyService.getClassUp(className);
-        return sbrList;
-    }
 
     /**
      * url精确查找
      * @return
      */
-    @GetMapping("/urlPath/{className}/{methodName}")
+    @GetMapping("/urlPath/{url}")
     @ResponseBody
-    public List<String> getUrlPath(@PathVariable("className") String className,@PathVariable("methodName") String methodName) {
-        List<String> url = new ArrayList<>();
-        url.add(className);
-        url.add(methodName);
-        List<String> sbrList = tabbyService.getUrlPath(url);
+    public List<String> getUrlPath(@PathVariable("url") String url) {
+        String[] urlField = url.split("/");
+        List<String> sbrList = tabbyService.getUrlPath(new ArrayList<>(List.of(urlField)));
         return sbrList;
     }
 
-
-
-    @GetMapping("/methodAll")
-    @ResponseBody
-    public List<String> getMethodNodeAll() {
-        return tabbyService.getAllMethodRelation();
-    }
 }

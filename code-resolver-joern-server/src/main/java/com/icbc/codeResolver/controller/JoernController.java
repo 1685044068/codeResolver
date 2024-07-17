@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/joern")
-@Tag(name = "joern", description = "joern接口")
+@Tag(name = "Joern", description = "joern接口")
 public class JoernController {
     @DubboReference(group = "joern")
     CodeResolverService joernService;
@@ -20,11 +20,13 @@ public class JoernController {
      * 方法追踪 类名 方法名
      * @return
      */
-    @GetMapping("/methodDown/{method}")
+    @GetMapping("/methodDown")
     @ResponseBody
-    @Operation(summary = "方法追踪", description = "方法追踪")
-    public List<String> getMethodNodeDown(@PathVariable("method") String methodName) {
-        List<String> sbrList = joernService.getMethodDown(methodName);
+    @Operation(summary = "方法追踪", description = "根据类名以及方法名进行方法追踪")
+    public List<String> getMethodNodeDown(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
+        System.out.println("方法追踪"+className);
+        System.out.println("方法追踪"+methodName);
+        List<String> sbrList = joernService.getMethodDown(className+".java",methodName);
         return sbrList;
     }
 
@@ -32,71 +34,42 @@ public class JoernController {
      * 方法溯源
      * @return
      */
-    @GetMapping("/methodUp/{method}")
+    @GetMapping("/methodUp")
     @ResponseBody
-    @Operation(summary = "方法溯源", description = "方法溯源")
-    public List<String> getMethodNodeUp(@PathVariable("method") String methodName) {
-        List<String> sbrList = joernService.getMethodUp(methodName);
+    @Operation(summary = "方法溯源", description = "根据类名以及方法名进行方法溯源")
+    public List<String> getMethodNodeUp(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
+        System.out.println("方法溯源"+className);
+        System.out.println("方法溯源"+methodName);
+        List<String> sbrList = joernService.getMethodUp(className+".java",methodName);
         return sbrList;
     }
 
-    /**
-     * 类追踪
-     * @return
-     */
-    @GetMapping("/classDown/{class}")
-    @ResponseBody
-    @Operation(summary = "类追踪", description = "类追踪")
-    public List<String> getClassNodeDown(@PathVariable("class") String className) {
-        List<String> sbrList = joernService.getClassDown(className);
-        return sbrList;
-    }
-
-    /**
-     * 类溯源
-     * @return
-     */
-    @GetMapping("/classUp/{class}")
-    @ResponseBody
-    @Operation(summary = "类溯源", description = "类溯源")
-    public List<String> getClassNodeUp(@PathVariable("class") String className) {
-        List<String> sbrList = joernService.getClassUp(className);
-        return sbrList;
-    }
 
     /**
      * url精确查找 url-》斜杠分割 List<String>
      * @return
      */
-    @GetMapping("/urlPath/{url}")
+    @GetMapping("/urlPath")
     @ResponseBody
-    @Operation(summary = "url精确查找", description = "url精确查找")
-    public List<String> getUrlPath(@PathVariable("className") String className,@PathVariable("methodName") String methodName) {
-        List<String> url = new ArrayList<>();
-        url.add(className);
-        url.add(methodName);
-        List<String> sbrList = joernService.getUrlPath(url);
+    @Operation(summary = "url查找", description = "url的形式为/*/*/*")
+    public List<String> getUrlPath(@RequestParam("url") String url) {
+        String[] urlField = url.split("/");
+        String Info=url.substring(urlField[0].length()+1,url.length());
+        List<String> data=new ArrayList<>();
+        data.add("/"+urlField[0]);
+        data.add(Info);
+        List<String> sbrList = joernService.getUrlPath(data);
         return sbrList;
     }
 
-    /**
-     * 表名和字段
-     * @return
-     */
-
-
-
-    @GetMapping("/methodAll")
     @ResponseBody
-    @Operation(summary = "methodAll", description = "methodAll")
-    public List<String> getMethodNodeAll() {
-        return joernService.getAllMethodRelation();
+    @GetMapping("/dataBaseInfo")
+    @Operation(summary = "数据库表字段关系", description = "根据数据库名，表名，字段名查询")
+    public List<String> getDataBaseInfo(@RequestParam("dataBaseName")String dataBaseName, @RequestParam("tableName")String tableName, @RequestParam("fieldName")String fieldName) {
+        System.out.println("数据库名"+dataBaseName);
+        System.out.println("表名"+tableName);
+        System.out.println("字段名查询"+fieldName);
+        return joernService.getDataBaseInfo(dataBaseName,tableName,fieldName);
     }
-
-
-
-
-
-
 
 }

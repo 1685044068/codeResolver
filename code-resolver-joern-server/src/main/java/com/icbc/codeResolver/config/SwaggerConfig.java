@@ -23,9 +23,9 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI swaggerOpenAPI(){
         return new OpenAPI()
-                .info(new Info().title("oa流程控制")
+                .info(new Info().title("code-resolver")
                         .contact(new Contact())
-                        .description("我的API文档")
+                        .description("代码血缘分析")
                         .version("版本v.1")
                         .license(new License().name("Apache 2.0").url("https://xxxx.xxx.xxx")));
     }
