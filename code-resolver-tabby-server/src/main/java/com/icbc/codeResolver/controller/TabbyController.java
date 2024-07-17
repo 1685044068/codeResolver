@@ -2,10 +2,7 @@ package com.icbc.codeResolver.controller;
 
 import com.icbc.codeResolver.service.CodeResolverService;
 import org.apache.dubbo.config.annotation.DubboReference;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +17,7 @@ public class TabbyController {
      * 方法追踪
      * @return
      */
-    @RequestMapping("/methodDown/{method}")
+    @GetMapping("/methodDown/{method}")
     @ResponseBody
     public List<String> getMethodNodeDown(@PathVariable("method") String method) {
         return tabbyService.getMethodDown(method);
@@ -30,7 +27,7 @@ public class TabbyController {
      * 方法溯源
      * @return
      */
-    @RequestMapping("/methodUp/{method}")
+    @GetMapping("/methodUp/{method}")
     @ResponseBody
     public List<String> getMethodNodeUp(@PathVariable("method") String method) {
         return tabbyService.getMethodUp(method);
@@ -40,7 +37,7 @@ public class TabbyController {
      * 类追踪
      * @return
      */
-    @RequestMapping("/classDown/{class}")
+    @GetMapping("/classDown/{class}")
     @ResponseBody
     public List<String> getClassNodeDown(@PathVariable("class") String className) {
         List<String> sbrList = tabbyService.getClassDown(className);
@@ -51,7 +48,7 @@ public class TabbyController {
      * 类溯源
      * @return
      */
-    @RequestMapping("/classUp/{class}")
+    @GetMapping("/classUp/{class}")
     @ResponseBody
     public List<String> getClassNodeUp(@PathVariable("class") String className) {
         List<String> sbrList = tabbyService.getClassUp(className);
@@ -62,7 +59,7 @@ public class TabbyController {
      * url精确查找
      * @return
      */
-    @RequestMapping("/urlPath/{className}/{methodName}")
+    @GetMapping("/urlPath/{className}/{methodName}")
     @ResponseBody
     public List<String> getUrlPath(@PathVariable("className") String className,@PathVariable("methodName") String methodName) {
         List<String> url = new ArrayList<>();
@@ -74,7 +71,7 @@ public class TabbyController {
 
 
 
-    @RequestMapping("/methodAll")
+    @GetMapping("/methodAll")
     @ResponseBody
     public List<String> getMethodNodeAll() {
         return tabbyService.getAllMethodRelation();

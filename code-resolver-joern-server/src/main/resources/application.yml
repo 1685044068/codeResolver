@@ -31,5 +31,17 @@ spring:
       username: neo4j
       password: 12345678
     uri: bolt://127.0.0.1:7687
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/joern/**' #默认扫描全部的接口
+      packages-to-scan: com.icbc.codeResolver.controller  #不加会默认扫描全部的包
+
 #开启包扫描，可替代 @EnableDubbo 注解
 ##dubbo.scan.base-packages=com.zang.gmall
