@@ -22,7 +22,7 @@ public class JoernController {
      */
     @GetMapping("/methodDown")
     @ResponseBody
-    @Operation(summary = "方法追踪", description = "根据类名以及方法名进行方法追踪")
+    @Operation(summary = "目标一：方法追踪", description = "根据类名以及方法名进行方法追踪")
     public List<String> getMethodNodeDown(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
         System.out.println("方法追踪"+className);
         System.out.println("方法追踪"+methodName);
@@ -36,7 +36,7 @@ public class JoernController {
      */
     @GetMapping("/methodUp")
     @ResponseBody
-    @Operation(summary = "方法溯源", description = "根据类名以及方法名进行方法溯源")
+    @Operation(summary = "目标一：方法溯源", description = "根据类名以及方法名进行方法溯源")
     public List<String> getMethodNodeUp(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
         System.out.println("方法溯源"+className);
         System.out.println("方法溯源"+methodName);
@@ -51,7 +51,7 @@ public class JoernController {
      */
     @GetMapping("/urlPath")
     @ResponseBody
-    @Operation(summary = "url查找", description = "url的形式为/*/*/*")
+    @Operation(summary = "目标二：url查找", description = "url的形式为/*/*/*")
     public List<String> getUrlPath(@RequestParam("url") String url) {
         String[] urlField = url.split("/");
         String Info=url.substring(urlField[0].length()+1,url.length());
@@ -64,7 +64,7 @@ public class JoernController {
 
     @ResponseBody
     @GetMapping("/dataBaseInfo")
-    @Operation(summary = "数据库表字段关系", description = "根据数据库名，表名，字段名查询")
+    @Operation(summary = "目标三：数据库表字段关系", description = "根据数据库名，表名，字段名查询")
     public List<String> getDataBaseInfo(@RequestParam("dataBaseName")String dataBaseName, @RequestParam("tableName")String tableName, @RequestParam("fieldName")String fieldName) {
         System.out.println("数据库名"+dataBaseName);
         System.out.println("表名"+tableName);
