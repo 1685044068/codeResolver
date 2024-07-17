@@ -18,7 +18,9 @@ public class JoernController {
     @ResponseBody
     public List<String> getMethodNodeDown(@PathVariable("method")  String method) {
         System.out.println("method: " + method);
+        System.out.println("ss");
         return joernService.getMethodDown(method);
+
     }
     @RequestMapping("/methodUp/{method}")
     @ResponseBody
