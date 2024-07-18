@@ -184,12 +184,4 @@ public class JoernServiceImpl implements CodeResolverService {
         }
         return sbrList;
     }
-
-
-
-
-
-
-
-
 }
