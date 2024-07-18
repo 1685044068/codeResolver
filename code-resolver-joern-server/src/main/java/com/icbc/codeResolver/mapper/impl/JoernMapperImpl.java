@@ -55,12 +55,23 @@ public class JoernMapperImpl implements JoernMapper {
 
     @Override
     public List<neo4jPath> getUrlPath(List<String> url) {
-        String class_name=url.get(0)+".java";
-        String method_name=url.get(1);
-        String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE (NOT (nextNodes)-[:CONTAINS]->(:CALL)) and (startNode.NAME=$METHOD_NAME AND startNode.FILENAME ENDS WITH $CLASS_NAME) RETURN p";
+        String first=url.get(0);
+        String left=url.get(1);
+        String name="RequestMapping";
+        String like="Mapping";
+        String cypherQuery = "MATCH (n:ANNOTATION)<-[:AST]-(c:TYPE_DECL)-[:AST]->(m:METHOD)-[:AST]->(n1:ANNOTATION) WHERE n.NAME =$NAME" +
+                "  AND n.CODE contains $FIRST" +
+                "  AND n1.NAME contains $LIKE" +
+                "  AND n1.CODE contains $LEFT" +
+                " WITH m" +
+                " MATCH p=(m)-[:CALL|CONTAINS*]->(nextNodes:METHOD)" +
+                " WHERE NOT (nextNodes)-[:CONTAINS]->(:CALL)" +
+                " RETURN p";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
-                .bind(method_name).to("METHOD_NAME")
-                .bind(class_name).to("CLASS_NAME")
+                .bind(first).to("FIRST")
+                .bind(left).to("LEFT")
+                .bind(name).to("NAME")
+                .bind(like).to("LIKE")
                 .fetch()
                 .all();
         List<neo4jNode> res = findRelation(result);
@@ -75,7 +86,6 @@ public class JoernMapperImpl implements JoernMapper {
                 .all();
         List<Map<String, Object>> resultList = new ArrayList<>(result);
         List<neo4jNode> ans = new ArrayList<>();
-        String label = null;
         InternalNode annotation_node=null;
         InternalNode method_node=null;
         for (Map<String, Object> record : resultList){
@@ -88,16 +98,9 @@ public class JoernMapperImpl implements JoernMapper {
                 method_node = (InternalNode) nodeObject;
             }
             String code=annotation_node.get("CODE").asString();
-            neo4jNode head = new neo4jNode("1", "1");
-
-            boolean x=code.contains(fieldName) ||code.contains("*");
-            boolean y=code.contains("from "+tableName)||code.contains("update "+tableName)||code.contains("insert into "+tableName);
             if((code.contains("from "+tableName)||code.contains("update "+tableName)||code.contains("insert into "+tableName))&&(code.contains(fieldName) ||code.contains("*"))){
-                label=annotation_node.labels().iterator().next();
-                head = new neo4jNode(label, annotation_node.get("NAME").asString());
                 //然后向上搜索
                 String method_name=method_node.get("NAME").asString();
-                neo4jNode cur = head;
                 cypherQuery = "MATCH p = (n:ANNOTATION)<-[:AST]-(endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.NAME=$method_name) and n.CODE=$CODE RETURN p";
                 result = neo4jClient.query(cypherQuery)
                         .bind(method_name).to("method_name")
@@ -107,44 +110,101 @@ public class JoernMapperImpl implements JoernMapper {
                 List<neo4jNode> res = findRelation(result);//这里的res是以$method_name结尾的方法调用
                 ans.addAll(res);
             }
-
         }
-        //List<MethodNode> res = findRelation(result);
         return linkToPath(ans);
     }
 
+    /**
+     * 根据pack查找
+     * @param packetName
+     * @return
+     */
     @Override
     public List<neo4jNode> getClassName(String packetName) {
-        return null;
+        String cypherQuery = "MATCH (n:TYPE_DECL) WHERE n.FULL_NAME STARTS WITH $PACK RETURN n";
+        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
+                .bind(packetName).to("PACK")
+                .fetch()
+                .all();
+        List<Map<String, Object>> resultList = new ArrayList<>(result);
+        List<neo4jNode> ans = new ArrayList<>();
+        InternalNode class_node=null;
+        for (Map<String, Object> record : resultList) {
+            Object nodeObject = record.get("n");
+            if (nodeObject instanceof InternalNode) {
+                class_node = (InternalNode) nodeObject;
+            }
+            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULLNAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString());
+            ans.add(node);
+        }
+
+        return ans;
     }
 
+    /**
+     * 根据类全路径查找
+     * @param className
+     * @return
+     */
     @Override
     public List<neo4jNode> getMethodName(String className) {
-        return null;
+
+        String cypherQuery = "MATCH (n:METHOD)<-[:AST]-(m:TYPE_DECL) WHERE m.FULL_NAME = $FULL_NAME RETURN m,n";
+        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
+                .bind(className).to("FULL_NAME")
+                .fetch()
+                .all();
+        List<Map<String, Object>> resultList = new ArrayList<>(result);
+        List<neo4jNode> ans = new ArrayList<>();
+        InternalNode class_node=null;
+        for (Map<String, Object> record : resultList) {
+            Object nodeObject = record.get("n");
+            if (nodeObject instanceof InternalNode) {
+                class_node = (InternalNode) nodeObject;
+            }
+            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULLNAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString());
+            ans.add(node);
+            String class_method_key="CLASS:"+className;
+
+
+        }
+        return ans;
     }
 
     public List<neo4jNode> findRelation(Collection<Map<String, Object>> result) {
         List<Map<String, Object>> resultList = new ArrayList<>(result);
         List<neo4jNode> ans = new ArrayList<>();
-        String label = null;
+        String label;
         for (Map<String, Object> record : resultList) {
             Path path = (Path) record.get("p");
-            neo4jNode head = new neo4jNode("1", "1");
+            neo4jNode head = new neo4jNode("1", "1","1","1","1");
             neo4jNode cur = head;
             int x = 0;
             for (Path.Segment segment : path) {
-                Node startNode = null;
+                Node startNode;
                 if (x == 0) {
                     startNode = segment.start();
                     label = startNode.labels().iterator().next();
-                    cur.next = new neo4jNode(label, startNode.get("NAME").asString());
+                    if(label.equals("ANNOTATION")){
+                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULLNAME").asString(),startNode.get("CODE").asString());
+                    }
+                    else{
+                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULLNAME").asString(),startNode.get("CODE").asString(),startNode.get("FILENAME").asString());
+                    }
                     cur = cur.next;
                     x = 1;
                 }
                 Node endNode = segment.end();
                 label = endNode.labels().iterator().next();
-                cur.next = new neo4jNode(label, endNode.get("NAME").asString());
-                cur = cur.next;
+                if(label.equals("METHOD")||label.equals("ANNOTATION")){
+                    if(label.equals("ANNOTATION")){
+                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULLNAME").asString(),endNode.get("CODE").asString());
+                    }
+                    else{
+                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULLNAME").asString(),endNode.get("CODE").asString(),endNode.get("FILENAME").asString());
+                    }
+                    cur = cur.next;
+                }
             }
             ans.add(head.next);
         }
