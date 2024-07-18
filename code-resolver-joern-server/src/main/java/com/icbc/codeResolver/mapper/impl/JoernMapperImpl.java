@@ -134,7 +134,7 @@ public class JoernMapperImpl implements JoernMapper {
             if (nodeObject instanceof InternalNode) {
                 class_node = (InternalNode) nodeObject;
             }
-            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULLNAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString());
+            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString());
             ans.add(node);
         }
 
@@ -162,7 +162,7 @@ public class JoernMapperImpl implements JoernMapper {
             if (nodeObject instanceof InternalNode) {
                 class_node = (InternalNode) nodeObject;
             }
-            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULLNAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString());
+            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString());
             ans.add(node);
             String class_method_key="CLASS:"+className;
 
@@ -186,10 +186,10 @@ public class JoernMapperImpl implements JoernMapper {
                     startNode = segment.start();
                     label = startNode.labels().iterator().next();
                     if(label.equals("ANNOTATION")){
-                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULLNAME").asString(),startNode.get("CODE").asString());
+                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),startNode.get("CODE").asString());
                     }
                     else{
-                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULLNAME").asString(),startNode.get("CODE").asString(),startNode.get("FILENAME").asString());
+                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),startNode.get("CODE").asString(),startNode.get("FILENAME").asString());
                     }
                     cur = cur.next;
                     x = 1;
@@ -198,10 +198,10 @@ public class JoernMapperImpl implements JoernMapper {
                 label = endNode.labels().iterator().next();
                 if(label.equals("METHOD")||label.equals("ANNOTATION")){
                     if(label.equals("ANNOTATION")){
-                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULLNAME").asString(),endNode.get("CODE").asString());
+                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),endNode.get("CODE").asString());
                     }
                     else{
-                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULLNAME").asString(),endNode.get("CODE").asString(),endNode.get("FILENAME").asString());
+                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),endNode.get("CODE").asString(),endNode.get("FILENAME").asString());
                     }
                     cur = cur.next;
                 }
