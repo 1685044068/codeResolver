@@ -25,11 +25,10 @@ public class JoernController {
     @GetMapping("/methodDown")
     @ResponseBody
     @Operation(summary = "目标一：方法追踪", description = "根据类名以及方法名进行方法追踪")
-    public List<String> getMethodNodeDown(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
+    public List<neo4jPath> getMethodNodeDown(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
         System.out.println("方法追踪"+className);
         System.out.println("方法追踪"+methodName);
-        List<String> sbrList = joernService.getMethodDown(className+".java",methodName);
-        return sbrList;
+        return joernService.getMethodDown(className+".java",methodName);
     }
 
     /**
@@ -39,11 +38,10 @@ public class JoernController {
     @GetMapping("/methodUp")
     @ResponseBody
     @Operation(summary = "目标一：方法溯源", description = "根据类名以及方法名进行方法溯源")
-    public List<String> getMethodNodeUp(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
+    public List<neo4jPath> getMethodNodeUp(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
         System.out.println("方法溯源"+className);
         System.out.println("方法溯源"+methodName);
-        List<String> sbrList = joernService.getMethodUp(className+".java",methodName);
-        return sbrList;
+        return joernService.getMethodUp(className+".java",methodName);
     }
 
 
@@ -54,14 +52,13 @@ public class JoernController {
     @GetMapping("/urlPath")
     @ResponseBody
     @Operation(summary = "目标二：url查找", description = "url的形式为/*/*/*")
-    public List<String> getUrlPath(@RequestParam("url") String url) {
+    public List<neo4jPath> getUrlPath(@RequestParam("url") String url) {
         String[] urlField = url.split("/");
         String Info=url.substring(urlField[1].length()+1,url.length());
         List<String> data=new ArrayList<>();
         data.add("/"+urlField[1]);
         data.add(Info);
-        List<String> sbrList = joernService.getUrlPath(data);
-        return sbrList;
+        return joernService.getUrlPath(data);
     }
 
     /**
@@ -74,7 +71,7 @@ public class JoernController {
     @ResponseBody
     @GetMapping("/dataBaseInfo")
     @Operation(summary = "目标三：数据库表字段关系", description = "根据数据库名，表名，字段名查询")
-    public List<String> getDataBaseInfo(@RequestParam("dataBaseName")String dataBaseName, @RequestParam("tableName")String tableName, @RequestParam("fieldName")String fieldName) {
+    public List<neo4jPath> getDataBaseInfo(@RequestParam("dataBaseName")String dataBaseName, @RequestParam("tableName")String tableName, @RequestParam("fieldName")String fieldName) {
         System.out.println("数据库名"+dataBaseName);
         System.out.println("表名"+tableName);
         System.out.println("字段名查询"+fieldName);
@@ -109,7 +106,7 @@ public class JoernController {
     public List<neo4jPath> showMethodName(@RequestParam("className")String className, @RequestParam("methodName")String methodName) {
         System.out.println("类名"+className);
         System.out.println("包名"+methodName);
-        return joernService.showInvocationLink(className, methodName);
+        return joernService.showInvocationLink(className, methodName,true);
     }
 
 

@@ -12,7 +12,7 @@ public interface CodeResolverService {
      * @param methodName
      * @return
      */
-    public List<String> getMethodUp(String className,String methodName);
+    public List<neo4jPath> getMethodUp(String className,String methodName);
 
     /**
      * 根据类和方法名向下追踪
@@ -20,14 +20,14 @@ public interface CodeResolverService {
      * @param methodName
      * @return
      */
-    public List<String> getMethodDown(String className,String methodName);
+    public List<neo4jPath> getMethodDown(String className,String methodName);
 
     /**
      * 根据url查询
      * @param url
      * @return
      */
-    public List<String> getUrlPath(List<String> url);
+    public List<neo4jPath> getUrlPath(List<String> url);
 
     /**
      * 查询表字段以及相关关系
@@ -36,7 +36,7 @@ public interface CodeResolverService {
      * @param fieldName
      * @return
      */
-    public List<String> getDataBaseInfo(String dataBaseName,String tableName,String fieldName);
+    public List<neo4jPath> getDataBaseInfo(String dataBaseName,String tableName,String fieldName);
 
     /**
      * 前端传递包名返回类名
@@ -58,7 +58,7 @@ public interface CodeResolverService {
      * @param methodName
      * @return
      */
-    public List<neo4jPath> showInvocationLink(String className, String methodName);
+    public List<neo4jPath> showInvocationLink(String className, String methodName,Boolean isDonw);
 
 
 

@@ -3,6 +3,7 @@ package com.icbc.codeResolver.entity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +16,7 @@ import java.util.List;
  * @Version: 1.0
  */
 @Data
-public class neo4jPath {
+public class neo4jPath implements Serializable {
     public List<neo4jNode> pathMember;
     public Integer pathLen;
 
