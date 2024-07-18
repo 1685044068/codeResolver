@@ -5,14 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.icbc</groupId>
-    <artifactId>code-reslover</artifactId>
+    <artifactId>code-resolver</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
+
     <modules>
-        <module>code-resolver-client</module>
         <module>code-resolver-interface</module>
         <module>code-resolver-joern-server</module>
-        <module>code-resolver-tabby-server</module>
         <module>code-resolver-upload-server</module>
     </modules>
 
@@ -66,8 +66,6 @@
             </dependency>
 
         </dependencies>
-
-
     </dependencyManagement>
 
     <build>
