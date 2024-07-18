@@ -19,9 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
-/**
 
- */
 @Controller
 @RequestMapping("file")
 @Slf4j
@@ -41,8 +39,7 @@ public class FileController {
     @ResponseBody
     @PostMapping("/uploadFile")
     public String fileUpload(@RequestParam("file") MultipartFile file) throws JSONException {
-        MultipartFile transFile=file;
-        return uploadFileService.upload(transFile);
+        return uploadFileService.upload(file);
     }
 
     /**

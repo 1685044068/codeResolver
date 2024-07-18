@@ -58,10 +58,11 @@ public class UploadFileServiceImpl implements UploadFileService {
             result.put("error", e.getMessage());
             return result.toString();
         }
-        result.put("success", uploadFilePath + "/" + fileName);
+        result.put("success,存储路径为：", uploadFilePath + "/" + fileName);
 //        csvService.transmit();
 //        asyncService.asyncTransmit();
-        return result.toString();
+        String s=result.toString().replace("\\","");
+        return s;
     }
 
 }
