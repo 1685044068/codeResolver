@@ -9,10 +9,8 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>code-resolver-client</module>
         <module>code-resolver-interface</module>
         <module>code-resolver-joern-server</module>
-        <module>code-resolver-tabby-server</module>
     </modules>
 
     <properties>
