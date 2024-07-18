@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.controller;
 
+import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.service.CodeResolverService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,8 +27,8 @@ public class JoernController {
     public List<String> getMethodNodeDown(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
         System.out.println("方法追踪"+className);
         System.out.println("方法追踪"+methodName);
-        List<String> sbrList = joernService.getMethodDown(className+".java",methodName);
-        return sbrList;
+        List<neo4jNode> sbrList = joernService.getMethodDown(className,methodName);
+        return pathToList(sbrList,true);
     }
 
     /**
@@ -40,8 +41,8 @@ public class JoernController {
     public List<String> getMethodNodeUp(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
         System.out.println("方法溯源"+className);
         System.out.println("方法溯源"+methodName);
-        List<String> sbrList = joernService.getMethodUp(className+".java",methodName);
-        return sbrList;
+        List<neo4jNode> sbrList = joernService.getMethodUp(className,methodName);
+        return pathToList(sbrList,false);
     }
 
 
@@ -58,8 +59,10 @@ public class JoernController {
         List<String> data=new ArrayList<>();
         data.add("/"+urlField[1]);
         data.add(Info);
-        List<String> sbrList = joernService.getUrlPath(data);
-        return sbrList;
+        List<neo4jNode> sbrList = joernService.getUrlPath(data);
+
+
+        return pathToList(sbrList,true);
     }
 
     @ResponseBody
@@ -69,7 +72,42 @@ public class JoernController {
         System.out.println("数据库名"+dataBaseName);
         System.out.println("表名"+tableName);
         System.out.println("字段名查询"+fieldName);
-        return joernService.getDataBaseInfo(dataBaseName,tableName,fieldName);
+        List<neo4jNode> sbrList=joernService.getDataBaseInfo(dataBaseName,tableName,fieldName);
+        return pathToList(sbrList,false);
+    }
+
+
+    @ResponseBody
+    @GetMapping("/className")
+    @Operation(summary = "目标一：", description = "获取类")
+    public List<String> getClassName(@RequestParam("packetName")String packetName) {
+        System.out.println("包名"+packetName);
+        List<neo4jNode> sbrList=joernService.getClassName(packetName);
+        return pathToList(sbrList,false);
+    }
+
+    @ResponseBody
+    @GetMapping("/methodName")
+    @Operation(summary = "目标一：", description = "获取方法")
+    public List<String> getMethodName(@RequestParam("className")String className) {
+        System.out.println("类全路径"+className);
+        List<neo4jNode> sbrList=joernService.getMethodName(className);
+        return pathToList(sbrList,false);
+    }
+
+    public List<String> pathToList(List<neo4jNode> path, boolean direction) {
+        String spiltChar = direction?"->":"<-";
+        List<String> sbrList = new ArrayList<>();
+        for (int i = 0; i < path.size(); i++) {
+            StringBuilder stringBuilder = new StringBuilder();
+            neo4jNode r = path.get(i);
+            while (r != null) {
+                stringBuilder.append('('+r.label+')'+r.code+spiltChar);
+                r = r.next;
+            }
+            sbrList.add(stringBuilder.substring(0,stringBuilder.length()-2));
+        }
+        return sbrList;
     }
 
 }
