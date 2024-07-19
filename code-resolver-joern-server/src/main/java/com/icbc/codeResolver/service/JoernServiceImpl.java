@@ -114,6 +114,12 @@ public class JoernServiceImpl implements CodeResolverService {
         }
     }
 
+    /**
+     * 获取热点节点
+     * @param packetName
+     * @param maxNumber
+     * @return
+     */
     @Override
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber) {
         return joernMapper.getHotNode(packetName,maxNumber);

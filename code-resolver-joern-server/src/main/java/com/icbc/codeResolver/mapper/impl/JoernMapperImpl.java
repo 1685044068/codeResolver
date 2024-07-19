@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.mapper.impl;
 
+import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
 import com.icbc.codeResolver.mapper.JoernMapper;
@@ -11,10 +12,7 @@ import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.Mapping;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @BelongsProject: code-resolver
@@ -167,6 +165,33 @@ public class JoernMapperImpl implements JoernMapper {
             String class_method_key="CLASS:"+className;
 
 
+        }
+        return ans;
+    }
+
+    @Override
+    public List<neo4jHotNode> getHotNode(String packetName, String maxNumber) {
+        String init=".<init>:";
+        Long num=Long.valueOf(maxNumber);
+        String cypherQuery="MATCH p=(n:METHOD)<-[:CALL]-(:CALL)<-[:CONTAINS]-(m:METHOD) WHERE ALL(r IN NODES(p) where (r.FULL_NAME starts with $PACK OR r.METHOD_FULL_NAME starts with $PACK) and (NOT r.FULL_NAME CONTAINS $INIT OR NOT r.METHOD_FULL_NAME CONTAINS $INIT)) RETURN n,count(*) as number order by number desc limit $MAXNUMBER";
+        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
+                .bind(packetName).to("PACK")
+                .bind(num).to("MAXNUMBER")
+                .bind(init).to("INIT")
+                .fetch()
+                .all();
+        List<Map<String, Object>> resultList = new ArrayList<>(result);
+        List<neo4jHotNode> ans = new ArrayList<>();
+        InternalNode class_node=null;
+
+        for (Map<String, Object> record : resultList) {
+            Object nodeObject = record.get("n");
+            if (nodeObject instanceof InternalNode) {
+                class_node = (InternalNode) nodeObject;
+            }
+            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString());
+            Long number =(Long) record.get("number");
+            ans.add(new neo4jHotNode(node,number));
         }
         return ans;
     }

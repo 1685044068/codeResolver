@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.controller;
 
+import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
 import com.icbc.codeResolver.service.CodeResolverService;
@@ -103,12 +104,37 @@ public class JoernController {
     @ResponseBody
     @GetMapping("/showInvocationLink")
     @Operation(summary = "目标一优化：获取唯一方法的调用链路", description = "根据前端传递过来的类名以及方法名及其参数获取到该唯一方法的调用链路")
-    public List<neo4jPath> showMethodName(@RequestParam("className")String className, @RequestParam("methodName")String methodName,@RequestParam("methodName")String isDown) {
+    public List<neo4jPath> showMethodName(@RequestParam("className")String className, @RequestParam("methodName")String methodName,@RequestParam("isDown")String isDown) {
         System.out.println("目标一优化：获取唯一方法的调用链路 类名"+className);
         System.out.println("目标一优化：获取唯一方法的调用链路 包名"+methodName);
         System.out.println("目标一优化：获取唯一方法的调用链路 isDown"+methodName);
-        return joernService.showInvocationLink(className, methodName,Boolean.valueOf(isDown));
+        return joernService.showInvocationLink(className + ".java", methodName,Boolean.valueOf(isDown));
     }
 
+    /**
+     * 获取热点节点
+     * @param packetName
+     * @param maxNumber
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/getHotNode")
+    @Operation(summary = "目标四 获取热点节点", description = "需要包名以及top maxNumber个热点节点")
+    public List<neo4jHotNode> getHotNode(@RequestParam("packetName")String packetName, @RequestParam("maxNumber")String maxNumber) {
+        System.out.println("目标四：获取热点节点 包名"+packetName);
+        System.out.println("目标四：获取热点节点 节点数"+maxNumber);
+        List<neo4jHotNode> ans=joernService.getHotNode(packetName,maxNumber);
+        return ans;
+    }
 
+    public List<String> nodeToString(List<neo4jHotNode> path) {
+        List<String> sbrList = new ArrayList<>();
+        for (int i = 0; i < path.size(); i++) {
+            neo4jHotNode r = path.get(i);
+            System.out.println(r.number);
+            String str=('('+r.node.label+')'+r.node.fullName+"     "+r.number);
+            sbrList.add(str);
+        }
+        return sbrList;
+    }
 }

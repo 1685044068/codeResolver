@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.mapper;
 
+import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
 
@@ -28,7 +29,7 @@ public interface JoernMapper {
 
     public List<neo4jNode> getMethodName(String className);
 
-
+    public List<neo4jHotNode> getHotNode(String packetName, String maxNumber);
 
 
 }
