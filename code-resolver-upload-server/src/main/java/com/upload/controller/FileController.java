@@ -56,7 +56,7 @@ public class FileController {
 
 
     @ResponseBody
-    @PostMapping("/deleteFile")
+    @GetMapping("/deleteFile")
     public String deleteFile(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException {
         return deleteFileService.delete(response,fileName);
     }
