@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.service;
 
+import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
 import com.icbc.codeResolver.mapper.JoernMapper;
@@ -109,5 +110,10 @@ public class JoernServiceImpl implements CodeResolverService {
         }else {
             return joernMapper.getMethodUp(className,methodName);
         }
+    }
+
+    @Override
+    public List<neo4jHotNode> getHotNode(String packetName, String maxNumber) {
+        return joernMapper.getHotNode(packetName,maxNumber);
     }
 }

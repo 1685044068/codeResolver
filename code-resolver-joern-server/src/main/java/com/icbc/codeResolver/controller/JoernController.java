@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.controller;
 
+import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
 import com.icbc.codeResolver.service.CodeResolverService;
@@ -109,6 +110,26 @@ public class JoernController {
         System.out.println("目标一优化：获取唯一方法的调用链路 isDown"+methodName);
         return joernService.showInvocationLink(className + ".java", methodName,Boolean.valueOf(isDown));
     }
+
+    @ResponseBody
+    @GetMapping("/getHotNode")
+    @Operation(summary = "目标四", description = "")
+    public List<String> getHotNode(@RequestParam("packetName")String packetName, @RequestParam("maxNumber")String maxNumber) {
+        List<neo4jHotNode> ans=joernService.getHotNode(packetName,maxNumber);
+        return nodeToString(ans);
+    }
+
+    public List<String> nodeToString(List<neo4jHotNode> path) {
+        List<String> sbrList = new ArrayList<>();
+        for (int i = 0; i < path.size(); i++) {
+            neo4jHotNode r = path.get(i);
+            System.out.println(r.number);
+            String str=('('+r.node.label+')'+r.node.fullName+"     "+r.number);
+            sbrList.add(str);
+        }
+        return sbrList;
+    }
+
 
 
 }
