@@ -1,43 +1,43 @@
 package com.icbc.codeResolver.service;
 
-import com.icbc.codeResolver.entity.MethodNode;
+import com.icbc.codeResolver.entity.neo4jNode;
+import com.icbc.codeResolver.entity.neo4jPath;
+import com.icbc.codeResolver.mapper.JoernMapper;
+import com.icbc.codeResolver.utils.CacheClient;
+import jakarta.annotation.Resource;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Path;
-import org.neo4j.driver.types.Relationship;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.core.Neo4jClient;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @DubboService(group = "joern")
 @Component
 public class JoernServiceImpl implements CodeResolverService {
 
-    @Autowired
-    private Neo4jClient neo4jClient;
+    @Resource
+    private CacheClient cacheClient;
+
+    @Resource
+    private JoernMapper joernMapper;
 
     /**
-     * TODO 等待修改
      * @param className
      * @param methodName
      * @return
      */
     @Override
-    public List<String> getMethodUp(String className,String methodName) {
-        String cypherQuery = "MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.NAME=$METHOD_NAME AND endNode.FILENAME ENDS WITH $CLASS_NAME) RETURN p";
-        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
-                .bind(methodName).to("METHOD_NAME")
-                .bind(className).to("CLASS_NAME")
-                .fetch()
-                .all();
-        List<MethodNode> res = findRelation(result);
-        return pathToList(res,false);
+    public List<neo4jPath> getMethodUp(String className,String methodName) {
+        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
+        //return joernMapper.getMethodUp(className,methodName);直接走数据库
     }
 
 
@@ -47,15 +47,9 @@ public class JoernServiceImpl implements CodeResolverService {
      * @return
      */
     @Override
-    public List<String> getMethodDown(String className,String methodName) {
-        String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE (NOT (nextNodes)-[:CONTAINS]->(:CALL)) and (startNode.NAME=$METHOD_NAME AND startNode.FILENAME ENDS WITH $CLASS_NAME) RETURN p";
-        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
-                .bind(methodName).to("METHOD_NAME")
-                .bind(className).to("CLASS_NAME")
-                .fetch()
-                .all();
-        List<MethodNode> res = findRelation(result);
-        return pathToList(res,true);
+    public List<neo4jPath> getMethodDown(String className,String methodName) {
+        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
+        //return joernMapper.getMethodDown(className,methodName);直接走数据库
     }
 
     /**
@@ -64,135 +58,56 @@ public class JoernServiceImpl implements CodeResolverService {
      * @return
      */
     @Override
-    public List<String> getUrlPath(List<String> url) {
-        String first=url.get(0);
-        String left=url.get(1);
-        String name="RequestMapping";
-        String like="Mapping";
-        String cypherQuery = "MATCH (n:ANNOTATION)<-[:AST]-(c:TYPE_DECL)-[:AST]->(m:METHOD)-[:AST]->(n1:ANNOTATION) WHERE n.NAME =$NAME" +
-                "  AND n.CODE contains $FIRST" +
-                "  AND n1.NAME contains $LIKE" +
-                "  AND n1.CODE contains $LEFT" +
-                " WITH m" +
-                " MATCH p=(m)-[:CALL|CONTAINS*]->(nextNodes:METHOD)" +
-                " WHERE NOT (nextNodes)-[:CONTAINS]->(:CALL)" +
-                " RETURN p";
-        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
-                .bind(first).to("FIRST")
-                .bind(left).to("LEFT")
-                .bind(name).to("NAME")
-                .bind(like).to("LIKE")
-                .fetch()
-                .all();
-        List<MethodNode> res = findRelation(result);
-        return pathToList(res,true);
+    public List<neo4jPath> getUrlPath(List<String> url) {
+        return joernMapper.getUrlPath(url);
     }
 
+    /**
+     * 查询表字段以及相关关系
+     * @param dataBaseName
+     * @param tableName
+     * @param fieldName
+     * @return
+     */
     @Override
-    public List<String> getDataBaseInfo(String dataBaseName, String tableName, String fieldName) {
-        String cypherQuery = "match (n:ANNOTATION)<-[:AST]-(m:METHOD) where (n.CODE starts with '@Insert(' or n.CODE starts with '@Delete(' or n.CODE starts with '@Select(' or n.CODE starts with '@Update(') return n,m";
-        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
-                .fetch()
-                .all();
-        List<Map<String, Object>> resultList = new ArrayList<>(result);
-        List<MethodNode> ans = new ArrayList<>();
-        String label = null;
-        InternalNode annotation_node=null;
-        InternalNode method_node=null;
-        for (Map<String, Object> record : resultList){
-            Object nodeObject = record.get("n");
-            if (nodeObject instanceof InternalNode) {
-                annotation_node = (InternalNode) nodeObject;
-            }
-            nodeObject = record.get("m");
-            if (nodeObject instanceof InternalNode) {
-                method_node = (InternalNode) nodeObject;
-            }
-            String code=annotation_node.get("CODE").asString();
-            MethodNode head = new MethodNode("1", "1");
-
-            boolean x=code.contains(fieldName) ||code.contains("*");
-            boolean y=code.contains("from "+tableName)||code.contains("update "+tableName)||code.contains("insert into "+tableName);
-            if((code.contains("from "+tableName)||code.contains("update "+tableName)||code.contains("insert into "+tableName))&&(code.contains(fieldName) ||code.contains("*"))){
-                label=annotation_node.labels().iterator().next();
-                head = new MethodNode(label, annotation_node.get("NAME").asString());
-                //然后向上搜索
-                String method_name=method_node.get("NAME").asString();
-                MethodNode cur = head;
-                cypherQuery = "MATCH p = (n:ANNOTATION)<-[:AST]-(endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.NAME=$method_name) and n.CODE=$CODE RETURN p";
-                result = neo4jClient.query(cypherQuery)
-                        .bind(method_name).to("method_name")
-                        .bind(code).to("CODE")
-                        .fetch()
-                        .all();
-                List<MethodNode> res = findRelation(result);//这里的res是以$method_name结尾的方法调用
-                ans.addAll(res);
-            }
-
-        }
-        //List<MethodNode> res = findRelation(result);
-        return pathToList(ans,false);
+    public List<neo4jPath> getDataBaseInfo(String dataBaseName, String tableName, String fieldName) {
+        return joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
     }
 
-
-    public List<MethodNode> findRelation(Collection<Map<String, Object>> result) {
-        List<Map<String, Object>> resultList = new ArrayList<>(result);
-        List<MethodNode> ans = new ArrayList<>();
-        String label = null;
-        for (Map<String, Object> record : resultList) {
-            Path path = (Path) record.get("p");
-            MethodNode head = new MethodNode("1", "1");
-            MethodNode cur = head;
-            int x = 0;
-            for (Path.Segment segment : path) {
-                Node startNode = null;
-                if (x == 0) {
-                    startNode = segment.start();
-                    label = startNode.labels().iterator().next();
-                    cur.next = new MethodNode(label, startNode.get("NAME").asString());
-                    cur = cur.next;
-                    x = 1;
-                }
-                Node endNode = segment.end();
-                label = endNode.labels().iterator().next();
-                cur.next = new MethodNode(label, endNode.get("NAME").asString());
-                cur = cur.next;
-            }
-            ans.add(head.next);
-        }
-        System.out.println(1);
-        return ans;
+    /**
+     * 前端传递包名返回类名
+     * @param packetName
+     * @return
+     */
+    @Override
+    public List<neo4jNode> showClassName(String packetName) {
+        return cacheClient.queryClassNameByPacket(packetName,100000L, TimeUnit.SECONDS);
+        //return joernMapper.getClassName(packetName);直接走数据库
     }
 
-
-    public List<String> pathToListDownPara(List<MethodNode> path,String s) {
-        List<String> sbrList = new ArrayList<>();
-        for (int i = 0; i < path.size(); i++) {
-            StringBuilder stringBuilder = new StringBuilder("(CLASS)"+s+"->");
-            MethodNode r = path.get(i);
-            while (r != null) {
-                stringBuilder.append('('+r.label+')'+r.name+"->");
-                r = r.next;
-            }
-            sbrList.add(stringBuilder.substring(0, stringBuilder.length() - 2));
-        }
-        return sbrList;
+    /**
+     * 前端传递类名返回方法名
+     * @param className
+     * @return
+     */
+    @Override
+    public List<neo4jNode> showMethodName(String className) {
+        return cacheClient.queryMethodNameByClass(className,100000L, TimeUnit.SECONDS);
+        //return joernMapper.getMethodName(className);直接走数据库
     }
 
-
-
-    public List<String> pathToList(List<MethodNode> path,boolean direction) {
-        String spiltChar = direction?"->":"<-";
-        List<String> sbrList = new ArrayList<>();
-        for (int i = 0; i < path.size(); i++) {
-            StringBuilder stringBuilder = new StringBuilder();
-            MethodNode r = path.get(i);
-            while (r != null) {
-                stringBuilder.append('('+r.label+')'+r.name+spiltChar);
-                r = r.next;
-            }
-            sbrList.add(stringBuilder.substring(0,stringBuilder.length()-2));
+    /**
+     * 前端传递类名和方法名返回调用链路
+     * @param className
+     * @param methodName
+     * @return
+     */
+    @Override
+    public List<neo4jPath> showInvocationLink(String className, String methodName,Boolean isDonw) {
+        if (isDonw){
+            return joernMapper.getMethodDown(className,methodName);
+        }else {
+            return joernMapper.getMethodUp(className,methodName);
         }
-        return sbrList;
     }
 }
