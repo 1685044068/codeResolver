@@ -106,8 +106,8 @@ public class JoernController {
     @Operation(summary = "目标一优化：获取唯一方法的调用链路", description = "根据前端传递过来的类名以及方法名及其参数获取到该唯一方法的调用链路")
     public List<neo4jPath> showMethodName(@RequestParam("className")String className, @RequestParam("methodName")String methodName,@RequestParam("isDown")String isDown) {
         System.out.println("目标一优化：获取唯一方法的调用链路 类名"+className);
-        System.out.println("目标一优化：获取唯一方法的调用链路 包名"+methodName);
-        System.out.println("目标一优化：获取唯一方法的调用链路 isDown"+methodName);
+        System.out.println("目标一优化：获取唯一方法的调用链路 方法名"+methodName);
+        System.out.println("目标一优化：获取唯一方法的调用链路 isDown"+isDown);
         return joernService.showInvocationLink(className + ".java", methodName,Boolean.valueOf(isDown));
     }
 

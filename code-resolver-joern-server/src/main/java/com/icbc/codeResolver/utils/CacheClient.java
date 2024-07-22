@@ -3,13 +3,11 @@ package com.icbc.codeResolver.utils;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.icbc.codeResolver.entity.RedisData;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
 import com.icbc.codeResolver.mapper.JoernMapper;
-import jakarta.annotation.Resource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -18,9 +16,10 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
-import static com.icbc.codeResolver.utils.RedisConstants.*;
+
+
+import static com.icbc.codeResolver.utils.RedisConstants.LOCK_SHOP_KEY;
 
 /**
  * @BelongsProject: code-resolver
@@ -35,6 +34,7 @@ public class CacheClient {
     private StringRedisTemplate stringRedisTemplate;
 
     private JoernMapper joernMapper;
+
     public CacheClient(StringRedisTemplate stringRedisTemplate,JoernMapper joernMapper){
         this.stringRedisTemplate=stringRedisTemplate;
         this.joernMapper=joernMapper;
@@ -48,7 +48,7 @@ public class CacheClient {
      * @param time
      * @param unit
      */
-    public void setWithLogicalExpire(String key,Object value,Long time,TimeUnit unit){
+    public void setWithLogicalExpire(String key, Object value, Long time, TimeUnit unit){
         //设置逻辑过期
         RedisData redisData=new RedisData();
         redisData.setData(value);//List<neo4jNode>

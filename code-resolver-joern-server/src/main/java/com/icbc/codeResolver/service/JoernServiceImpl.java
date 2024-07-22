@@ -5,6 +5,7 @@ import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
 import com.icbc.codeResolver.mapper.JoernMapper;
 import com.icbc.codeResolver.utils.CacheClient;
+import java.util.concurrent.TimeUnit;
 import jakarta.annotation.Resource;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.neo4j.driver.internal.InternalNode;
@@ -18,12 +19,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+
 
 @DubboService(group = "joern")
 @Component
 public class JoernServiceImpl implements CodeResolverService {
-
     @Resource
     private CacheClient cacheClient;
 
@@ -37,8 +37,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getMethodUp(String className,String methodName) {
-        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
-        //return joernMapper.getMethodUp(className,methodName);直接走数据库
+//        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
+        return joernMapper.getMethodUp(className,methodName);
     }
 
 
@@ -49,8 +49,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getMethodDown(String className,String methodName) {
-        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
-        //return joernMapper.getMethodDown(className,methodName);直接走数据库
+//        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
+        return joernMapper.getMethodDown(className,methodName);
     }
 
     /**
@@ -84,8 +84,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jNode> showClassName(String packetName) {
-        return cacheClient.queryClassNameByPacket(packetName,100000L, TimeUnit.SECONDS);
-        //return joernMapper.getClassName(packetName);直接走数据库
+//        return cacheClient.queryClassNameByPacket(packetName,100000L, TimeUnit.SECONDS);
+        return joernMapper.getClassName(packetName);
     }
 
     /**
@@ -95,8 +95,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jNode> showMethodName(String className) {
-        return cacheClient.queryMethodNameByClass(className,100000L, TimeUnit.SECONDS);
-        //return joernMapper.getMethodName(className);直接走数据库
+//        return cacheClient.queryMethodNameByClass(className,100000L, TimeUnit.SECONDS);
+        return joernMapper.getMethodName(className);
     }
 
     /**
