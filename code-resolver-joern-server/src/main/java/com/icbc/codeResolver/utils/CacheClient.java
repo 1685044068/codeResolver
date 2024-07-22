@@ -248,6 +248,53 @@ public class CacheClient {
         }
     }
 
+    public List<neo4jPath> queryDataBaseInfo(String dataBaseName, String tableName, String fieldName,Long time, TimeUnit unit){
+        String key=dataBaseName+tableName+fieldName;
+        List<neo4jPath> links=null;
+        //1.查询缓存
+        String json=stringRedisTemplate.opsForValue().get(key);
+        //2.判断是否存在
+        if (StrUtil.isBlank(json)){
+            //3.不存在，这里应该去查数据库然后存入缓存
+            System.out.println("需要到数据库中进行查询");
+            links=joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
+            //4.存入到缓存
+            this.setWithLogicalExpire(key,links,time,unit);
+            //5.返回
+            return links;
+        }else{//6.如果存在
+            RedisData redisData=JSONUtil.toBean(json,RedisData.class);
+            links=JSONUtil.toList((JSONArray) redisData.getData(), neo4jPath.class);
+            LocalDateTime expireTime=redisData.getExpireTime();
+            //7.判断是否过期
+            if (expireTime.isAfter(LocalDateTime.now())){
+                //7.1未过期，直接返回对应信息
+                return links;
+            }
+            //7.2已经过期，重建缓存
+            String lockKey=LOCK_SHOP_KEY+key;
+            boolean isLock=tryLock(lockKey);
+            //7.3判断是否获取锁成功
+            if (isLock){
+                CACHE_REBUILD_EXECUTOR.submit(()->{
+                    List<neo4jPath>linksRebuild=null;
+                    try {
+                        //重建缓存
+                        //1查询数据库
+                        linksRebuild=joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
+                        //2.存储到缓存中
+                        this.setWithLogicalExpire(key,linksRebuild,time,unit);
+                    }catch (Exception e){
+                        throw new RuntimeException(e);
+                    }finally {
+                        unlock(lockKey);
+                    }
+                });
+            }
+            return links;
+        }
+    }
+
 
 
 

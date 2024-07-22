@@ -37,7 +37,7 @@ public class UploadFileServiceImpl implements UploadFileService {
         String suffixName = fileName.substring(fileName.lastIndexOf("."));
         log.info("上传文件名称为:{}, 后缀名为:{}!", fileName, suffixName);
 
-        File fileTempObj = new File(uploadFilePath + "/" + fileName);
+        File fileTempObj = new File(uploadFilePath + "\\" + fileName);
         // 检测目录是否存在
         if (!fileTempObj.getParentFile().exists()) {
             fileTempObj.getParentFile().mkdirs();
@@ -58,10 +58,10 @@ public class UploadFileServiceImpl implements UploadFileService {
             result.put("error", e.getMessage());
             return result.toString();
         }
-        result.put("success,存储路径为：", uploadFilePath + "/" + fileName);
+        result.put("success,存储路径为：", uploadFilePath + "\\" + fileName);
 //        csvService.transmit();
 //        asyncService.asyncTransmit();
-        String s=result.toString().replace("\\","");
+        String s=result.toString().replace("\\\\","\\");
         return s;
     }
 

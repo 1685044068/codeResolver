@@ -233,7 +233,6 @@ public class JoernMapperImpl implements JoernMapper {
             }
             ans.add(head.next);
         }
-        System.out.println(1);
         return ans;
     }
 

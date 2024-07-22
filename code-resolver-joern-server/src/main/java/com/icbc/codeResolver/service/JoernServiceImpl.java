@@ -72,7 +72,9 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getDataBaseInfo(String dataBaseName, String tableName, String fieldName) {
-        return joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
+
+        return cacheClient.queryDataBaseInfo(dataBaseName,tableName,fieldName,100000L, TimeUnit.SECONDS);
+        //return joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
     }
 
     /**
@@ -112,6 +114,12 @@ public class JoernServiceImpl implements CodeResolverService {
         }
     }
 
+    /**
+     * 获取热点节点
+     * @param packetName
+     * @param maxNumber
+     * @return
+     */
     @Override
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber) {
         return joernMapper.getHotNode(packetName,maxNumber);

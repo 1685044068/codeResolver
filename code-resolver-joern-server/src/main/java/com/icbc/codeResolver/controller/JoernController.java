@@ -111,12 +111,20 @@ public class JoernController {
         return joernService.showInvocationLink(className + ".java", methodName,Boolean.valueOf(isDown));
     }
 
+    /**
+     * 获取热点节点
+     * @param packetName
+     * @param maxNumber
+     * @return
+     */
     @ResponseBody
     @GetMapping("/getHotNode")
-    @Operation(summary = "目标四", description = "")
-    public List<String> getHotNode(@RequestParam("packetName")String packetName, @RequestParam("maxNumber")String maxNumber) {
+    @Operation(summary = "目标四 获取热点节点", description = "需要包名以及top maxNumber个热点节点")
+    public List<neo4jHotNode> getHotNode(@RequestParam("packetName")String packetName, @RequestParam("maxNumber")String maxNumber) {
+        System.out.println("目标四：获取热点节点 包名"+packetName);
+        System.out.println("目标四：获取热点节点 节点数"+maxNumber);
         List<neo4jHotNode> ans=joernService.getHotNode(packetName,maxNumber);
-        return nodeToString(ans);
+        return ans;
     }
 
     public List<String> nodeToString(List<neo4jHotNode> path) {
@@ -129,7 +137,4 @@ public class JoernController {
         }
         return sbrList;
     }
-
-
-
 }
