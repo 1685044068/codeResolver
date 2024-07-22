@@ -15,6 +15,8 @@
         <module>code-resolver-joern-server</module>
         <module>code-resolver-netty</module>
         <module>code-resolver-parse-server</module>
+        <module>code-resolver-upload</module>
+        <module>code-resolver-consumber</module>
     </modules>
 
     <properties>
@@ -69,6 +71,12 @@
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
                 <version>5.8.8</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <!--<version>5.0.0.Alpha2</version>-->
+                <version>4.1.20.Final</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
