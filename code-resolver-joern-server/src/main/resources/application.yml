@@ -7,7 +7,7 @@ dubbo:
     qos-port: 22223
   registry:
     protocol: zookeeper
-    address: 192.168.85.130:2181
+    address: localhost:2181
   protocol:
     name: dubbo
     port: 20881
@@ -25,12 +25,11 @@ spring:
       matching-strategy: ant_path_matcher
   data:
     neo4j:
-      database: mvc
+      database: resolvertest
     redis:
       host: localhost
       port: 6379
       database: 1
-      password: 123456
       lettuce:
         pool:
           max-active: 10
@@ -40,7 +39,7 @@ spring:
   neo4j:
     authentication:
       username: neo4j
-      password: 19990528
+      password: chenqiujian123
     uri: bolt://127.0.0.1:7687
 springdoc:
   swagger-ui:

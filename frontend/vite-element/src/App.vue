@@ -4,14 +4,32 @@ import axios from 'axios';
 
 //测试代码
 import { reactive, ref, onMounted } from 'vue'
+import { ElSelect } from 'element-plus';
+
 //定义选择目标的绑定变量
+
+
+
 const selectvalue = ref('')
+
+const selectclass = ref('')
+const selectmethod = ref('')
+
 
 //定义表单输入的东西
 const form1 = reactive({
   class: '',
   method: '',
   isup: 1,
+})
+
+const form1_update = reactive({
+  package: '',
+  class: '',
+  method: '',
+  isdown: false,
+  isclass: true,
+  ismethod: true,
 })
 
 const form2 = reactive({
@@ -32,6 +50,10 @@ const options = [
     label: '目标1',
   },
   {
+    value: 'Object1_update',
+    label: "目标1优化"
+  },
+  {
     value: 'Object2',
     label: '目标2',
   },
@@ -40,6 +62,14 @@ const options = [
     label: '目标3',
   },
 ]
+
+const classoption = reactive([
+
+])
+
+const methodoption = reactive([
+
+])
 
 //这里填写获取到的PathArray结构
 /*
@@ -74,6 +104,66 @@ const Node = reactive({
 })
 
 const PathArray = reactive([])
+
+//查找给出的包下的类
+const getClass = () => {
+  classoption.splice(0,classoption.length)
+
+  let url = 'http://localhost:8081/joern/showClassName'
+  console.log('submit!')
+  //与后端交互
+  axios.get(url,{
+  params:{
+    packetName: form1_update.package,
+    }
+  })
+  .then(response => {
+    response.data.forEach(item => {
+    classoption.push({
+      value: item.fullName,
+      label: item.name,
+    })
+    
+    })
+    console.log(classoption)
+    })
+  .catch(error => {
+    console.error(error);
+    })
+    form1_update.isclass = false
+}
+
+//查找类下的方法
+
+const getMethod = () => {
+  //console.log(selectclass.value)
+  
+  methodoption.splice(0,methodoption.length)
+
+  let url = 'http://localhost:8081/joern/showMethodName'
+  console.log('submit!')
+  //与后端交互
+  axios.get(url,{
+  params:{
+    className: selectclass.value.value,
+    }
+  })
+  .then(response => {
+    response.data.forEach(item => {
+      methodoption.push({
+        value: item.fullName,
+        label: item.name,
+    })
+    
+    })
+    console.log(methodoption)
+    })
+  .catch(error => {
+    console.error(error);
+    })
+    form1_update.ismethod = false
+    
+}
 
 const onSubmit1 = () => {
   /* 测试代码
@@ -135,6 +225,45 @@ const onSubmit1 = () => {
 const onReset1 = () => {
   form1.class = ''
   form1.method = ''
+}
+
+const onSubmit1_update = () => {
+  form1_update.class = selectclass.value.label
+  form1_update.method = selectmethod.value.label
+  PathArray.splice(0,PathArray.length)
+  let url = 'http://localhost:8081/joern/showInvocationLink'
+  console.log('submit!')
+  //与后端交互
+  console.log(form1_update)
+  axios.get(url,{
+  params:{
+    className: form1_update.class,
+    methodName: form1_update.method,
+    isDown: form1_update.isdown.toString(),
+    }
+  })
+  .then(response => {
+    response.data.forEach(item => {
+    PathArray.push(item)
+    
+    })
+    console.log(PathArray)
+    })
+  .catch(error => {
+    console.error(error);
+    })
+  
+}
+
+const onReset1_update = () => {
+  form1_update.package = ''
+  form1_update.class= ''
+  form1_update.method= ''
+  form1_update.isdown= false
+  form1_update.isclass= true
+  form1_update.ismethod= true
+  selectclass = ''
+  selectmethod = ''
 }
 
 const onSubmit2 = () => {
@@ -321,6 +450,90 @@ const handleclick = (Pathindex, Nodeindex) =>{
     </el-form>
 
   </el-row>
+
+  <el-row v-if="selectvalue == 'Object1_update'">
+    <!--Object1_update的情况-->
+    <!--用表单-->
+    <el-form model="form1_update" label-width="auto" style="max-width: 300px; margin-left:12%">
+      <el-form-item style="width: 600px;" label="请输入要查找的包">
+        <el-row>
+          <el-col :span="21">
+            <el-input style="width:310px" v-model="form1_update.package" ></el-input>
+          </el-col>
+          <el-col :span="3">
+            <el-button @click="getClass">
+              查找
+            </el-button>
+          </el-col>
+        </el-row>
+      </el-form-item>
+      <el-form-item style="width: 600px;" label="请选择要查找的类">
+        <el-row v-model="form1_update.isclass">
+          <!--新的一行放选择器-->
+          <el-col :span="21">
+            <el-select
+            :disabled= form1_update.isclass
+            v-model="selectclass"
+            placeholder="Select"
+            size="medium"
+            style="width: 310px"
+            >
+            <el-option
+              v-for="item in classoption"
+              :key="item.value"
+              :label="item.label"
+              :value="item"
+            />
+          </el-select>
+          </el-col>
+          <el-col :span="3">
+            <el-button @click="getMethod">
+              查找
+            </el-button>
+          </el-col>
+        </el-row>
+      </el-form-item>
+      <el-form-item style="width: 450px;" label="请选择要查找的方法">
+        <el-row v-model="form1_update.ismethod">
+          <!--新的一行放选择器-->
+          <el-col :span="24">
+            <el-select 
+            v-model="selectmethod"
+            :disabled= form1_update.ismethod
+            placeholder="Select"
+            size="medium"
+            style="width: 310px"
+            >
+            <el-option v-model="form1_update.class"
+              v-for="item in methodoption"
+              :key="item.value"
+              :label="item.label"
+              :value="item"
+            />
+          </el-select>
+          </el-col>
+        </el-row>
+      </el-form-item>
+      <el-form-item style="width: 450px;" label="请选择调用方向">
+        <el-radio-group v-model="form1_update.isdown" class="ml-4">
+          <el-radio :value="false"  >向上调用</el-radio>
+          <el-radio :value="true"  >向下调用</el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item style="margin-left:50%;">
+        <el-button type="primary" @click="onSubmit1_update">
+          提交
+        </el-button>
+        <el-button @click="onReset1_update">
+          重置
+        </el-button>
+      </el-form-item>
+
+
+    </el-form>
+
+  </el-row>
+
   <el-row v-else-if="selectvalue == 'Object2'">
     <!--Object2的情况-->
     <!--用表单-->

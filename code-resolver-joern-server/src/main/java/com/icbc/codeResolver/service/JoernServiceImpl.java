@@ -37,8 +37,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getMethodUp(String className,String methodName) {
-        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
-        //return joernMapper.getMethodUp(className,methodName);直接走数据库
+//        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
+        return joernMapper.getMethodUp(className,methodName);
     }
 
 
@@ -49,8 +49,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getMethodDown(String className,String methodName) {
-        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
-        //return joernMapper.getMethodDown(className,methodName);直接走数据库
+//        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
+        return joernMapper.getMethodDown(className,methodName);
     }
 
     /**
@@ -72,7 +72,9 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getDataBaseInfo(String dataBaseName, String tableName, String fieldName) {
-        return joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
+
+        return cacheClient.queryDataBaseInfo(dataBaseName,tableName,fieldName,100000L, TimeUnit.SECONDS);
+        //return joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
     }
 
     /**
@@ -82,8 +84,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jNode> showClassName(String packetName) {
-        return cacheClient.queryClassNameByPacket(packetName,100000L, TimeUnit.SECONDS);
-        //return joernMapper.getClassName(packetName);直接走数据库
+//        return cacheClient.queryClassNameByPacket(packetName,100000L, TimeUnit.SECONDS);
+        return joernMapper.getClassName(packetName);
     }
 
     /**
@@ -93,8 +95,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jNode> showMethodName(String className) {
-        return cacheClient.queryMethodNameByClass(className,100000L, TimeUnit.SECONDS);
-        //return joernMapper.getMethodName(className);直接走数据库
+//        return cacheClient.queryMethodNameByClass(className,100000L, TimeUnit.SECONDS);
+        return joernMapper.getMethodName(className);
     }
 
     /**
@@ -112,6 +114,12 @@ public class JoernServiceImpl implements CodeResolverService {
         }
     }
 
+    /**
+     * 获取热点节点
+     * @param packetName
+     * @param maxNumber
+     * @return
+     */
     @Override
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber) {
         return joernMapper.getHotNode(packetName,maxNumber);
