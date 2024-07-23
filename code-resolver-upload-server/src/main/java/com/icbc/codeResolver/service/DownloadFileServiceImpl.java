@@ -1,9 +1,11 @@
-package com.upload.serviceImpl;
+package com.icbc.codeResolver.service;
 
 import cn.hutool.core.io.FileUtil;
-import com.upload.service.DownloadFileService;
 import jakarta.servlet.http.HttpServletResponse;
+
+import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 @Service
+@DubboService(group = "upload")
 public class DownloadFileServiceImpl implements DownloadFileService {
     @Value("${file.upload.dir}")
     private String uploadFilePath;

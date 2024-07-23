@@ -1,7 +1,8 @@
-package com.upload.service;
+package com.icbc.codeResolver.service;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.configurationprocessor.json.JSONException;
+
 
 import java.io.IOException;
 

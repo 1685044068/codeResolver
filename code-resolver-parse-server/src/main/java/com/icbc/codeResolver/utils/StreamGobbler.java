@@ -1,4 +1,4 @@
-package joern.utils;
+package com.icbc.codeResolver.utils;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

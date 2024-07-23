@@ -1,16 +1,18 @@
-package joern.controller;
+package com.icbc.codeResolver.controller;
 
+import com.icbc.codeResolver.service.JoernParseService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import joern.service.JoernParseServiceImpl;
 
-@RequestMapping("/joern")
+@RequestMapping("/parse")
 @Controller
+@Slf4j
 public class JoernParseController {
     @Autowired
-    private JoernParseServiceImpl joernParseService;
-    @GetMapping("/parse")
+    JoernParseService joernParseService;
+    @GetMapping("/parseCode")
     @ResponseBody
     public String parseAndImport(@RequestParam("url") String url){
         return joernParseService.parse(url);

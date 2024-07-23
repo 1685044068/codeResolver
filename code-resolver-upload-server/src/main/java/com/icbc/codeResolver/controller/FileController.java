@@ -1,26 +1,20 @@
-package com.upload.controller;
+package com.icbc.codeResolver.controller;
 
-import cn.hutool.core.io.FileUtil;
-//import com.common.CSVService;
-import com.upload.service.DeleteFileService;
-import com.upload.service.DownloadFileService;
-import com.upload.service.UploadFileService;
-import com.upload.serviceImpl.DownloadFileServiceImpl;
+import com.icbc.codeResolver.service.DeleteFileService;
+import com.icbc.codeResolver.service.DownloadFileService;
+import com.icbc.codeResolver.service.UploadFileService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 
-import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 
 
 @Controller
@@ -34,8 +28,7 @@ public class FileController {
     public String index() {
         return "upload";
     }
-//    @DubboReference
-//    private CSVService csvService;
+
     @Autowired
     private UploadFileService uploadFileService;
     @Autowired

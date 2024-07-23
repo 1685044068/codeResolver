@@ -1,8 +1,9 @@
-package com.upload.serviceImpl;
+package com.icbc.codeResolver.service;
 
-import com.upload.service.DeleteFileService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
@@ -12,6 +13,7 @@ import java.io.File;
 
 @Service
 @Slf4j
+@DubboService(group = "upload")
 public class DeleteFileServiceImpl implements DeleteFileService {
     @Value("${file.upload.dir}")
     private String uploadFilePath;

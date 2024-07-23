@@ -25,7 +25,7 @@ spring:
       matching-strategy: ant_path_matcher
   data:
     neo4j:
-      database: resolvertest
+      database: mvc
     redis:
       host: localhost
       port: 6379
@@ -36,10 +36,11 @@ spring:
           max-idle: 10
           min-idle: 1
           time-between-eviction-runs: 10s
+      password: 123456
   neo4j:
     authentication:
       username: neo4j
-      password: chenqiujian123
+      password: 12345678
     uri: bolt://127.0.0.1:7687
 springdoc:
   swagger-ui:
