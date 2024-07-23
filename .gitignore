@@ -3,7 +3,7 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-
+code-resolver-netty/
 ### IntelliJ IDEA ###
 .idea/
 *.iws
