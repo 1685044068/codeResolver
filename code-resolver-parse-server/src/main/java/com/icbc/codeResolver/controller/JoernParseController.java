@@ -7,13 +7,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/parse")
-@Controller
+@RestController
 @Slf4j
 public class JoernParseController {
     @Autowired
     JoernParseService joernParseService;
     @GetMapping("/parseCode")
-    @ResponseBody
     public String parseAndImport(@RequestParam("url") String url){
         return joernParseService.parse(url);
     }

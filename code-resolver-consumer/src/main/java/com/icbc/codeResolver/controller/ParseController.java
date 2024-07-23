@@ -23,7 +23,6 @@ public class ParseController {
 
 
     @GetMapping("/parseCode")
-    @ResponseBody
     @Operation(summary = "解析文件", description = "解析文件")
     public String parseAndImport(@RequestParam("url") String url){
         String test=joernParseService.parse(url);

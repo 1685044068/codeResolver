@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,26 +34,12 @@ public class UploadController {
     @DubboReference(group = "upload")
     DeleteFileService deleteFileService;
 
-    @GetMapping(value = {"", "/", "/index"})
-    @Operation(summary = "index页面", description = "index页面")
-    public String index() {
-        return "index";
-    }
-
-    @GetMapping(value = {"", "/", "/uploadIndex"})
-    @Operation(summary = "uploadIndex页面", description = "uploadIndex页面")
-    public String uploadIndex() {
-        return "upload";
-    }
-
-
     /**
      * TODO MultipartFile改为可序列化的模式
      * @param file
      * @return
      * @throws JSONException
      */
-    @ResponseBody
     @PostMapping("/uploadFile")
     @Operation(summary = "上传文件", description = "上传文件")
     public String fileUpload(@RequestParam("file") MultipartFile file) throws JSONException {
@@ -68,7 +55,7 @@ public class UploadController {
         return uploadFileService.upload(arr,fileName,suffixName);
     }
     // 下载到了默认的位置
-    @ResponseBody
+    
     @GetMapping("/downloadFile")
     @Operation(summary = "下载文件", description = "下载文件")
     public String fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException, IOException {
@@ -76,7 +63,7 @@ public class UploadController {
     }
 
 
-    @ResponseBody
+    
     @GetMapping("/deleteFile")
     @Operation(summary = "删除文件", description = "删除文件")
     public String deleteFile(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException {
