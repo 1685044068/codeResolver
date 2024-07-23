@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 本地测试controller
+ */
 @RestController
 @RequestMapping(value = "/joern")
 @Tag(name = "Joern", description = "joern接口")
