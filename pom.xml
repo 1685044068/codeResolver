@@ -14,7 +14,7 @@
         <module>code-resolver-interface</module>
         <module>code-resolver-joern-server</module>
         <module>code-resolver-netty</module>
-        <module>code-resolver-consumber</module>
+        <module>code-resolver-consumer</module>
         <module>code-resolver-parse-server</module>
         <module>code-resolver-upload-server</module>
     </modules>
