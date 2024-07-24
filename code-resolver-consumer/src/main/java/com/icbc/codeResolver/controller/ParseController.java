@@ -24,7 +24,6 @@ public class ParseController {
 
 
     @GetMapping("/parseCode")
-    @ResponseBody
     @Operation(summary = "解析文件", description = "解析文件")
     public Result parseAndImport(@RequestParam("url") String url){
         Result result=joernParseService.parse(url);

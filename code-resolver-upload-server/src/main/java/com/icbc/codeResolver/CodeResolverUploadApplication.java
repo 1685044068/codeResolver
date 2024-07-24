@@ -9,8 +9,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 @EnableDubbo
 @SpringBootApplication
-@EnableAsync
-@ComponentScan("com.icbc")
 public class CodeResolverUploadApplication {
 
     public static void main(String[] args) {

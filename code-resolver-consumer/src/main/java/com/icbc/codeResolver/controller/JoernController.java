@@ -26,7 +26,6 @@ public class JoernController {
      * @return
      */
     @GetMapping("/methodDown")
-    @ResponseBody
     @Operation(summary = "目标一：方法追踪", description = "根据类名以及方法名进行方法追踪")
     public List<neo4jPath> getMethodNodeDown(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
         System.out.println("目标一：方法追踪 className"+className);
@@ -39,7 +38,6 @@ public class JoernController {
      * @return
      */
     @GetMapping("/methodUp")
-    @ResponseBody
     @Operation(summary = "目标一：方法溯源", description = "根据类名以及方法名进行方法溯源")
     public List<neo4jPath> getMethodNodeUp(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
         System.out.println("目标一：方法溯源 className"+className);
@@ -53,7 +51,7 @@ public class JoernController {
      * @return
      */
     @GetMapping("/urlPath")
-    @ResponseBody
+    
     @Operation(summary = "目标二：url查找", description = "url的形式为/*/*/*")
     public List<neo4jPath> getUrlPath(@RequestParam("url") String url) {
         System.out.println("目标二：url查找 url"+url);
@@ -72,7 +70,7 @@ public class JoernController {
      * @param fieldName
      * @return
      */
-    @ResponseBody
+    
     @GetMapping("/dataBaseInfo")
     @Operation(summary = "目标三：数据库表字段关系", description = "根据数据库名，表名，字段名查询")
     public List<neo4jPath> getDataBaseInfo(@RequestParam("dataBaseName")String dataBaseName, @RequestParam("tableName")String tableName, @RequestParam("fieldName")String fieldName) {
@@ -82,7 +80,7 @@ public class JoernController {
         return joernService.getDataBaseInfo(dataBaseName,tableName,fieldName);
     }
 
-    @ResponseBody
+    
     @GetMapping("/showClassName")
     @Operation(summary = "目标一优化：获取包下所有类名", description = "根据前端传递过来的包名获取到该包下的所有类名")
     public List<neo4jNode> showClassName(@RequestParam("packetName")String packetName) {
@@ -90,7 +88,7 @@ public class JoernController {
         return joernService.showClassName(packetName);
     }
 
-    @ResponseBody
+    
     @GetMapping("/showMethodName")
     @Operation(summary = "目标一优化：获取类下所有方法名", description = "根据前端传递过来的类名获取到该类下的所有方法名以及参数")
     public List<neo4jNode> showMethodName(@RequestParam("className")String className) {
@@ -103,7 +101,7 @@ public class JoernController {
      * @param methodName
      * @return
      */
-    @ResponseBody
+    
     @GetMapping("/showInvocationLink")
     @Operation(summary = "目标一优化：获取唯一方法的调用链路", description = "根据前端传递过来的类名以及方法名及其参数获取到该唯一方法的调用链路")
     public List<neo4jPath> showMethodName(@RequestParam("className")String className, @RequestParam("methodName")String methodName,@RequestParam("isDown")String isDown) {
@@ -119,7 +117,7 @@ public class JoernController {
      * @param maxNumber
      * @return
      */
-    @ResponseBody
+    
     @GetMapping("/getHotNode")
     @Operation(summary = "目标四 获取热点节点", description = "需要包名以及top maxNumber个热点节点")
     public List<neo4jHotNode> getHotNode(@RequestParam("packetName")String packetName, @RequestParam("maxNumber")String maxNumber) {
