@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.controller;
 
+import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.service.DeleteFileService;
 import com.icbc.codeResolver.service.DownloadFileService;
 import com.icbc.codeResolver.service.UploadFileService;
@@ -47,7 +48,7 @@ public class UploadController {
 
 
     /**
-     * TODO MultipartFile改为可序列化的模式
+     * MultipartFile改为可序列化的模式
      * @param file
      * @return
      * @throws JSONException
@@ -55,7 +56,8 @@ public class UploadController {
     @ResponseBody
     @PostMapping("/uploadFile")
     @Operation(summary = "上传文件", description = "上传文件")
-    public String fileUpload(@RequestParam("file") MultipartFile file) throws JSONException {
+    public Result fileUpload(@RequestParam("file") MultipartFile file) throws JSONException {
+        System.out.println("controller++++++++++++++++++++++++++++++++++++");
         byte[] arr=null;
         try{
             arr=file.getBytes();
@@ -71,7 +73,7 @@ public class UploadController {
     @ResponseBody
     @GetMapping("/downloadFile")
     @Operation(summary = "下载文件", description = "下载文件")
-    public String fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException, IOException {
+    public Result fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException, IOException {
         return downloadFileService.download(response,fileName);
     }
 
@@ -79,7 +81,7 @@ public class UploadController {
     @ResponseBody
     @GetMapping("/deleteFile")
     @Operation(summary = "删除文件", description = "删除文件")
-    public String deleteFile(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException {
+    public Result deleteFile(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException {
         return deleteFileService.delete(response,fileName);
     }
 }

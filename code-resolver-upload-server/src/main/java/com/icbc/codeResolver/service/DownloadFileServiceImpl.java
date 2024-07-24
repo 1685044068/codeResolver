@@ -1,6 +1,7 @@
 package com.icbc.codeResolver.service;
 
 import cn.hutool.core.io.FileUtil;
+import com.icbc.codeResolver.entity.Result;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.dubbo.config.annotation.DubboService;
@@ -20,13 +21,11 @@ public class DownloadFileServiceImpl implements DownloadFileService {
     @Value("${file.upload.dir}")
     private String uploadFilePath;
     @Override
-    public String download(HttpServletResponse response, String fileName) throws JSONException, IOException {
-            JSONObject result = new JSONObject();
+    public Result download(HttpServletResponse response, String fileName) throws JSONException, IOException {
 
             File file = new File(uploadFilePath + '/' + fileName);
             if (!file.exists()) {
-                result.put("error", "下载文件不存在!");
-                return result.toString();
+                return Result.fail("文件不存在！");
             }
 
             response.reset();
@@ -38,7 +37,6 @@ public class DownloadFileServiceImpl implements DownloadFileService {
             byte[] readBytes = FileUtil.readBytes(file);
             OutputStream os = response.getOutputStream();
             os.write(readBytes);
-            result.put("success", "下载成功!");
-            return result.toString();
+            return Result.ok("下载成功");
     }
 }

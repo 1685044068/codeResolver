@@ -1,5 +1,7 @@
 package com.icbc.codeResolver.service;
 
+import com.icbc.codeResolver.entity.Result;
+
 /**
  * @BelongsProject: code-resolver
  * @BelongsPackage: com.icbc.codeResolver.service
@@ -9,5 +11,12 @@ package com.icbc.codeResolver.service;
  * @Version: 1.0
  */
 public interface JoernParseService {
-    public String parse(String url);
+    /**
+     * 核心解析业务
+     * @param url
+     * @return
+     */
+    public Result parse(String url);
+
+    public Result getFileList();
 }

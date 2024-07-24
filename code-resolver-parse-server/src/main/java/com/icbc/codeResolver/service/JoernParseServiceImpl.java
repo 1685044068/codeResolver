@@ -1,5 +1,7 @@
 package com.icbc.codeResolver.service;
 
+import com.icbc.codeResolver.entity.FileDto;
+import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.utils.StreamGobbler;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,9 +31,16 @@ public class JoernParseServiceImpl implements JoernParseService {
     private String cpg_dir;
     @Value("${database}")
     private String database;
+    @Value("${upload.dir}")
+    private String upload_dir;
 
+    /**
+     * 解析业务
+     * @param url
+     * @return
+     */
     @Override
-    public String parse(String url){
+    public Result parse(String url){
         System.out.println("url为"+url);
         List<String> commands=new ArrayList<>();
         int i=0;
@@ -57,6 +66,23 @@ public class JoernParseServiceImpl implements JoernParseService {
                 e.printStackTrace();
             }
         }
-        return "success";
+        return Result.ok();
+    }
+
+    /**
+     * 获取存储路径下的所有文件列表
+     * @return
+     */
+    @Override
+    public Result getFileList() {
+        //表示一个文件路径
+        File file = new File(upload_dir);
+        //用数组把文件夹下的文件存起来
+        File[] files = file.listFiles();
+        List<FileDto> fileDtoList=new ArrayList<>();
+        for (File file1:files){
+            fileDtoList.add(new FileDto(file1.getName(),file1.getPath()));
+        }
+        return Result.ok(fileDtoList,files.length);
     }
 }

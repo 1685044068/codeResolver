@@ -2,6 +2,7 @@ package com.icbc.codeResolver.service;
 
 import cn.hutool.core.io.FileUtil;
 
+import com.icbc.codeResolver.entity.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,18 +21,12 @@ import java.util.Objects;
 @Slf4j
 @DubboService(group = "upload")
 public class UploadFileServiceImpl implements UploadFileService {
-//    @Autowired
-//    private AsyncServiceImpl asyncService;
-//    @DubboReference
-//    private CSVService csvService;
     @Value("${file.upload.dir}")
     private String uploadFilePath;
     @Override
-    public String upload(MultipartFile file) throws JSONException {
-        JSONObject result = new JSONObject();
+    public Result upload(MultipartFile file) throws JSONException {
         if (file.isEmpty()) {
-            result.put("error", "空文件!");
-            return result.toString();
+            return Result.fail("错误！空文件!");
         }
         // 文件名
         String fileName = file.getOriginalFilename();
@@ -45,33 +40,23 @@ public class UploadFileServiceImpl implements UploadFileService {
         }
         // 使用文件名称检测文件是否已经存在
         if (fileTempObj.exists()) {
-            result.put("error", "文件已经存在!");
-            return result.toString();
+            return Result.fail("错误！文件已经存在!");
         }
 
         try {
-            // 写入文件:方式1
-            // file.transferTo(fileTempObj);
-            // 写入文件:方式2
             FileUtil.writeBytes(file.getBytes(), fileTempObj);
         } catch (Exception e) {
             log.error("发生错误: {}", e);
-            result.put("error", e.getMessage());
-            return result.toString();
+            return Result.fail("错误！"+e.getMessage());
         }
-        result.put("success,存储路径为：", uploadFilePath + "/" + fileName);
-//        csvService.transmit();
-//        asyncService.asyncTransmit();
-        String s=result.toString().replace("\\","");
-        return s;
+        return Result.ok(uploadFilePath + "/" + fileName);
     }
 
     @Override
-    public String upload(byte[] file,String fileName,String suffixName) throws JSONException {
-        JSONObject result = new JSONObject();
+    public Result upload(byte[] file,String fileName,String suffixName) throws JSONException {
+        System.out.println("++++++++++++++++++++++++++++++++++进入一次");
         if (Objects.isNull(file)) {
-            result.put("error", "空文件!");
-            return result.toString();
+            return Result.fail("错误！空文件!");
         }
         log.info("上传文件名称为:{}, 后缀名为:{}!", fileName, suffixName);
         File fileTempObj = new File(uploadFilePath + "/" + fileName);
@@ -81,24 +66,16 @@ public class UploadFileServiceImpl implements UploadFileService {
         }
         // 使用文件名称检测文件是否已经存在
         if (fileTempObj.exists()) {
-            result.put("error", "文件已经存在!");
-            return result.toString();
+            System.out.println("#########################################文件已存在");
+            return Result.fail("错误！文件已经存在!");
         }
         try {
-            // 写入文件:方式1
-            // file.transferTo(fileTempObj);
-            // 写入文件:方式2
             FileUtil.writeBytes(file, fileTempObj);
         } catch (Exception e) {
             log.error("发生错误: {}", e);
-            result.put("error", e.getMessage());
-            return result.toString();
+            return Result.fail("错误！"+e.getMessage());
         }
-        result.put("success,存储路径为：", uploadFilePath + "/" + fileName);
-//        csvService.transmit();
-//        asyncService.asyncTransmit();
-        String s=result.toString().replace("\\","");
-        return s;
+        return Result.ok(uploadFilePath + "/" + fileName);
     }
 
 }

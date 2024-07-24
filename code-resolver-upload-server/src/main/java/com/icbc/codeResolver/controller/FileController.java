@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.controller;
 
+import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.service.DeleteFileService;
 import com.icbc.codeResolver.service.DownloadFileService;
 import com.icbc.codeResolver.service.UploadFileService;
@@ -37,20 +38,20 @@ public class FileController {
     private DeleteFileService deleteFileService;
     @ResponseBody
     @PostMapping("/uploadFile")
-    public String fileUpload(@RequestParam("file") MultipartFile file) throws JSONException {
+    public Result fileUpload(@RequestParam("file") MultipartFile file) throws JSONException {
         return uploadFileService.upload(file);
     }
     // 下载到了默认的位置
     @ResponseBody
     @GetMapping("/downloadFile")
-    public String fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException, IOException {
+    public Result fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException, IOException {
         return downloadFileService.download(response,fileName);
     }
 
 
     @ResponseBody
     @GetMapping("/deleteFile")
-    public String deleteFile(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException {
+    public Result deleteFile(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException {
         return deleteFileService.delete(response,fileName);
     }
 

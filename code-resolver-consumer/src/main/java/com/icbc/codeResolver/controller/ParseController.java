@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.controller;
 
+import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.service.JoernParseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,9 +26,18 @@ public class ParseController {
     @GetMapping("/parseCode")
     @ResponseBody
     @Operation(summary = "解析文件", description = "解析文件")
-    public String parseAndImport(@RequestParam("url") String url){
-        String test=joernParseService.parse(url);
-        System.out.println(test);
-        return test;
+    public Result parseAndImport(@RequestParam("url") String url){
+        Result result=joernParseService.parse(url);
+        System.out.println(result);
+        return result;
     }
+    @GetMapping("/getFileList")
+    @ResponseBody
+    @Operation(summary = "获取解析目录下的所有文件", description = "获取解析目录下的所有文件")
+    public Result getFileList(){
+        Result result=joernParseService.getFileList();
+        System.out.println(result);
+        return result;
+    }
+
 }

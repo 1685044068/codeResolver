@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.service;
 
+import com.icbc.codeResolver.entity.Result;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,14 +19,11 @@ public class DeleteFileServiceImpl implements DeleteFileService {
     @Value("${file.upload.dir}")
     private String uploadFilePath;
     @Override
-    public String delete(HttpServletResponse response,String fileName) throws JSONException {
-        JSONObject result = new JSONObject();
-
+    public Result delete(HttpServletResponse response, String fileName) throws JSONException {
         File file = new File(uploadFilePath + '/' + fileName);
         // 判断文件不为null或文件目录存在
         if (file == null || !file.exists()) {
-            result.put("success", "文件不存在!");
-            return result.toString();
+            return Result.fail("文件不存在！");
         }
         try {
             if (file.isFile()) file.delete();
@@ -38,10 +36,8 @@ public class DeleteFileServiceImpl implements DeleteFileService {
             }
         } catch (Exception e) {
             log.error("发生错误: {}", e);
-            result.put("error", e.getMessage());
-            return result.toString();
+            return Result.fail("发生错误！");
         }
-        result.put("success", "删除成功!");
-        return result.toString();
+        return Result.ok("删除成功");
     }
 }
