@@ -24,8 +24,6 @@ spring:
       #因为Springfox使用的路径匹配是基于AntPathMatcher的，而Spring Boot 2.6.X使用的是PathPatternMatcher
       matching-strategy: ant_path_matcher
   data:
-    neo4j:
-      database: mvc
     redis:
       host: localhost
       port: 6379
@@ -36,11 +34,12 @@ spring:
           max-idle: 10
           min-idle: 1
           time-between-eviction-runs: 10s
-  neo4j:
-    authentication:
-      username: neo4j
-      password: chenqiujian123
-    uri: bolt://127.0.0.1:7687
+    neo4j:
+      database: resolvertest
+      authentication:
+        username: neo4j
+        password: chenqiujian123
+      uri: bolt://127.0.0.1:7687
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

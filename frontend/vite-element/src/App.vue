@@ -3,14 +3,108 @@ import axios from 'axios';
 
 
 //测试代码
-import { reactive, ref, onMounted } from 'vue'
+import { defineComponent, reactive, ref, onMounted } from 'vue';
 import { ElSelect } from 'element-plus';
+import * as echarts from 'echarts';
+import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-vue'
 
 //定义选择目标的绑定变量
+  //这里的array用于存图中的信息
+  var node_array = [
+    {
+      x: 10,
+      y: 100,
+      id: "22",
+      name: "test1",
+      symbolSize: 40,
+      itemStyle: {
+        color: "#4f19c7"
+      },
+      label:{
+        show:true   //在最后产生的方法上
+      },
+    },
+    {
+      x: 20,
+      y: 110,
+      id: "21",
+      name: "test2",
+      symbolSize: 40,
+      itemStyle: {
+        color: "#c71969"
+      }
+    }
+  ]
+
+  var edge_array = [{
+    source:"21",
+    target:"22",
+
+  }]
+
+  //这里的node_data用于存放相应的节点
+  /*
+  const Node = reactive({
+    label:'',
+    name:'',
+    code:'',
+    fullname:'',
+    filename:'',
+    id: '',
+  })
+  */
+  var node_data = []
+
+  const radiodisabled = ref(false)
+
+  const mycharts = ref(null)
+  onMounted(() => {
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(mycharts.value);
+    var option;
+    myChart.showLoading();
+    myChart.hideLoading();
+    myChart.setOption(
+      (option = {
+        title: {
+          text: ''
+        },
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        series: [
+          {
+            type: 'graph',
+            layout: 'none',
+            // progressiveThreshold: 700,
+            data: node_array,
+            edges: edge_array,
+            emphasis: {
+              focus: 'adjacency',
+              label: {
+                position: 'right',
+                show: true
+              }
+            },
+            edgeSymbol: ['', 'arrow'],
+            roam: true,
+            draggable: true,
+            lineStyle: {
+              width: 0.5,
+              curveness: 0.3,
+              opacity: 0.7
+            }
+          }
+        ]
+      }),
+      true
+    );
+  }
+);
 
 
 
-const selectvalue = ref('')
+
+const selectvalue = ref('Object1_update')
 
 const selectclass = ref('')
 const selectmethod = ref('')
@@ -101,13 +195,39 @@ const Node = reactive({
   code:'',
   fullname:'',
   filename:'',
+  id: '',
 })
 
 const PathArray = reactive([])
 
+const handleSelect = (key) =>{
+  console.log(key)
+  if(key == '1-1') {
+    selectvalue.value = 'Object1_update'
+
+  }
+  else if(key == '1-2'){
+    selectvalue.value = 'Object2'
+  }  
+  else if(key == '1-3'){
+    selectvalue.value = 'Object3'
+  }
+  else{
+
+  }  
+}
+
+
 //查找给出的包下的类
 const getClass = () => {
+  radiodisabled.value = true
+  console.log(mycharts.value)
+  var myChart = echarts.init(mycharts.value);
+  myChart.showLoading()
   classoption.splice(0,classoption.length)
+  node_array.splice(0,node_array.length)
+  node_data.splice(0,node_data.length)
+  edge_array.splice(0,edge_array.length)
 
   let url = 'http://localhost:8081/joern/showClassName'
   console.log('submit!')
@@ -118,18 +238,88 @@ const getClass = () => {
     }
   })
   .then(response => {
-    response.data.forEach(item => {
+    response.data.forEach((item, index, arr) => {
     classoption.push({
       value: item.fullName,
       label: item.name,
     })
-    
+    var icolor = '#0B848C'
+    node_array.push({
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      id: item.id,
+      name: item.name,
+      symbolSize: 50,
+      draggable: true,
+      itemStyle: {
+        color: icolor
+      },
+      label:{
+        show:true   //在最后产生的方法上
+      },
     })
-    console.log(classoption)
+    node_data.push({
+      label: item.label,
+      name: item.name,
+      code:item.code,
+      fullname: item.fullName,
+      filename: item.fileName,
+      id: item.id,
+    })
+    /*
+    if(index + 1 < arr.length){
+      let isource = item.id
+      let itarget = arr[index+1].id
+      var edge = {source:isource,target:itarget}
+      if(!edge_array.some(item => item.source == edge.source && item.target == edge.target)){
+        edge_array.push(edge)
+      }
+    }
+    */
+    })
+    var option
+    console.log(response.data)
+    console.log(node_array)
+    console.log(node_data)
+    myChart.setOption(
+      (option = {
+        title: {
+          text: ''
+        },
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        series: [
+          {
+            type: 'graph',
+            layout: 'none',
+            // progressiveThreshold: 700,
+            data: node_array,
+            edges: edge_array,
+            emphasis: {
+              focus: 'adjacency',
+              label: {
+                position: 'right',
+                show: true
+              }
+            },
+            edgeSymbol: ['', 'arrow'],
+            roam: true,
+            lineStyle: {
+              width: 0.5,
+              curveness: 0.3,
+              opacity: 0.7
+            }
+          }
+        ]
+      }),
+      true
+    );
+    myChart.hideLoading()
     })
   .catch(error => {
     console.error(error);
     })
+    
     form1_update.isclass = false
 }
 
@@ -262,8 +452,9 @@ const onReset1_update = () => {
   form1_update.isdown= false
   form1_update.isclass= true
   form1_update.ismethod= true
-  selectclass = ''
-  selectmethod = ''
+  selectclass.value = ''
+  selectmethod.value = ''
+  radiodisabled.value = false
 }
 
 const onSubmit2 = () => {
@@ -328,6 +519,7 @@ const onReset3 = () => {
 }
 
 //点击节点显示属性
+
 const handleclick = (Pathindex, Nodeindex) =>{
   Node.name = PathArray[Pathindex].pathMember[Nodeindex].name
   Node.label = PathArray[Pathindex].pathMember[Nodeindex].label
@@ -336,17 +528,52 @@ const handleclick = (Pathindex, Nodeindex) =>{
   Node.filename = PathArray[Pathindex].pathMember[Nodeindex].fileName
 }
 
+
 //定义提交和重置的函数
 
 </script>
 
 <template>
-  <el-row>
-    <el-col :span="24"><div class="head">代码血缘分析工具DEMO</div></el-col>
+  <el-row style="height:31.1px;width:100%">
+    <el-col style="width:100%" :span="24"><div class="head">代码血缘分析工具DEMO</div></el-col>
   </el-row>
   <el-row>
+  <el-col :span="3">
+    <el-row>
+      <el-col :span="24">
+        <el-menu
+          default-active="1-1"
+          background-color="#0a0a0a"
+          text-color="white"
+          active-text-color="#DDBEF6"
+          style="width:240px;height:100vh"
+          @select="handleSelect"
+        >
+          <el-sub-menu index="1">
+            <template #title>
+              <el-icon><DataAnalysis /></el-icon>
+              <span>数据库分析</span>
+            </template>
+            <el-menu-item-group >
+              <el-menu-item index="1-1">根据类名查找</el-menu-item>
+              <el-menu-item index="1-2">根据url查找</el-menu-item>
+              <el-menu-item index="1-3">根据表名查找</el-menu-item>
+            </el-menu-item-group>
+          </el-sub-menu>
+          <el-menu-item index="2">
+            <el-icon><Upload /></el-icon>
+            <span>分析文件上传下载</span>
+          </el-menu-item>
+        </el-menu>
+
+      </el-col>
+    </el-row>
+  </el-col>
+  <el-col :span="21">
+  <el-row>
     <el-col :span="14">
-        <el-card style="max-width: 700px; margin-left:20%">
+
+        <el-card style="max-width: 900px; margin-left:5%">
           <template #header>
             <div class="card-header">
                 <div class="chaindisplayhead">调用链</div>
@@ -354,9 +581,9 @@ const handleclick = (Pathindex, Nodeindex) =>{
           </template>
           <!--调用链显示框-->
           <div>
-            <el-scrollbar height="300px">
-              <!--里面放button-->
-                <!--这里用for循环来遍历渲染获得的节点所有属性-->
+              <!--
+              里面放button
+              这里用for循环来遍历渲染获得的节点所有属性
 
               <el-row v-for="(Pathitem,Pathindex) in PathArray" style="white-space: nowrap">
                 <el-col :span="24" >
@@ -369,7 +596,9 @@ const handleclick = (Pathindex, Nodeindex) =>{
 
                 </el-col>
               </el-row>
-            </el-scrollbar>
+            -->
+            <div ref="mycharts" style="width:100%;height:500px">
+            </div>
           </div>
         </el-card>
       </el-col>
@@ -399,10 +628,57 @@ const handleclick = (Pathindex, Nodeindex) =>{
           </el-scrollbar>
         </div>
       </el-card>
+      <div>
+        <el-row v-if="selectvalue == 'Object1_update'">
+          <!--Object1_update的情况-->
+          <!--用表单-->
+          <el-form model="form1_update" label-width="auto" style="max-width: 300px; margin-left:5%;margin-top:5%">
+            <el-form-item style="width: 600px;" label="请输入要查找的包">
+              <el-row>
+                <el-col :span="21">
+                  <el-input style="width:200px" v-model="form1_update.package" ></el-input>
+                </el-col>
+                <el-col :span="3">
+                  <el-button @click="getClass">
+                    查找
+                  </el-button>
+                </el-col>
+              </el-row>
+            </el-form-item>
+            <el-form-item style="width: 450px;" label="请选择调用方向">
+              <el-radio-group v-model="form1_update.isdown" class="ml-4">
+                <el-radio :value="false" :disabled = radiodisabled>向上调用</el-radio>
+                <el-radio :value="true"  :disabled = radiodisabled>向下调用</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item style="margin-left:50%;">
+              <el-button type="primary" @click="onSubmit1_update">
+                提交
+              </el-button>
+              <el-button @click="onReset1_update">
+                重置
+              </el-button>
+            </el-form-item>
+      
+      
+          </el-form>
+      
+        </el-row>
+      </div>
     </el-col>
   </el-row>
-  <el-row>
+  <el-row> 
+    <el-col :span="24">
+    <el-steps :active="active" align-center finish-status="success" style="width:33%;margin-left:12%">
+      <el-step title="第一步" description="输入包和调用方向"/>
+      <el-step title="第二步" description="选择要查询的类"/>
+      <el-step title="第三步" description="选择要查询的方法"/>
+    </el-steps>
+  
+    <el-button type="success" style="margin-left:14.5%" @click="next">Next step</el-button>
+    </el-col>
     <!--新的一行放选择器-->
+    <!--
     <el-col style="max-width: 400px; margin-left: 12%;" :span="24">
       <el-select
       v-model="selectvalue"
@@ -419,11 +695,14 @@ const handleclick = (Pathindex, Nodeindex) =>{
     </el-select>
 
     </el-col>
+  -->
   </el-row>
+
   <!--这里要分开渲染-->
+  <!--
   <el-row v-if="selectvalue == 'Object1'">
-    <!--Object1的情况-->
-    <!--用表单-->
+    Object1的情况
+    用表单
     <el-form model="form1" label-width="auto" style="max-width: 300px; margin-left:12%">
       <el-form-item style="width: 450px;" label="请输入要查找的类">
         <el-input v-model="form1.class" ></el-input>
@@ -450,10 +729,9 @@ const handleclick = (Pathindex, Nodeindex) =>{
     </el-form>
 
   </el-row>
-
+  -->
+<!--旧版布局，先搁置在这里
   <el-row v-if="selectvalue == 'Object1_update'">
-    <!--Object1_update的情况-->
-    <!--用表单-->
     <el-form model="form1_update" label-width="auto" style="max-width: 300px; margin-left:12%">
       <el-form-item style="width: 600px;" label="请输入要查找的包">
         <el-row>
@@ -469,7 +747,6 @@ const handleclick = (Pathindex, Nodeindex) =>{
       </el-form-item>
       <el-form-item style="width: 600px;" label="请选择要查找的类">
         <el-row v-model="form1_update.isclass">
-          <!--新的一行放选择器-->
           <el-col :span="21">
             <el-select
             :disabled= form1_update.isclass
@@ -495,7 +772,6 @@ const handleclick = (Pathindex, Nodeindex) =>{
       </el-form-item>
       <el-form-item style="width: 450px;" label="请选择要查找的方法">
         <el-row v-model="form1_update.ismethod">
-          <!--新的一行放选择器-->
           <el-col :span="24">
             <el-select 
             v-model="selectmethod"
@@ -533,8 +809,8 @@ const handleclick = (Pathindex, Nodeindex) =>{
     </el-form>
 
   </el-row>
-
-  <el-row v-else-if="selectvalue == 'Object2'">
+-->
+  <el-row v-if="selectvalue == 'Object2'">
     <!--Object2的情况-->
     <!--用表单-->
     <el-form model="form2" label-width="auto" style="max-width: 300px; margin-left:12%">
@@ -582,10 +858,10 @@ const handleclick = (Pathindex, Nodeindex) =>{
 
     </el-form>
   </el-row>
-  <el-row v-else>
-    <!--Object2的情况-->
-    <el-text class="mx-1" style="font-size:large; margin-left:12%;" type="info">请选择目标</el-text>
+  <el-row v-else> <!--这里先置为空，不知道还有用没-->
   </el-row>
+</el-col>
+</el-row>
 
 </template>
 
@@ -601,7 +877,7 @@ const handleclick = (Pathindex, Nodeindex) =>{
   }
 
   .head {
-    background-color: #2c3e50; /* 深蓝色背景 */
+    background-color: #1d1e1f; /* 深蓝色背景 */
     color: #ffffff;           /* 白色字体 */
     padding: 10px;            /* 内边距 */
     text-align: center;       /* 居中对齐 */
@@ -636,21 +912,12 @@ const handleclick = (Pathindex, Nodeindex) =>{
     border-radius: 4px;
     min-height: 36px;
   }
+  
+  .el-menu-vertical-demo:not(.el-menu--collapse) {
+    width: 180px;
+    min-height: 400px;
+  }
 
-  :root {
-    --ep-c-bg-row: #f9fafc;
-    --ep-c-bg-purple: #d3dce6;
-    --ep-c-bg-purple-dark: #99a9bf;
-    --ep-c-bg-purple-light: #e5e9f2;
-  }
-  
-  .dark {
-    --ep-c-bg-row: #18191a;
-    --ep-c-bg-purple: #46494d;
-    --ep-c-bg-purple-dark: #242526;
-    --ep-c-bg-purple-light: #667180;
-  }
-  
   .row-bg {
     padding: 10px 0;
     background-color: var(--ep-c-bg-row);
@@ -667,5 +934,13 @@ const handleclick = (Pathindex, Nodeindex) =>{
   .ep-bg-purple-light {
     background: var(--ep-c-bg-purple-light);
   }
+
+	html,
+	body,
+	#app {//这里设置强制铺满全屏
+		margin: 0;
+		padding: 0;
+		height: 100%;
+	}
 
 </style>

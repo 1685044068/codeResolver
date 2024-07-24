@@ -132,7 +132,7 @@ public class JoernMapperImpl implements JoernMapper {
             if (nodeObject instanceof InternalNode) {
                 class_node = (InternalNode) nodeObject;
             }
-            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString());
+            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
             ans.add(node);
         }
 
@@ -160,7 +160,7 @@ public class JoernMapperImpl implements JoernMapper {
             if (nodeObject instanceof InternalNode) {
                 class_node = (InternalNode) nodeObject;
             }
-            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString());
+            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
             ans.add(node);
             String class_method_key="CLASS:"+className;
 
@@ -189,7 +189,7 @@ public class JoernMapperImpl implements JoernMapper {
             if (nodeObject instanceof InternalNode) {
                 class_node = (InternalNode) nodeObject;
             }
-            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString());
+            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
             Long number =(Long) record.get("number");
             ans.add(new neo4jHotNode(node,number));
         }
@@ -202,7 +202,7 @@ public class JoernMapperImpl implements JoernMapper {
         String label;
         for (Map<String, Object> record : resultList) {
             Path path = (Path) record.get("p");
-            neo4jNode head = new neo4jNode("1", "1","1","1","1");
+            neo4jNode head = new neo4jNode("1", "1","1","1","1","1");
             neo4jNode cur = head;
             int x = 0;
             for (Path.Segment segment : path) {
@@ -211,10 +211,10 @@ public class JoernMapperImpl implements JoernMapper {
                     startNode = segment.start();
                     label = startNode.labels().iterator().next();
                     if(label.equals("ANNOTATION")){
-                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),startNode.get("CODE").asString());
+                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),startNode.get("CODE").asString(),startNode.elementId());
                     }
                     else{
-                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),startNode.get("CODE").asString(),startNode.get("FILENAME").asString());
+                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),startNode.get("CODE").asString(),startNode.get("FILENAME").asString(), startNode.elementId());
                     }
                     cur = cur.next;
                     x = 1;
@@ -223,10 +223,10 @@ public class JoernMapperImpl implements JoernMapper {
                 label = endNode.labels().iterator().next();
                 if(label.equals("METHOD")||label.equals("ANNOTATION")){
                     if(label.equals("ANNOTATION")){
-                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),endNode.get("CODE").asString());
+                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),endNode.get("CODE").asString(),endNode.elementId());
                     }
                     else{
-                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),endNode.get("CODE").asString(),endNode.get("FILENAME").asString());
+                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),endNode.get("CODE").asString(),endNode.get("FILENAME").asString(),endNode.elementId());
                     }
                     cur = cur.next;
                 }
