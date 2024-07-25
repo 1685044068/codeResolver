@@ -14,6 +14,7 @@ import org.neo4j.driver.types.Path;
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,6 +23,7 @@ import java.util.Map;
 
 
 @DubboService(group = "joern")
+
 @Component
 public class JoernServiceImpl implements CodeResolverService {
     @Resource

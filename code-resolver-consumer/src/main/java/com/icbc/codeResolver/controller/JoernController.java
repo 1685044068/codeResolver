@@ -11,13 +11,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-
 /**
- * 本地测试controller
+ * 分布式调用controller
  */
 @RestController
 @RequestMapping(value = "/joern")
-@Tag(name = "Joern", description = "joern接口")
+@Tag(name = "DubboJoern", description = "Dubbojoern接口")
 public class JoernController {
     @DubboReference(group = "joern")
     CodeResolverService joernService;
@@ -27,7 +26,6 @@ public class JoernController {
      * @return
      */
     @GetMapping("/methodDown")
-    
     @Operation(summary = "目标一：方法追踪", description = "根据类名以及方法名进行方法追踪")
     public List<neo4jPath> getMethodNodeDown(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
         System.out.println("目标一：方法追踪 className"+className);
@@ -40,7 +38,6 @@ public class JoernController {
      * @return
      */
     @GetMapping("/methodUp")
-    
     @Operation(summary = "目标一：方法溯源", description = "根据类名以及方法名进行方法溯源")
     public List<neo4jPath> getMethodNodeUp(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
         System.out.println("目标一：方法溯源 className"+className);
@@ -109,8 +106,8 @@ public class JoernController {
     @Operation(summary = "目标一优化：获取唯一方法的调用链路", description = "根据前端传递过来的类名以及方法名及其参数获取到该唯一方法的调用链路")
     public List<neo4jPath> showMethodName(@RequestParam("className")String className, @RequestParam("methodName")String methodName,@RequestParam("isDown")String isDown) {
         System.out.println("目标一优化：获取唯一方法的调用链路 类名"+className);
-        System.out.println("目标一优化：获取唯一方法的调用链路 方法名"+methodName);
-        System.out.println("目标一优化：获取唯一方法的调用链路 isDown"+isDown);
+        System.out.println("目标一优化：获取唯一方法的调用链路 包名"+methodName);
+        System.out.println("目标一优化：获取唯一方法的调用链路 isDown"+methodName);
         return joernService.showInvocationLink(className + ".java", methodName,Boolean.valueOf(isDown));
     }
 
