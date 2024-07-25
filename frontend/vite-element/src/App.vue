@@ -3,9 +3,10 @@ import axios from 'axios';
 
 
 //测试代码
-import { defineComponent, reactive, ref, onMounted } from 'vue';
+import { defineComponent, reactive, ref, onMounted, Transition } from 'vue';
 import { ElSelect, ElMessage, ElMessageBox } from 'element-plus';
 import * as echarts from 'echarts';
+import 'animate.css';
 import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-vue'
 
 
@@ -613,7 +614,6 @@ const methodback = () =>  {
   methodoption.splice(0,methodoption.length)
   myChart.showLoading()
   active.value = 2
-  classselected = -1
   edge_array = JSON.parse(JSON.stringify(method_edge_array))
   node_array = JSON.parse(JSON.stringify(method_node_array))
   node_data = JSON.parse(JSON.stringify(method_node_data))
@@ -1120,11 +1120,11 @@ const onSubmit4 = () =>{
   .then(response => {
     console.log(response.data)
     response.data.forEach((item, index, arr) => {
-      if(!node_data.some(item2 => item2.id == item.node.id)){
+      if(!node_data.some(item2 => item2.id == item.node.id && item2.number != 0)){
       console.log(item,item.node.label)
       node_array.push({
-        x: 150 + Math.random() * 100,
-        y: 150 + Math.random() * 100,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
         id: item.node.id,
         name: item.node.name,
         symbolSize: 50,
@@ -1145,9 +1145,48 @@ const onSubmit4 = () =>{
         id: item.node.id,
         number: item.number,
       })
+      let itarget = item.node.id
+      //这里要把所有的follow节点找出来，并连接边
+      item.followNode.forEach((itemf,indexf,arrf) => {
+        if(!node_data.some(item2 => item2.id == itemf.id)){
+        node_array.push({
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          id: itemf.id,
+          name: itemf.name,
+          symbolSize: 50,
+          draggable: true,
+          itemStyle: {
+            color: mapcolor.get(itemf.label)
+          },
+          label:{
+            show:true   //在最后产生的方法上
+          },
+        })
+        node_data.push({
+          label: itemf.label,
+          name: itemf.name,
+          code:itemf.code,
+          fullname: itemf.fullName,
+          filename: itemf.fileName,
+          id: itemf.id,
+          number: 0,
+        })
+        
+
+      }
+      //边要在点的条件判断外再进行判断
+        let isource = itemf.id
+        var edge = {source:isource,target:itarget}
+        if(!edge_array.some(item2 => item2.source == edge.source && item2.target == edge.target)){
+          edge_array.push(edge)
+        }
+      })
+
+
     }
     })
-    
+    console.log(node_array)
     var option
     myChart.setOption(
       (option = {
@@ -1252,8 +1291,10 @@ const onReset4 = () => {
   </el-col>
   <el-col :span="21">
   <el-row>
+    <Transition appear :duration="800" enter-active-class="animate__animated animate__backInDown animate__faster">
     <el-col :span="14">
-
+      
+        <div>
         <el-card style="max-width: 900px; margin-left:5%">
           <template #header>
             <div class="card-header">
@@ -1282,8 +1323,11 @@ const onReset4 = () => {
             </div>
           </div>
         </el-card>
+      </div>
       </el-col>
+      </Transition>
     <el-col :span="10">
+      <Transition appear :duration="800" enter-active-class="animate__animated animate__backInDown animate__faster">
       <el-card style="max-width: 400px; margin-left: 5%;">
         <template #header>
           <div class="card-header">
@@ -1311,7 +1355,9 @@ const onReset4 = () => {
           </el-scrollbar>
         </div>
       </el-card>
+      </Transition>
       <div>
+      <Transition appear mode="out-in" :duration="500" enter-active-class="animate__animated animate__backInDown animate__faster" leave-active-class="animate__animated animate__backOutDown">
         <el-row v-if="selectvalue == 'Object1_update'">
           <!--Object1_update的情况-->
           <!--用表单-->
@@ -1350,6 +1396,7 @@ const onReset4 = () => {
               <el-input style="width:275px" v-model="form2.url" ></el-input>
             </el-form-item>
             <el-form-item>
+
               <el-button type="primary" @click="onSubmit2">
                 提交
               </el-button>
@@ -1362,6 +1409,8 @@ const onReset4 = () => {
           </el-form>
       
         </el-row>
+
+
         <el-row v-else-if="selectvalue == 'Object3'">
           <!--Object3的情况-->
           <!--用表单-->
@@ -1418,9 +1467,11 @@ const onReset4 = () => {
         </el-row>
         <el-row v-else> <!--这里先置为空，不知道还有用没-->
         </el-row>
+      </Transition>
       </div>
     </el-col>
   </el-row>
+  <Transition appear mode="out-in" :duration="5000" enter-active-class="animate__animated animate__bounceIn " leave-active-class="animate__animated animate__bounceOut">
   <el-row v-if="selectvalue == 'Object1_update'"> 
     <el-col :span="24">
     <el-steps :active="active" align-center finish-status="success" style="width:33%;margin-left:12%">
@@ -1471,7 +1522,7 @@ const onReset4 = () => {
     </el-col>
   -->
   </el-row>
-
+  </Transition>
   <!--这里要分开渲染-->
   <!--
   <el-row v-if="selectvalue == 'Object1'">
@@ -1590,6 +1641,10 @@ const onReset4 = () => {
 </template>
 
 <style lang="scss">
+  .fade{
+    --animate-delay:3s
+  }
+
   .el-row {
     margin-bottom: 20px;
   }

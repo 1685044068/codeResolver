@@ -78,7 +78,7 @@ public class CacheClient {
     /**
      * 创建线程池
      */
-    private static final ExecutorService CACHE_REBUILD_EXECUTOR= Executors.newFixedThreadPool(10);
+    private static final ExecutorService CACHE_REBUILD_EXECUTOR= Executors.newFixedThreadPool(100);
 
 
     /**
