@@ -4,44 +4,29 @@ import axios from 'axios';
 
 //测试代码
 import { defineComponent, reactive, ref, onMounted } from 'vue';
-import { ElSelect } from 'element-plus';
+import { ElSelect, ElMessage, ElMessageBox } from 'element-plus';
 import * as echarts from 'echarts';
 import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-vue'
+
+
+//设置颜色映射
+ const mapcolor = new Map([
+  ["METHOD", '#FFD04F'],
+  ["TYPE_DECL", '#0B848C'],
+  ["ANNOTATION", '#4CC8F5'],
+  ["SELECTED", '#C9181E'],
+ ])
 
 //定义选择目标的绑定变量
   //这里的array用于存图中的信息
   var node_array = [
-    {
-      x: 10,
-      y: 100,
-      id: "22",
-      name: "test1",
-      symbolSize: 40,
-      itemStyle: {
-        color: "#4f19c7"
-      },
-      label:{
-        show:true   //在最后产生的方法上
-      },
-    },
-    {
-      x: 20,
-      y: 110,
-      id: "21",
-      name: "test2",
-      symbolSize: 40,
-      itemStyle: {
-        color: "#c71969"
-      }
-    }
+
   ]
-
-  var edge_array = [{
-    source:"21",
-    target:"22",
-
-  }]
-
+  var old_node_array = []
+  var method_node_array = []
+  var edge_array = []
+  var method_edge_array = []
+  var old_edge_array = []
   //这里的node_data用于存放相应的节点
   /*
   const Node = reactive({
@@ -54,8 +39,15 @@ import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-
   })
   */
   var node_data = []
+  var old_node_data = []
+  var method_node_data = []
 
   const radiodisabled = ref(false)
+  const active = ref(0)
+  //定义已经选择的class
+  var classselected = null
+
+  var old_selectindex = -1 //上一个被选中的节点
 
   const mycharts = ref(null)
   onMounted(() => {
@@ -98,6 +90,66 @@ import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-
       }),
       true
     );
+
+    //保存拖拽节点位置
+    myChart.on("mouseup", params => {
+      let index = params.dataIndex
+      option.series[0].data[index].x = myChart._chartsViews[0]._symbolDraw._data._itemLayouts[index][0]
+      option.series[0].data[index].y = myChart._chartsViews[0]._symbolDraw._data._itemLayouts[index][1]
+      //node_array也要更新
+      node_array[index].x = option.series[0].data[index].x
+      node_array[index].y = option.series[0].data[index].y
+    })
+
+    myChart.on("dblclick", params => {
+        //先把选中节点变色
+      option = {
+        title: {
+          text: ''
+        },
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        series: [
+          {
+            type: 'graph',
+            layout: 'none',
+            // progressiveThreshold: 700,
+            data: node_array,
+            edges: edge_array,
+            emphasis: {
+              focus: 'adjacency',
+              label: {
+                position: 'right',
+                show: true
+              }
+            },
+            edgeSymbol: ['', 'arrow'],
+            roam: true,
+            draggable: true,
+            lineStyle: {
+              width: 0.5,
+              curveness: 0.3,
+              opacity: 0.7
+            }
+          }
+        ]
+      }
+        let index = params.dataIndex
+        if(old_selectindex != -1 && old_selectindex != index){
+            option.series[0].data[old_selectindex].itemStyle.color = mapcolor.get(node_data[old_selectindex].label)
+
+        }
+        option.series[0].data[index].itemStyle.color = mapcolor.get('SELECTED')
+        old_selectindex=index
+        myChart.setOption(option)
+        //然后在节点属性栏显示
+        Node.label = node_data[index].label
+        Node.name = node_data[index].name
+        Node.code = node_data[index].code
+        Node.fullname = node_data[index].fullname
+        Node.filename = node_data[index].filename
+        Node.id = node_data[index].id
+    })
   }
 );
 
@@ -201,6 +253,12 @@ const Node = reactive({
 const PathArray = reactive([])
 
 const handleSelect = (key) =>{
+  //清空关系图状态
+  onReset1_update()
+  onReset2()
+  onReset3()
+
+
   console.log(key)
   if(key == '1-1') {
     selectvalue.value = 'Object1_update'
@@ -220,14 +278,27 @@ const handleSelect = (key) =>{
 
 //查找给出的包下的类
 const getClass = () => {
+  old_selectindex = -1
   radiodisabled.value = true
-  console.log(mycharts.value)
   var myChart = echarts.init(mycharts.value);
   myChart.showLoading()
   classoption.splice(0,classoption.length)
   node_array.splice(0,node_array.length)
   node_data.splice(0,node_data.length)
   edge_array.splice(0,edge_array.length)
+  old_node_array.splice(0,old_node_array.length)
+  old_node_data.splice(0,old_node_data.length)
+  old_edge_array.splice(0,old_edge_array.length)
+  method_node_array.splice(0,old_node_array.length)
+  method_node_data.splice(0,old_node_data.length)
+  method_edge_array.splice(0,old_edge_array.length)
+  active.value = 1
+  Node.label = ''
+  Node.name = ''
+  Node.code = ''
+  Node.fullname = ''
+  Node.filename = ''
+  Node.id = ''
 
   let url = 'http://localhost:8081/joern/showClassName'
   console.log('submit!')
@@ -243,7 +314,6 @@ const getClass = () => {
       value: item.fullName,
       label: item.name,
     })
-    var icolor = '#0B848C'
     node_array.push({
       x: Math.random() * 100,
       y: Math.random() * 100,
@@ -252,7 +322,7 @@ const getClass = () => {
       symbolSize: 50,
       draggable: true,
       itemStyle: {
-        color: icolor
+        color: mapcolor.get(item.label)
       },
       label:{
         show:true   //在最后产生的方法上
@@ -266,21 +336,8 @@ const getClass = () => {
       filename: item.fileName,
       id: item.id,
     })
-    /*
-    if(index + 1 < arr.length){
-      let isource = item.id
-      let itarget = arr[index+1].id
-      var edge = {source:isource,target:itarget}
-      if(!edge_array.some(item => item.source == edge.source && item.target == edge.target)){
-        edge_array.push(edge)
-      }
-    }
-    */
     })
     var option
-    console.log(response.data)
-    console.log(node_array)
-    console.log(node_data)
     myChart.setOption(
       (option = {
         title: {
@@ -323,30 +380,176 @@ const getClass = () => {
     form1_update.isclass = false
 }
 
+//返回到上一个步骤，只显示类
+const classback = () => {
+  var myChart = echarts.init(mycharts.value);
+  methodoption.splice(0,methodoption.length)
+  myChart.showLoading()
+  active.value = 1
+  classselected = -1
+  edge_array = JSON.parse(JSON.stringify(old_edge_array))
+  node_array = JSON.parse(JSON.stringify(old_node_array))
+  node_data = JSON.parse(JSON.stringify(old_node_data))
+  //将状态还原到只有类时
+  Node.label = ''
+  Node.name = ''
+  Node.code = ''
+  Node.fullname = ''
+  Node.filename = ''
+  Node.id = ''
+
+  old_selectindex = -1
+  node_data.forEach((item,index,arr) => {
+      node_array[index].itemStyle.color = mapcolor.get(node_data[index].label)
+  })
+
+  console.log(old_edge_array)
+  var option
+    myChart.setOption(
+      (option = {
+        title: {
+          text: ''
+        },
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        series: [
+          {
+            type: 'graph',
+            layout: 'none',
+            // progressiveThreshold: 700,
+            data: node_array,
+            edges: edge_array,
+            emphasis: {
+              focus: 'adjacency',
+              label: {
+                position: 'right',
+                show: true
+              }
+            },
+            edgeSymbol: ['', 'arrow'],
+            roam: true,
+            lineStyle: {
+              width: 0.5,
+              curveness: 0.3,
+              opacity: 0.7
+            }
+          }
+        ]
+      }),
+      true
+    );
+    myChart.hideLoading()
+}
+
 //查找类下的方法
 
 const getMethod = () => {
   //console.log(selectclass.value)
-  
+  //需要先确定是否有节点被选中
+  if(Node.id == '' || Node.label != 'TYPE_DECL'){
+    ElMessageBox.alert('请双击选择需要查询的类节点再确定','提示',{
+      confirmButtonText: '确认',
+    })
+    return
+  }
+
+  method_node_array.splice(0,old_node_array.length)
+  method_node_data.splice(0,old_node_data.length)
+  method_edge_array.splice(0,old_edge_array.length)
+
+  old_edge_array = JSON.parse(JSON.stringify(edge_array))
+  old_node_array = JSON.parse(JSON.stringify(node_array))
+  old_node_data = JSON.parse(JSON.stringify(node_data))
+  var myChart = echarts.init(mycharts.value);
+  myChart.showLoading()
   methodoption.splice(0,methodoption.length)
+  active.value = 2
 
   let url = 'http://localhost:8081/joern/showMethodName'
+  let isource = Node.id
   console.log('submit!')
   //与后端交互
   axios.get(url,{
   params:{
-    className: selectclass.value.value,
+    className: Node.fullname,
     }
   })
   .then(response => {
-    response.data.forEach(item => {
+    response.data.forEach((item,index,arr) => {
       methodoption.push({
         value: item.fullName,
         label: item.name,
     })
-    
+
+    node_array.push({
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      id: item.id,
+      name: item.name,
+      symbolSize: 50,
+      draggable: true,
+      itemStyle: {
+        color: mapcolor.get(item.label)
+      },
+      label:{
+        show:true   //在最后产生的方法上
+      },
     })
-    console.log(methodoption)
+    node_data.push({
+      label: item.label,
+      name: item.name,
+      code:item.code,
+      fullname: item.fullName,
+      filename: item.fileName,
+      id: item.id,
+    })
+    
+    let itarget = item.id
+    var edge = {source:isource,target:itarget}
+    if(!edge_array.some(item2 => item2.source == edge.source && item2.target == edge.target)){
+      edge_array.push(edge)
+    }
+    
+
+    })
+
+    var option
+    myChart.setOption(
+      (option = {
+        title: {
+          text: ''
+        },
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        series: [
+          {
+            type: 'graph',
+            layout: 'none',
+            // progressiveThreshold: 700,
+            data: node_array,
+            edges: edge_array,
+            emphasis: {
+              focus: 'adjacency',
+              label: {
+                position: 'right',
+                show: true
+              }
+            },
+            edgeSymbol: ['', 'arrow'],
+            roam: true,
+            lineStyle: {
+              width: 0.5,
+              curveness: 0.3,
+              opacity: 0.7
+            }
+          }
+        ]
+      }),
+      true
+    );
+    myChart.hideLoading()
+    classselected = JSON.parse(JSON.stringify(Node))
+    console.log(classselected)
     })
   .catch(error => {
     console.error(error);
@@ -411,6 +614,68 @@ const onSubmit1 = () => {
     })
   
 }
+//回到上一个步骤，显示类和类的方法
+const methodback = () =>  {
+  var myChart = echarts.init(mycharts.value);
+  methodoption.splice(0,methodoption.length)
+  myChart.showLoading()
+  active.value = 2
+  classselected = -1
+  edge_array = JSON.parse(JSON.stringify(method_edge_array))
+  node_array = JSON.parse(JSON.stringify(method_node_array))
+  node_data = JSON.parse(JSON.stringify(method_node_data))
+  //将状态还原到只有类和方法时
+  Node.label = ''
+  Node.name = ''
+  Node.code = ''
+  Node.fullname = ''
+  Node.filename = ''
+  Node.id = ''
+
+
+  old_selectindex = -1
+  node_data.forEach((item,index,arr) => {
+      node_array[index].itemStyle.color = mapcolor.get(node_data[index].label)
+
+  })
+
+  console.log(method_edge_array)
+  var option
+    myChart.setOption(
+      (option = {
+        title: {
+          text: ''
+        },
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        series: [
+          {
+            type: 'graph',
+            layout: 'none',
+            // progressiveThreshold: 700,
+            data: node_array,
+            edges: edge_array,
+            emphasis: {
+              focus: 'adjacency',
+              label: {
+                position: 'right',
+                show: true
+              }
+            },
+            edgeSymbol: ['', 'arrow'],
+            roam: true,
+            lineStyle: {
+              width: 0.5,
+              curveness: 0.3,
+              opacity: 0.7
+            }
+          }
+        ]
+      }),
+      true
+    );
+    myChart.hideLoading()
+}
 
 const onReset1 = () => {
   form1.class = ''
@@ -421,23 +686,105 @@ const onSubmit1_update = () => {
   form1_update.class = selectclass.value.label
   form1_update.method = selectmethod.value.label
   PathArray.splice(0,PathArray.length)
+  if(Node.id == '' || Node.label != 'METHOD'){
+    ElMessageBox.alert('请双击选择需要查询的方法节点再确定','提示',{
+      confirmButtonText: '确认',
+    })
+    return
+  }
+  method_edge_array = JSON.parse(JSON.stringify(edge_array))
+  method_node_array = JSON.parse(JSON.stringify(node_array))
+  method_node_data = JSON.parse(JSON.stringify(node_data))
+
+  var myChart = echarts.init(mycharts.value);
+  myChart.showLoading()
+  active.value = 3
+
   let url = 'http://localhost:8081/joern/showInvocationLink'
   console.log('submit!')
   //与后端交互
-  console.log(form1_update)
   axios.get(url,{
   params:{
-    className: form1_update.class,
-    methodName: form1_update.method,
+    className: classselected.name,
+    methodName: Node.name,
     isDown: form1_update.isdown.toString(),
     }
   })
   .then(response => {
-    response.data.forEach(item => {
-    PathArray.push(item)
-    
+    response.data.forEach((item_p, index_p, arr_p) => {
+      item_p.pathMember.forEach((item, index, arr) => {
+      if(!node_data.some(item2 => item2.id == item.id)){
+      
+      node_array.push({
+        x: 150 + Math.random() * 100,
+        y: 150 + Math.random() * 100,
+        id: item.id,
+        name: item.name,
+        symbolSize: 50,
+        draggable: true,
+        itemStyle: {
+          color: mapcolor.get(item.label)
+        },
+        label:{
+          show:true   //在最后产生的方法上
+        },
+      })
+      node_data.push({
+        label: item.label,
+        name: item.name,
+        code:item.code,
+        fullname: item.fullName,
+        filename: item.fileName,
+        id: item.id,
+      })
+    }
+      if(index + 1 < arr.length){
+        let isource = item.id
+        let itarget = arr[index+1].id
+        var edge = {source:isource,target:itarget}
+        if(!edge_array.some(item2 => item2.source == edge.source && item2.target == edge.target)){
+          edge_array.push(edge)
+        }
+      }
+
+      })
     })
-    console.log(PathArray)
+    var option
+    myChart.setOption(
+      (option = {
+        title: {
+          text: ''
+        },
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        series: [
+          {
+            type: 'graph',
+            layout: 'none',
+            // progressiveThreshold: 700,
+            data: node_array,
+            edges: edge_array,
+            emphasis: {
+              focus: 'adjacency',
+              label: {
+                position: 'right',
+                show: true
+              }
+            },
+            edgeSymbol: ['', 'arrow'],
+            roam: true,
+            lineStyle: {
+              width: 0.5,
+              curveness: 0.3,
+              opacity: 0.7
+            }
+          }
+        ]
+      }),
+      true
+    );
+      console.log(response.data)
+      myChart.hideLoading()
     })
   .catch(error => {
     console.error(error);
@@ -447,18 +794,51 @@ const onSubmit1_update = () => {
 
 const onReset1_update = () => {
   form1_update.package = ''
-  form1_update.class= ''
-  form1_update.method= ''
   form1_update.isdown= false
   form1_update.isclass= true
   form1_update.ismethod= true
+  classselected = null
   selectclass.value = ''
   selectmethod.value = ''
   radiodisabled.value = false
+  Node.label = ''
+  Node.name = ''
+  Node.code = ''
+  Node.fullname = ''
+  Node.filename = ''
+  Node.id = ''
+  node_array = []
+  edge_array = []
+  node_data = []
+  old_node_array = []
+  old_edge_array = []
+  old_node_data = []
+  active.value = 0
+  old_selectindex = -1 
+  var myChart = echarts.init(mycharts.value);
+  myChart.clear()
 }
 
 const onSubmit2 = () => {
-  PathArray.splice(0,PathArray.length)
+  //PathArray.splice(0,PathArray.length)
+  if(form2.url == ''){
+    ElMessageBox.alert('请输入请求路径','提示',{
+      confirmButtonText: '确认',
+    })
+    return
+  }
+
+  Node.label = ''
+  Node.name = ''
+  Node.code = ''
+  Node.fullname = ''
+  Node.filename = ''
+  Node.id = ''
+  node_data.splice(0,node_data.length)
+  node_array.splice(0,node_array.length)
+  edge_array.splice(0,edge_array.length)
+  var myChart = echarts.init(mycharts.value);
+  myChart.showLoading()
   let url = 'http://localhost:8081/joern/urlPath'
   console.log('submit!')
   //与后端交互
@@ -469,11 +849,81 @@ const onSubmit2 = () => {
     }
   })
   .then(response => {
-    response.data.forEach(item => {
-    PathArray.push(item)
+    response.data.forEach((p_item, p_index, p_arr) => {
+      p_item.pathMember.forEach((item, index, arr) => {
+        if(!node_data.some(item2 => item2.id == item.id)){
+        
+        node_array.push({
+          x: 150 + Math.random() * 100,
+          y: 150 + Math.random() * 100,
+          id: item.id,
+          name: item.name,
+          symbolSize: 50,
+          draggable: true,
+          itemStyle: {
+            color: mapcolor.get(item.label)
+          },
+          label:{
+            show:true   //在最后产生的方法上
+          },
+        })
+        node_data.push({
+          label: item.label,
+          name: item.name,
+          code:item.code,
+          fullname: item.fullName,
+          filename: item.fileName,
+          id: item.id,
+        })
+      }
+        if(index + 1 < arr.length){
+          let isource = item.id
+          let itarget = arr[index+1].id
+          var edge = {source:isource,target:itarget}
+          if(!edge_array.some(item2 => item2.source == edge.source && item2.target == edge.target)){
+            edge_array.push(edge)
+          }
+        }
+      })
     
     })
-    console.log(PathArray)
+    var option
+    myChart.setOption(
+      (option = {
+        title: {
+          text: ''
+        },
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        series: [
+          {
+            type: 'graph',
+            layout: 'none',
+            // progressiveThreshold: 700,
+            data: node_array,
+            edges: edge_array,
+            emphasis: {
+              focus: 'adjacency',
+              label: {
+                position: 'right',
+                show: true
+              }
+            },
+            edgeSymbol: ['', 'arrow'],
+            roam: true,
+            lineStyle: {
+              width: 0.5,
+              curveness: 0.3,
+              opacity: 0.7
+            }
+          }
+        ]
+      }),
+      true
+    );
+
+    myChart.hideLoading()
+
     })
   .catch(error => {
     console.error(error);
@@ -483,11 +933,48 @@ const onSubmit2 = () => {
 
 const onReset2 = () => {
   form2.url = ''
-
+  Node.label = ''
+  Node.name = ''
+  Node.code = ''
+  Node.fullname = ''
+  Node.filename = ''
+  Node.id = ''
+  node_data.splice(0,node_data.length)
+  node_array.splice(0,node_array.length)
+  edge_array.splice(0,edge_array.length)
+  var myChart = echarts.init(mycharts.value);
+  myChart.clear()
 }
 
 const onSubmit3 = () => {
-  PathArray.splice(0,PathArray.length)
+  //PathArray.splice(0,PathArray.length)
+
+  if(form3.table == ''){
+    ElMessageBox.alert('请输入表名','提示',{
+      confirmButtonText: '确认',
+    })
+    return
+  }
+
+  if(form3.field == ''){
+    ElMessageBox.alert('请输入字段名','提示',{
+      confirmButtonText: '确认',
+    })
+    return
+  }
+
+  Node.label = ''
+  Node.name = ''
+  Node.code = ''
+  Node.fullname = ''
+  Node.filename = ''
+  Node.id = ''
+  node_data.splice(0,node_data.length)
+  node_array.splice(0,node_array.length)
+  edge_array.splice(0,edge_array.length)
+  var myChart = echarts.init(mycharts.value);
+  myChart.showLoading()
+
   let url = 'http://localhost:8081/joern/dataBaseInfo'
   console.log('submit!')
   //与后端交互
@@ -500,10 +987,82 @@ const onSubmit3 = () => {
     }
   })
   .then(response => {
-    response.data.forEach(item => {
-    PathArray.push(item)
+    response.data.forEach((p_item, p_index, p_arr) => {
+      p_item.pathMember.forEach((item, index, arr) => {
+        if(!node_data.some(item2 => item2.id == item.id)){
+        console.log(item,item.label)
+        node_array.push({
+          x: 150 + Math.random() * 100,
+          y: 150 + Math.random() * 100,
+          id: item.id,
+          name: item.name,
+          symbolSize: 50,
+          draggable: true,
+          itemStyle: {
+            color: mapcolor.get(item.label)
+          },
+          label:{
+            show:true   //在最后产生的方法上
+          },
+        })
+        node_data.push({
+          label: item.label,
+          name: item.name,
+          code:item.code,
+          fullname: item.fullName,
+          filename: item.fileName,
+          id: item.id,
+        })
+      }
+        if(index + 1 < arr.length){
+          let isource = item.id
+          let itarget = arr[index+1].id
+          var edge = {source:isource,target:itarget}
+          if(!edge_array.some(item2 => item2.source == edge.source && item2.target == edge.target)){
+            edge_array.push(edge)
+          }
+        }
+      })
     
     })
+    var option
+    myChart.setOption(
+      (option = {
+        title: {
+          text: ''
+        },
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        series: [
+          {
+            type: 'graph',
+            layout: 'none',
+            // progressiveThreshold: 700,
+            data: node_array,
+            edges: edge_array,
+            emphasis: {
+              focus: 'adjacency',
+              label: {
+                position: 'right',
+                show: true
+              }
+            },
+            edgeSymbol: ['', 'arrow'],
+            roam: true,
+            lineStyle: {
+              width: 0.5,
+              curveness: 0.3,
+              opacity: 0.7
+            }
+          }
+        ]
+      }),
+      true
+    );
+
+    myChart.hideLoading()
+
+    
     console.log(PathArray)
     })
   .catch(error => {
@@ -515,7 +1074,17 @@ const onReset3 = () => {
   form3.database = ''
   form3.field = ''
   form3.table = ''
-
+  Node.label = ''
+  Node.name = ''
+  Node.code = ''
+  Node.fullname = ''
+  Node.filename = ''
+  Node.id = ''
+  node_data.splice(0,node_data.length)
+  node_array.splice(0,node_array.length)
+  edge_array.splice(0,edge_array.length)
+  var myChart = echarts.init(mycharts.value);
+  myChart.clear()
 }
 
 //点击节点显示属性
@@ -618,6 +1187,7 @@ const handleclick = (Pathindex, Nodeindex) =>{
                 <el-descriptions-item width="100px" v-model="Node.label" label="节点标签">
                   <el-tag v-if="Node.label != ''" size="small">{{Node.label}}</el-tag>
                 </el-descriptions-item>
+                <el-descriptions-item v-model="Node.id" label="节点ID">{{Node.id}}</el-descriptions-item>
                 <el-descriptions-item v-model="Node.name" label="节点名">{{Node.name}}</el-descriptions-item>
                 <el-descriptions-item v-model="Node.code" label="代码">{{Node.code}}</el-descriptions-item>
                 <el-descriptions-item v-model="Node.fullname" label="节点全名">{{Node.fullname}}</el-descriptions-item>
@@ -650,12 +1220,27 @@ const handleclick = (Pathindex, Nodeindex) =>{
                 <el-radio :value="false" :disabled = radiodisabled>向上调用</el-radio>
                 <el-radio :value="true"  :disabled = radiodisabled>向下调用</el-radio>
               </el-radio-group>
+              <el-button style="margin-left:40px" @click="onReset1_update">
+                重置
+              </el-button>
             </el-form-item>
-            <el-form-item style="margin-left:50%;">
-              <el-button type="primary" @click="onSubmit1_update">
+      
+      
+          </el-form>
+          
+        </el-row>
+        <el-row v-else-if="selectvalue == 'Object2'">
+          <!--Object2的情况-->
+          <!--用表单-->
+          <el-form model="form2" label-width="auto" style="max-width: 300px; margin-left:5%;margin-top:5%">
+            <el-form-item style="width: 450px;" label="请输入请求路径">
+              <el-input style="width:275px" v-model="form2.url" ></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="onSubmit2">
                 提交
               </el-button>
-              <el-button @click="onReset1_update">
+              <el-button @click="onReset2">
                 重置
               </el-button>
             </el-form-item>
@@ -664,19 +1249,68 @@ const handleclick = (Pathindex, Nodeindex) =>{
           </el-form>
       
         </el-row>
+        <el-row v-if="selectvalue == 'Object3'">
+          <!--Object3的情况-->
+          <!--用表单-->
+          <el-form model="form3" label-width="auto" style="max-width: 300px; margin-left:5%;margin-top:5%">
+            <!--
+            <el-form-item style="width: 450px;" label="请输入数据库名">
+              <el-input v-model="form3.database" ></el-input>
+            </el-form-item>
+            -->
+            <el-form-item style="width: 450px;" label="请输入数据库表名">
+              <el-input style="width:275px" v-model="form3.table" ></el-input>
+            </el-form-item>
+            <el-form-item style="width: 450px;" label="请输入字段名">
+              <el-input style="width:275px" v-model="form3.field" ></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="onSubmit3">
+                提交
+              </el-button>
+              <el-button @click="onReset3">
+                重置
+              </el-button>
+            </el-form-item>
+      
+      
+          </el-form>
+        </el-row>
+        <el-row v-else> <!--这里先置为空，不知道还有用没-->
+        </el-row>
       </div>
     </el-col>
   </el-row>
-  <el-row> 
+  <el-row v-if="selectvalue == 'Object1_update'"> 
     <el-col :span="24">
     <el-steps :active="active" align-center finish-status="success" style="width:33%;margin-left:12%">
       <el-step title="第一步" description="输入包和调用方向"/>
       <el-step title="第二步" description="选择要查询的类"/>
       <el-step title="第三步" description="选择要查询的方法"/>
     </el-steps>
-  
-    <el-button type="success" style="margin-left:14.5%" @click="next">Next step</el-button>
+    <div v-if="active == 1"> <!--第二步是确定类并查找类-->
+    <div>
+    <el-button type="success" style="margin-left:25.8%" @click="getMethod">确定查找</el-button>
+    </div>
+    <div>
+    <el-button style="margin-left:26.6%;margin-top:5px" @click="onReset1_update">返回</el-button>
+    </div>
+    </div>
+    <div v-if="active == 2"> <!--第二步是确定类并查找类-->
+      <div>
+      <el-button type="success" style="margin-left:36.5%" @click="onSubmit1_update">确定查找</el-button>
+      </div>
+      <div>
+      <el-button style="margin-left:37.3%;margin-top:5px" @click="classback">返回</el-button>
+      </div>
+    </div>
+    <div v-if="active == 3"> <!--第二步是确定类并查找类-->
+      <div>
+      <el-button style="margin-left:37.3%;margin-top:5px" @click="methodback">返回</el-button>
+      </div>
+    </div>
     </el-col>
+
     <!--新的一行放选择器-->
     <!--
     <el-col style="max-width: 400px; margin-left: 12%;" :span="24">
@@ -810,56 +1444,6 @@ const handleclick = (Pathindex, Nodeindex) =>{
 
   </el-row>
 -->
-  <el-row v-if="selectvalue == 'Object2'">
-    <!--Object2的情况-->
-    <!--用表单-->
-    <el-form model="form2" label-width="auto" style="max-width: 300px; margin-left:12%">
-      <el-form-item style="width: 450px;" label="请输入请求路径">
-        <el-input v-model="form2.url" ></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="onSubmit2">
-          提交
-        </el-button>
-        <el-button @click="onReset2">
-          重置
-        </el-button>
-      </el-form-item>
-
-
-    </el-form>
-
-  </el-row>
-  <el-row v-else-if="selectvalue == 'Object3'">
-    <!--Object3的情况-->
-    <!--Object2的情况-->
-    <!--用表单-->
-    <el-form model="form3" label-width="auto" style="max-width: 300px; margin-left:12%">
-      <!--
-      <el-form-item style="width: 450px;" label="请输入数据库名">
-        <el-input v-model="form3.database" ></el-input>
-      </el-form-item>
-      -->
-      <el-form-item style="width: 450px;" label="请输入数据库表名">
-        <el-input v-model="form3.table" ></el-input>
-      </el-form-item>
-      <el-form-item style="width: 450px;" label="请输入字段名">
-        <el-input v-model="form3.field" ></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="onSubmit3">
-          提交
-        </el-button>
-        <el-button @click="onReset3">
-          重置
-        </el-button>
-      </el-form-item>
-
-
-    </el-form>
-  </el-row>
-  <el-row v-else> <!--这里先置为空，不知道还有用没-->
-  </el-row>
 </el-col>
 </el-row>
 
