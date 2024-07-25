@@ -1,5 +1,10 @@
 package com.icbc.codeResolver.mapper.impl;
 
+import com.alibaba.druid.sql.SQLUtils;
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlSchemaStatVisitor;
+import com.alibaba.druid.stat.TableStat;
+import com.alibaba.druid.util.JdbcConstants;
 import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
@@ -52,33 +57,43 @@ public class JoernMapperImpl implements JoernMapper {
     }
 
     @Override
-    public List<neo4jPath> getUrlPath(List<String> url) {
-        String first=url.get(0);
-        String left=url.get(1);
+    public List<neo4jPath> getUrlPath(String url) {
         String name="RequestMapping";
         String like="Mapping";
-        String cypherQuery = "MATCH (n:ANNOTATION)<-[:AST]-(c:TYPE_DECL)-[:AST]->(m:METHOD)-[:AST]->(n1:ANNOTATION) WHERE n.NAME =$NAME" +
-                "  AND n.CODE contains $FIRST" +
-                "  AND n1.NAME contains $LIKE" +
-                "  AND n1.CODE contains $LEFT" +
-                " WITH m" +
-                " MATCH p=(m)-[:CALL|CONTAINS*]->(nextNodes:METHOD)" +
-                " WHERE NOT (nextNodes)-[:CONTAINS]->(:CALL)" +
+        String n_code= "@RequestMapping\\(\"([^\"]+)\"\\)";
+        String n1_code="@[a-zA-Z]+Mapping\\(\"([^\"]+)\"\\)";
+        String cypherQuery = "WITH $URL AS str"+
+                " MATCH (n:ANNOTATION)<-[:AST]-(c:TYPE_DECL)-[:AST]->(m:METHOD)-[:AST]->(n1:ANNOTATION)"+
+                " WHERE n.NAME = $NAME"+
+                " AND n1.NAME contains $LIKE"+
+                " AND n.CODE =~$N_CODE"+
+                " AND n1.CODE =~$N1_CODE"+
+//                " RETURN n,c,m,n1";
+                " WITH n, n1, m,"+
+                " substring(n.CODE, apoc.text.indexOf(n.CODE, '\"') + 1, apoc.text.indexOf(n.CODE, '\")') - apoc.text.indexOf(n.CODE, '\"') - 1) AS code1,"+
+                " substring(n1.CODE, apoc.text.indexOf(n1.CODE, '\"') + 1, apoc.text.indexOf(n1.CODE, '\")') - apoc.text.indexOf(n1.CODE, '\"') - 1) AS code2"+
+                " WHERE code1 + code2 = str"+
+                " MATCH p=(m)-[:CALL|CONTAINS*]->(nextNodes:METHOD)"+
+                " WHERE NOT (nextNodes)-[:CONTAINS]->(:CALL)"+
                 " RETURN p";
+
+        System.out.println(cypherQuery);
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
-                .bind(first).to("FIRST")
-                .bind(left).to("LEFT")
+                .bind(url).to("URL")
+                .bind(n_code).to("N_CODE")
+                .bind(n1_code).to("N1_CODE")
                 .bind(name).to("NAME")
                 .bind(like).to("LIKE")
                 .fetch()
                 .all();
         List<neo4jNode> res = findRelation(result);
         return linkToPath(res);
+
     }
 
     @Override
     public List<neo4jPath> getDataBaseInfo(String dataBaseName, String tableName, String fieldName) {
-        String cypherQuery = "match (n:ANNOTATION)<-[:AST]-(m:METHOD) where (n.CODE starts with '@Insert(' or n.CODE starts with '@Delete(' or n.CODE starts with '@Select(' or n.CODE starts with '@Update(') return n,m";
+        String cypherQuery = "match (n:ANNOTATION)<-[:AST]-(m:METHOD)<-[:AST]-(c:TYPE_DECL) where EXISTS { MATCH (c)-[:AST]->(nn:ANNOTATION) WHERE nn.NAME=\"Mapper\"} and (n.CODE starts with '@Insert(' or n.CODE starts with '@Delete(' or n.CODE starts with '@Select(' or n.CODE starts with '@Update(') RETURN n,m";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
                 .fetch()
                 .all();
@@ -96,7 +111,37 @@ public class JoernMapperImpl implements JoernMapper {
                 method_node = (InternalNode) nodeObject;
             }
             String code=annotation_node.get("CODE").asString();
-            if((code.contains("from "+tableName)||code.contains("update "+tableName)||code.contains("insert into "+tableName))&&(code.contains(fieldName) ||code.contains("*"))){
+            System.out.println(code);
+            //对注解上的code进行分解
+            String sql=code.substring(code.indexOf("\"")+1,code.lastIndexOf("\""));
+            System.out.println(sql);
+            sql = sql.replaceAll("\" \\+ \"", "").replaceAll("\\s+", " ").trim();
+            System.out.println("Transformed String: " + sql);
+            SQLStatement sqlStatement = SQLUtils.parseStatements(sql, JdbcConstants.MYSQL).get(0);
+            MySqlSchemaStatVisitor visitor = new MySqlSchemaStatVisitor();
+            sqlStatement.accept(visitor);
+            //获取表名称
+            Map<TableStat.Name,TableStat> tables=visitor.getTables();
+            boolean flag_table=false,flag_field=false;
+            for (Map.Entry <TableStat.Name,TableStat>  entry : tables.entrySet()) {
+                System.out.println("表名 = " + entry.getKey());
+                if(entry.getKey().toString().equals(tableName)){
+                    flag_table=true;
+                    break;
+                }
+            }
+            Collection<TableStat.Column> columns_first=visitor.getColumns();
+            Set<TableStat.Column> columns=new HashSet<>(columns_first);
+            Iterator iterator = columns.iterator();
+            while(iterator.hasNext()){
+                String str=iterator.next().toString();
+                System.out.println("列名 = " + str);
+                if(str.equals(tableName+"."+fieldName)||str.equals(tableName+".*")){
+                    flag_field=true;
+                    break;
+                }
+            }
+            if(flag_table&&flag_field){
                 //然后向上搜索
                 String method_name=method_node.get("NAME").asString();
                 cypherQuery = "MATCH p = (n:ANNOTATION)<-[:AST]-(endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.NAME=$method_name) and n.CODE=$CODE RETURN p";
@@ -173,7 +218,7 @@ public class JoernMapperImpl implements JoernMapper {
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber) {
         String init=".<init>:";
         Long num=Long.valueOf(maxNumber);
-        String cypherQuery="MATCH p=(n:METHOD)<-[:CALL]-(:CALL)<-[:CONTAINS]-(m:METHOD) WHERE ALL(r IN NODES(p) where (r.FULL_NAME starts with $PACK OR r.METHOD_FULL_NAME starts with $PACK) and (NOT r.FULL_NAME CONTAINS $INIT OR NOT r.METHOD_FULL_NAME CONTAINS $INIT)) RETURN n,count(*) as number order by number desc limit $MAXNUMBER";
+        String cypherQuery="MATCH p=(n:METHOD)<-[:CALL]-(:CALL)<-[:CONTAINS]-(m:METHOD) WHERE ALL(r IN NODES(p) where (r.FULL_NAME starts with $PACK OR r.METHOD_FULL_NAME starts with $PACK) and (NOT r.FULL_NAME CONTAINS $INIT OR NOT r.METHOD_FULL_NAME CONTAINS $INIT)) RETURN n,collect(m) as follower,count(*) as number order by number desc limit $MAXNUMBER";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
                 .bind(packetName).to("PACK")
                 .bind(num).to("MAXNUMBER")
@@ -191,7 +236,22 @@ public class JoernMapperImpl implements JoernMapper {
             }
             neo4jNode node=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
             Long number =(Long) record.get("number");
-            ans.add(new neo4jHotNode(node,number));
+            //获取列表follower
+            List<?> list_followers=new ArrayList<>();
+            List<neo4jNode> followers_node=new ArrayList<>();
+            Object followers=record.get("follower");
+            if(followers instanceof List<?>){
+                list_followers=(List<?>)followers;
+            }
+            for(int i=0;i<list_followers.size();i++){
+                nodeObject=list_followers.get(i);
+                if(nodeObject instanceof InternalNode){
+                    class_node = (InternalNode) nodeObject;
+                    node=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+                    followers_node.add(node);
+                }
+            }
+            ans.add(new neo4jHotNode(node,number,followers_node));
         }
         return ans;
     }

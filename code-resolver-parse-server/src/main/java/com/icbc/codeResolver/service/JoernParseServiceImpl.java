@@ -2,6 +2,7 @@ package com.icbc.codeResolver.service;
 
 import com.icbc.codeResolver.entity.FileDto;
 import com.icbc.codeResolver.entity.Result;
+import com.icbc.codeResolver.service.JoernParseService;
 import com.icbc.codeResolver.utils.StreamGobbler;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Value;

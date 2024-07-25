@@ -35,10 +35,10 @@ spring:
           min-idle: 1
           time-between-eviction-runs: 10s
     neo4j:
-      database: resolvertest
+      database: hmdp
       authentication:
         username: neo4j
-        password: chenqiujian123
+        password: neo4j123
       uri: bolt://127.0.0.1:7687
 springdoc:
   swagger-ui:

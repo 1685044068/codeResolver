@@ -61,7 +61,7 @@ public class JoernServiceImpl implements CodeResolverService {
      * @return
      */
     @Override
-    public List<neo4jPath> getUrlPath(List<String> url) {
+    public List<neo4jPath> getUrlPath(String url) {
         return joernMapper.getUrlPath(url);
     }
 
