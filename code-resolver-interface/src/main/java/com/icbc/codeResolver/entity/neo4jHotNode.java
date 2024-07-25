@@ -13,6 +13,12 @@ public class neo4jHotNode implements Serializable {
 
     public List<neo4jNode> followNode;
 
+    public neo4jHotNode(neo4jNode node, Long number, List<neo4jNode> followNode) {
+        this.node = node;
+        this.number = number;
+        this.followNode = followNode;
+    }
+
     public neo4jHotNode(neo4jNode node, Long number) {
         this.node = node;
         this.number = number;

@@ -218,7 +218,7 @@ public class JoernMapperImpl implements JoernMapper {
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber) {
         String init=".<init>:";
         Long num=Long.valueOf(maxNumber);
-        String cypherQuery="MATCH p=(n:METHOD)<-[:CALL]-(:CALL)<-[:CONTAINS]-(m:METHOD) WHERE ALL(r IN NODES(p) where (r.FULL_NAME starts with $PACK OR r.METHOD_FULL_NAME starts with $PACK) and (NOT r.FULL_NAME CONTAINS $INIT OR NOT r.METHOD_FULL_NAME CONTAINS $INIT)) RETURN n,count(*) as number order by number desc limit $MAXNUMBER";
+        String cypherQuery="MATCH p=(n:METHOD)<-[:CALL]-(:CALL)<-[:CONTAINS]-(m:METHOD) WHERE ALL(r IN NODES(p) where (r.FULL_NAME starts with $PACK OR r.METHOD_FULL_NAME starts with $PACK) and (NOT r.FULL_NAME CONTAINS $INIT OR NOT r.METHOD_FULL_NAME CONTAINS $INIT)) RETURN n,collect(m) as follower,count(*) as number order by number desc limit $MAXNUMBER";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
                 .bind(packetName).to("PACK")
                 .bind(num).to("MAXNUMBER")
@@ -236,7 +236,22 @@ public class JoernMapperImpl implements JoernMapper {
             }
             neo4jNode node=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
             Long number =(Long) record.get("number");
-            ans.add(new neo4jHotNode(node,number));
+            //获取列表follower
+            List<?> list_followers=new ArrayList<>();
+            List<neo4jNode> followers_node=new ArrayList<>();
+            Object followers=record.get("follower");
+            if(followers instanceof List<?>){
+                list_followers=(List<?>)followers;
+            }
+            for(int i=0;i<list_followers.size();i++){
+                nodeObject=list_followers.get(i);
+                if(nodeObject instanceof InternalNode){
+                    class_node = (InternalNode) nodeObject;
+                    node=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+                    followers_node.add(node);
+                }
+            }
+            ans.add(new neo4jHotNode(node,number,followers_node));
         }
         return ans;
     }
