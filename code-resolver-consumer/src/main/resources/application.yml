@@ -1,15 +1,20 @@
 server:
     port: 8084
 dubbo:
+  provider:
+    prefer-serialization=fastjson2,hessian2:
   application:
     name: code-resolver-consumer
     qos-accept-foreign-ip: true
     qos-port: 22226
+    consumer:
+      timeout=60000:
   registry:
     protocol: zookeeper
-    address: localhost:2181
+    address: 127.0.0.1:2181
   protocol:
       name: dubbo
+      payload: 2010241024
       port: -1
   metrics:
       enable-jvm: true
@@ -23,7 +28,7 @@ spring:
     neo4j:
       database: mvc
     redis:
-      host: localhost
+      host: 127.0.0.1
       port: 6379
       database: 1
       lettuce:

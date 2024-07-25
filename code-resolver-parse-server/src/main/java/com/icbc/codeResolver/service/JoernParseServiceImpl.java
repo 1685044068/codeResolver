@@ -81,6 +81,8 @@ public class JoernParseServiceImpl implements JoernParseService {
         File[] files = file.listFiles();
         List<FileDto> fileDtoList=new ArrayList<>();
         for (File file1:files){
+            String end=file1.getName().substring(file1.getName().length()-3);
+            if (!end.equals("jar")) continue;
             fileDtoList.add(new FileDto(file1.getName(),file1.getPath()));
         }
         return Result.ok(fileDtoList,files.length);

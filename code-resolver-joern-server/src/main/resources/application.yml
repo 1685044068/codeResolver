@@ -7,10 +7,11 @@ dubbo:
     qos-port: 22223
   registry:
     protocol: zookeeper
-    address: localhost:2181
+    address: 127.0.0.1:2181
   protocol:
     name: dubbo
-    port: -1
+    port: 20888
+    payload: 2010241024
   metrics:
     enable-jvm: true
 #  monitor:
@@ -27,7 +28,7 @@ spring:
     neo4j:
       database: mvc
     redis:
-      host: localhost
+      host: 127.0.0.1
       port: 6379
       database: 1
       lettuce:
