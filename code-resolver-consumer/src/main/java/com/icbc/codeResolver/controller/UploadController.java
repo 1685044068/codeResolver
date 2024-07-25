@@ -1,15 +1,11 @@
 package com.icbc.codeResolver.controller;
 
-import com.icbc.codeResolver.entity.Result;
-import com.icbc.codeResolver.service.DeleteFileService;
-import com.icbc.codeResolver.service.DownloadFileService;
-import com.icbc.codeResolver.service.UploadFileService;
+import com.icbc.codeResolver.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,11 +25,7 @@ import java.io.IOException;
 public class UploadController {
 
     @DubboReference(group = "upload")
-    UploadFileService uploadFileService;
-    @DubboReference(group = "upload")
-    DownloadFileService downloadFileService;
-    @DubboReference(group = "upload")
-    DeleteFileService deleteFileService;
+    FileService fileService;
 
     /**
      * MultipartFile改为可序列化的模式
@@ -54,14 +46,14 @@ public class UploadController {
         //获取文件名
         String fileName=file.getOriginalFilename();
         String suffixName = fileName.substring(fileName.lastIndexOf("."));
-        return uploadFileService.upload(arr,fileName,suffixName);
+        return fileService.upload(arr,fileName,suffixName);
     }
     // 下载到了默认的位置
     
     @GetMapping("/downloadFile")
     @Operation(summary = "下载文件", description = "下载文件")
     public Result fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException, IOException {
-        return downloadFileService.download(response,fileName);
+        return fileService.download(response,fileName);
     }
 
 
@@ -69,6 +61,6 @@ public class UploadController {
     @GetMapping("/deleteFile")
     @Operation(summary = "删除文件", description = "删除文件")
     public Result deleteFile(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException {
-        return deleteFileService.delete(response,fileName);
+        return fileService.delete(response,fileName);
     }
 }

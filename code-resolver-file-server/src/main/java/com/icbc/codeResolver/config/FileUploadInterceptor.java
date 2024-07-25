@@ -3,7 +3,10 @@ package com.icbc.codeResolver.config;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,11 +23,12 @@ import java.util.stream.Collectors;
 @Component
 public class FileUploadInterceptor implements HandlerInterceptor {
 
-    @Value("${file.upload.disableTypes}")
-    private String disableFileTypes;
+    @Autowired
+    CommonConfig commonConfig;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        String disableFileTypes =  commonConfig.getDisableFileTypes();
         // 文件上传的Servlet
         if (request instanceof MultipartHttpServletRequest) {
             // 允许所有的文件类型
