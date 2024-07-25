@@ -28,7 +28,7 @@ public interface CodeResolverService {
      * @param url
      * @return
      */
-    public List<neo4jPath> getUrlPath(List<String> url);
+    public List<neo4jPath> getUrlPath(String url);
 
     /**
      * 查询表字段以及相关关系

@@ -21,7 +21,7 @@ public interface JoernMapper {
 
     public List<neo4jPath> getMethodDown(String className,String methodName);
 
-    public List<neo4jPath> getUrlPath(List<String> url);
+    public List<neo4jPath> getUrlPath(String url);
 
     public List<neo4jPath> getDataBaseInfo(String dataBaseName, String tableName, String fieldName);
 
