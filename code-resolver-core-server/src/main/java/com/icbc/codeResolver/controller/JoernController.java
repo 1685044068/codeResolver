@@ -7,6 +7,7 @@ import com.icbc.codeResolver.service.CodeResolverService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -16,18 +17,16 @@ import java.util.List;
  * 本地测试controller
  */
 @RestController
-@RequestMapping(value = "/joern")
+@RequestMapping(value = "/resolver")
 @Tag(name = "Joern", description = "joern接口")
 public class JoernController {
-    @DubboReference(group = "joern")
+    @Autowired
     CodeResolverService joernService;
-
     /**
      * 方法追踪 类名 方法名
      * @return
      */
     @GetMapping("/methodDown")
-    
     @Operation(summary = "目标一：方法追踪", description = "根据类名以及方法名进行方法追踪")
     public List<neo4jPath> getMethodNodeDown(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
         System.out.println("目标一：方法追踪 className"+className);
@@ -40,7 +39,6 @@ public class JoernController {
      * @return
      */
     @GetMapping("/methodUp")
-    
     @Operation(summary = "目标一：方法溯源", description = "根据类名以及方法名进行方法溯源")
     public List<neo4jPath> getMethodNodeUp(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
         System.out.println("目标一：方法溯源 className"+className);
@@ -54,7 +52,6 @@ public class JoernController {
      * @return
      */
     @GetMapping("/urlPath")
-    
     @Operation(summary = "目标二：url查找", description = "url的形式为/*/*/*")
     public List<neo4jPath> getUrlPath(@RequestParam("url") String url) {
         System.out.println("目标二：url查找 url"+url);

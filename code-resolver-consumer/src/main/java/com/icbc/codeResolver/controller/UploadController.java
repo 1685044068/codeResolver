@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.controller;
 
+import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -55,8 +56,6 @@ public class UploadController {
     public Result fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException, IOException {
         return fileService.download(response,fileName);
     }
-
-
     
     @GetMapping("/deleteFile")
     @Operation(summary = "删除文件", description = "删除文件")

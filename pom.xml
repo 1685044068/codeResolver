@@ -12,9 +12,9 @@
 
     <modules>
         <module>code-resolver-interface</module>
-        <module>code-resolver-joern-server</module>
+        <module>code-resolver-core-server</module>
         <module>code-resolver-consumer</module>
-        <module>code-resolver-parse-server</module>
+        <module>code-resolver-parser-server</module>
         <module>code-resolver-file-server</module>
     </modules>
 
@@ -59,12 +59,6 @@
                 <version>${dubbo.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.dubbo</groupId>
-                <artifactId>dubbo-dependencies-zookeeper-curator5</artifactId>
-                <version>${dubbo.version}</version>
-                <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>org.springdoc</groupId>

@@ -1,4 +1,4 @@
-package joern.service;
+package com.icbc.codeResolver.service;
 
 import com.icbc.codeResolver.entity.FileDto;
 import com.icbc.codeResolver.entity.Result;
@@ -6,6 +6,7 @@ import com.icbc.codeResolver.service.JoernParseService;
 import com.icbc.codeResolver.utils.StreamGobbler;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -16,6 +17,7 @@ import java.util.concurrent.Executors;
 
 @Service
 @DubboService(group = "parse",timeout = 100000000)//设置超时时间
+@RefreshScope
 public class JoernParseServiceImpl implements JoernParseService {
     @Value("${import_to_db.dir}")
     private String toDb_dir;

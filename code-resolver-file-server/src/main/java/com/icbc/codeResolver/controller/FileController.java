@@ -1,10 +1,12 @@
 package com.icbc.codeResolver.controller;
 
 import com.icbc.codeResolver.config.CommonConfig;
+import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.service.FileService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -19,14 +21,9 @@ import java.io.IOException;
 @Slf4j
 public class FileController {
 
-    private String uploadFilePath;
-
+    @Autowired
     private FileService fileService;
 
-    public FileController(CommonConfig commonConfig,FileService fileService) {
-        uploadFilePath = commonConfig.getUploadFilePath();
-        this.fileService = fileService;
-    }
 
     @GetMapping(value = {"", "/", "/index"})
     public String index() {
@@ -43,19 +40,18 @@ public class FileController {
         return fileService.download(response,fileName);
     }
 
-
     @GetMapping("/deleteFile")
     public Result deleteFile(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException {
         return fileService.delete(response,fileName);
     }
 
-    /**
-     * 多个文件上传
-     *
-     * @param files
-     * @return
-     * @throws JSONException
-     */
+    // /**
+    //  * 多个文件上传
+    //  *
+    //  * @param files
+    //  * @return
+    //  * @throws JSONException
+    //  */
 //    @ResponseBody
 //    @PostMapping("/uploadFiles")
 //    public String fileUploads(@RequestParam("files") MultipartFile files[]) throws JSONException {

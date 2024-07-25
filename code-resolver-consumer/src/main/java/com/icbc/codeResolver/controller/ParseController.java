@@ -16,12 +16,11 @@ import org.springframework.web.bind.annotation.*;
  * @Version: 1.0
  */
 @RestController
-@RequestMapping(value = "/parse")
+@RequestMapping(value = "/parser")
 @Tag(name = "DubboParse", description = "Dubboparse接口")
 public class ParseController {
     @DubboReference(group = "parse")
     JoernParseService joernParseService;
-
 
     @GetMapping("/parseCode")
     @Operation(summary = "解析文件", description = "解析文件")

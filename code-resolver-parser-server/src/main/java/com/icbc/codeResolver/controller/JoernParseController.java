@@ -8,14 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/parse")
-@Controller
+@RequestMapping("/parser")
+@RestController
 @Slf4j
 public class JoernParseController {
     @Autowired
     JoernParseService joernParseService;
     @GetMapping("/parseCode")
-    @ResponseBody
     public Result parseAndImport(@RequestParam("url") String url){
         Result result=joernParseService.parse(url);
         System.out.println(result);
@@ -23,7 +22,6 @@ public class JoernParseController {
     }
 
     @GetMapping("/getFileList")
-    @ResponseBody
     @Operation(summary = "获取解析目录下的所有文件", description = "获取解析目录下的所有文件")
     public Result getFileList(){
         Result result=joernParseService.getFileList();

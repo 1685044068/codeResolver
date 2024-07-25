@@ -15,7 +15,7 @@ import java.util.List;
  * 分布式调用controller
  */
 @RestController
-@RequestMapping(value = "/joern")
+@RequestMapping(value = "/resolver")
 @Tag(name = "DubboJoern", description = "Dubbojoern接口")
 public class JoernController {
     @DubboReference(group = "joern")

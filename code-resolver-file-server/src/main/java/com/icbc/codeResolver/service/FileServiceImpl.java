@@ -2,6 +2,7 @@ package com.icbc.codeResolver.service;
 
 import cn.hutool.core.io.FileUtil;
 import com.icbc.codeResolver.config.CommonConfig;
+import com.icbc.codeResolver.entity.Result;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
@@ -28,14 +29,11 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public String delete(HttpServletResponse response, String fileName) throws JSONException {
-        JSONObject result = new JSONObject();
-
-        File file = new File(commonConfig.getUploadFilePath() + '/' + fileName);
+    public Result delete(HttpServletResponse response, String fileName) throws JSONException {
+        File file = new File(uploadFilePath + '/' + fileName);
         // 判断文件不为null或文件目录存在
         if (file == null || !file.exists()) {
-            result.put("success", "文件不存在!");
-            return result.toString();
+            return Result.fail("文件不存在！");
         }
         try {
             if (file.isFile()) file.delete();
@@ -48,11 +46,9 @@ public class FileServiceImpl implements FileService {
             }
         } catch (Exception e) {
             log.error("发生错误: {}", e);
-            result.put("error", e.getMessage());
-            return result.toString();
+            return Result.fail("发生错误！");
         }
-        result.put("success", "删除成功!");
-        return result.toString();
+        return Result.ok("删除成功");
     }
 
     @Override
@@ -111,13 +107,10 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public String download(HttpServletResponse response, String fileName) throws JSONException, IOException {
-        JSONObject result = new JSONObject();
-
-        File file = new File( commonConfig.getUploadFilePath() + '/' + fileName);
+    public Result download(HttpServletResponse response, String fileName) throws JSONException, IOException {
+        File file = new File(uploadFilePath + '/' + fileName);
         if (!file.exists()) {
-            result.put("error", "下载文件不存在!");
-            return result.toString();
+            return Result.fail("文件不存在！");
         }
 
         response.reset();
@@ -129,7 +122,6 @@ public class FileServiceImpl implements FileService {
         byte[] readBytes = FileUtil.readBytes(file);
         OutputStream os = response.getOutputStream();
         os.write(readBytes);
-        result.put("success", "下载成功!");
-        return result.toString();
+        return Result.ok("下载成功");
     }
 }
