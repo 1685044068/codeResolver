@@ -149,6 +149,9 @@ import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-
         Node.fullname = node_data[index].fullname
         Node.filename = node_data[index].filename
         Node.id = node_data[index].id
+        if(selectvalue.value == 'Object4'){
+          Node.number = node_data[index].number
+        }
     })
   }
 );
@@ -188,26 +191,11 @@ const form3 = reactive({
   field: '',
 })
 
+const form4 = reactive({
+  package: '',
+  maxnumber: '',
+})
 
-//定义选择目标的选项，包括key和标签
-const options = [
-  {
-    value: 'Object1',
-    label: '目标1',
-  },
-  {
-    value: 'Object1_update',
-    label: "目标1优化"
-  },
-  {
-    value: 'Object2',
-    label: '目标2',
-  },
-  {
-    value: 'Object3',
-    label: '目标3',
-  },
-]
 
 const classoption = reactive([
 
@@ -248,6 +236,7 @@ const Node = reactive({
   fullname:'',
   filename:'',
   id: '',
+  number: 0, //被调用次数
 })
 
 const PathArray = reactive([])
@@ -257,6 +246,7 @@ const handleSelect = (key) =>{
   onReset1_update()
   onReset2()
   onReset3()
+  onReset4()
 
 
   console.log(key)
@@ -269,6 +259,9 @@ const handleSelect = (key) =>{
   }  
   else if(key == '1-3'){
     selectvalue.value = 'Object3'
+  }
+  else if(key == '1-4'){
+    selectvalue.value = 'Object4'
   }
   else{
 
@@ -1062,8 +1055,6 @@ const onSubmit3 = () => {
 
     myChart.hideLoading()
 
-    
-    console.log(PathArray)
     })
   .catch(error => {
     console.error(error);
@@ -1087,16 +1078,136 @@ const onReset3 = () => {
   myChart.clear()
 }
 
-//点击节点显示属性
+const onSubmit4 = () =>{
+  if(form4.package == ''){
+    ElMessageBox.alert('请输入包名','提示',{
+      confirmButtonText: '确认',
+    })
+    return
+  }
 
-const handleclick = (Pathindex, Nodeindex) =>{
-  Node.name = PathArray[Pathindex].pathMember[Nodeindex].name
-  Node.label = PathArray[Pathindex].pathMember[Nodeindex].label
-  Node.code = PathArray[Pathindex].pathMember[Nodeindex].code
-  Node.fullname = PathArray[Pathindex].pathMember[Nodeindex].fullName
-  Node.filename = PathArray[Pathindex].pathMember[Nodeindex].fileName
+  if(form4.maxnumber == '' || isNaN(form4.maxnumber) || Number(form4.maxnumber) <= 0 || !Number.isInteger(Number(form4.maxnumber))){
+    console.log(form4.maxnumber)
+    ElMessageBox.alert('请输入一个正整数','提示',{
+      confirmButtonText: '确认',
+    })
+    return
+  }
+  
+  Node.label = ''
+  Node.name = ''
+  Node.code = ''
+  Node.fullname = ''
+  Node.filename = ''
+  Node.id = ''
+  Node.number = 0
+  node_data.splice(0,node_data.length)
+  node_array.splice(0,node_array.length)
+  edge_array.splice(0,edge_array.length)
+  var myChart = echarts.init(mycharts.value);
+  myChart.showLoading()
+
+  let url = 'http://localhost:8081/joern/getHotNode'
+  console.log('submit!')
+  //与后端交互
+  //url形式为/*/*/*
+  axios.get(url,{
+  params:{
+      packetName: form4.package,
+      maxNumber: form4.maxnumber,
+    }
+  })
+  .then(response => {
+    console.log(response.data)
+    response.data.forEach((item, index, arr) => {
+      if(!node_data.some(item2 => item2.id == item.node.id)){
+      console.log(item,item.node.label)
+      node_array.push({
+        x: 150 + Math.random() * 100,
+        y: 150 + Math.random() * 100,
+        id: item.node.id,
+        name: item.node.name,
+        symbolSize: 50,
+        draggable: true,
+        itemStyle: {
+          color: mapcolor.get(item.node.label)
+        },
+        label:{
+          show:true   //在最后产生的方法上
+        },
+      })
+      node_data.push({
+        label: item.node.label,
+        name: item.node.name,
+        code:item.node.code,
+        fullname: item.node.fullName,
+        filename: item.node.fileName,
+        id: item.node.id,
+        number: item.number,
+      })
+    }
+    })
+    
+    var option
+    myChart.setOption(
+      (option = {
+        title: {
+          text: ''
+        },
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        series: [
+          {
+            type: 'graph',
+            layout: 'none',
+            // progressiveThreshold: 700,
+            data: node_array,
+            edges: edge_array,
+            emphasis: {
+              focus: 'adjacency',
+              label: {
+                position: 'right',
+                show: true
+              }
+            },
+            edgeSymbol: ['', 'arrow'],
+            roam: true,
+            lineStyle: {
+              width: 0.5,
+              curveness: 0.3,
+              opacity: 0.7
+            }
+          }
+        ]
+      }),
+      true
+    );
+
+    myChart.hideLoading()
+
+    })
+  .catch(error => {
+    console.error(error);
+    })
 }
 
+const onReset4 = () => {
+  form4.package = ''
+  form4.maxnumber = ''
+
+  Node.label = ''
+  Node.name = ''
+  Node.code = ''
+  Node.fullname = ''
+  Node.filename = ''
+  Node.id = ''
+  Node.number = 0
+  node_data.splice(0,node_data.length)
+  node_array.splice(0,node_array.length)
+  edge_array.splice(0,edge_array.length)
+  var myChart = echarts.init(mycharts.value);
+  myChart.clear()
+}
 
 //定义提交和重置的函数
 
@@ -1127,6 +1238,7 @@ const handleclick = (Pathindex, Nodeindex) =>{
               <el-menu-item index="1-1">根据类名查找</el-menu-item>
               <el-menu-item index="1-2">根据url查找</el-menu-item>
               <el-menu-item index="1-3">根据表名查找</el-menu-item>
+              <el-menu-item index="1-4">热点查找</el-menu-item>
             </el-menu-item-group>
           </el-sub-menu>
           <el-menu-item index="2">
@@ -1189,6 +1301,7 @@ const handleclick = (Pathindex, Nodeindex) =>{
                 </el-descriptions-item>
                 <el-descriptions-item v-model="Node.id" label="节点ID">{{Node.id}}</el-descriptions-item>
                 <el-descriptions-item v-model="Node.name" label="节点名">{{Node.name}}</el-descriptions-item>
+                <el-descriptions-item v-if="selectvalue == 'Object4' && Node.number != 0" v-model="Node.number" label="节点调用次数">{{Node.number }}</el-descriptions-item>
                 <el-descriptions-item v-model="Node.code" label="代码">{{Node.code}}</el-descriptions-item>
                 <el-descriptions-item v-model="Node.fullname" label="节点全名">{{Node.fullname}}</el-descriptions-item>
                 <el-descriptions-item v-model="Node.filename" label="节点文件名">{{Node.filename }}</el-descriptions-item>
@@ -1249,7 +1362,7 @@ const handleclick = (Pathindex, Nodeindex) =>{
           </el-form>
       
         </el-row>
-        <el-row v-if="selectvalue == 'Object3'">
+        <el-row v-else-if="selectvalue == 'Object3'">
           <!--Object3的情况-->
           <!--用表单-->
           <el-form model="form3" label-width="auto" style="max-width: 300px; margin-left:5%;margin-top:5%">
@@ -1269,6 +1382,33 @@ const handleclick = (Pathindex, Nodeindex) =>{
                 提交
               </el-button>
               <el-button @click="onReset3">
+                重置
+              </el-button>
+            </el-form-item>
+      
+      
+          </el-form>
+        </el-row>
+        <el-row v-else-if="selectvalue == 'Object4'">
+          <!--Object4的情况-->
+          <!--用表单-->
+          <el-form model="form4" label-width="auto" style="max-width: 300px; margin-left:5%;margin-top:5%">
+            <!--
+            <el-form-item style="width: 450px;" label="请输入数据库名">
+              <el-input v-model="form3.database" ></el-input>
+            </el-form-item>
+            -->
+            <el-form-item style="width: 450px;" label="请输入包名">
+              <el-input style="width:275px" v-model="form4.package" ></el-input>
+            </el-form-item>
+            <el-form-item style="width: 450px;" label="请输入最大节点数">
+              <el-input style="width:275px" v-model="form4.maxnumber" ></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="onSubmit4">
+                提交
+              </el-button>
+              <el-button @click="onReset4">
                 重置
               </el-button>
             </el-form-item>

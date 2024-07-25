@@ -1,4 +1,4 @@
-package joern.service;
+package com.icbc.codeResolver.service;
 
 import com.icbc.codeResolver.entity.FileDto;
 import com.icbc.codeResolver.entity.Result;
@@ -6,7 +6,6 @@ import com.icbc.codeResolver.utils.StreamGobbler;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import joern.utils.StreamGobbler;
 
 import java.io.File;
 import java.util.ArrayList;
