@@ -1,12 +1,9 @@
 package com.icbc.codeResolver.controller;
 
-import com.icbc.codeResolver.service.DeleteFileService;
-import com.icbc.codeResolver.service.DownloadFileService;
-import com.icbc.codeResolver.service.UploadFileService;
+import com.icbc.codeResolver.config.CommonConfig;
+import com.icbc.codeResolver.service.FileService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.stereotype.Controller;
@@ -17,41 +14,39 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 
-@Controller
-@RequestMapping("file")
+@RestController
+@RequestMapping("/file")
 @Slf4j
 public class FileController {
-    @Value("${file.upload.dir}")
+
     private String uploadFilePath;
+
+    private FileService fileService;
+
+    public FileController(CommonConfig commonConfig,FileService fileService) {
+        uploadFilePath = commonConfig.getUploadFilePath();
+        this.fileService = fileService;
+    }
 
     @GetMapping(value = {"", "/", "/index"})
     public String index() {
-        return "upload";
+        return "index";
     }
 
-    @Autowired
-    private UploadFileService uploadFileService;
-    @Autowired
-    private DownloadFileService downloadFileService;
-    @Autowired
-    private DeleteFileService deleteFileService;
-    @ResponseBody
     @PostMapping("/uploadFile")
     public String fileUpload(@RequestParam("file") MultipartFile file) throws JSONException {
-        return uploadFileService.upload(file);
+        return fileService.upload(file);
     }
     // 下载到了默认的位置
-    @ResponseBody
     @GetMapping("/downloadFile")
     public String fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException, IOException {
-        return downloadFileService.download(response,fileName);
+        return fileService.download(response,fileName);
     }
 
 
-    @ResponseBody
     @GetMapping("/deleteFile")
     public String deleteFile(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException {
-        return deleteFileService.delete(response,fileName);
+        return fileService.delete(response,fileName);
     }
 
     /**

@@ -1,31 +1,57 @@
 package com.icbc.codeResolver.service;
 
 import cn.hutool.core.io.FileUtil;
-
+import com.icbc.codeResolver.config.CommonConfig;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-
 import java.io.File;
-
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Objects;
-
 
 @Service
 @Slf4j
 @DubboService(group = "upload")
-public class UploadFileServiceImpl implements UploadFileService {
-//    @Autowired
-//    private AsyncServiceImpl asyncService;
-//    @DubboReference
-//    private CSVService csvService;
-    @Value("${file.upload.dir}")
-    private String uploadFilePath;
+public class FileServiceImpl implements FileService {
+
+    @Autowired
+    CommonConfig commonConfig;
+
+    @Override
+    public String delete(HttpServletResponse response, String fileName) throws JSONException {
+        JSONObject result = new JSONObject();
+
+        File file = new File(commonConfig.getUploadFilePath() + '/' + fileName);
+        // 判断文件不为null或文件目录存在
+        if (file == null || !file.exists()) {
+            result.put("success", "文件不存在!");
+            return result.toString();
+        }
+        try {
+            if (file.isFile()) file.delete();
+            else {
+                // 文件夹, 需要先删除文件夹下面所有的文件, 然后删除
+                for (File temp : file.listFiles()) {
+                    temp.delete();
+                }
+                file.delete();
+            }
+        } catch (Exception e) {
+            log.error("发生错误: {}", e);
+            result.put("error", e.getMessage());
+            return result.toString();
+        }
+        result.put("success", "删除成功!");
+        return result.toString();
+    }
+
     @Override
     public String upload(MultipartFile file) throws JSONException {
         JSONObject result = new JSONObject();
@@ -38,7 +64,7 @@ public class UploadFileServiceImpl implements UploadFileService {
         String suffixName = fileName.substring(fileName.lastIndexOf("."));
         log.info("上传文件名称为:{}, 后缀名为:{}!", fileName, suffixName);
 
-        File fileTempObj = new File(uploadFilePath + "/" + fileName);
+        File fileTempObj = new File( commonConfig.getUploadFilePath() + "/" + fileName);
         // 检测目录是否存在
         if (!fileTempObj.getParentFile().exists()) {
             fileTempObj.getParentFile().mkdirs();
@@ -59,7 +85,7 @@ public class UploadFileServiceImpl implements UploadFileService {
             result.put("error", e.getMessage());
             return result.toString();
         }
-        result.put("success,存储路径为：", uploadFilePath + "/" + fileName);
+        result.put("success,存储路径为：",  commonConfig.getUploadFilePath() + "/" + fileName);
 //        csvService.transmit();
 //        asyncService.asyncTransmit();
         String s=result.toString().replace("\\","");
@@ -74,7 +100,7 @@ public class UploadFileServiceImpl implements UploadFileService {
             return result.toString();
         }
         log.info("上传文件名称为:{}, 后缀名为:{}!", fileName, suffixName);
-        File fileTempObj = new File(uploadFilePath + "/" + fileName);
+        File fileTempObj = new File( commonConfig.getUploadFilePath() + "/" + fileName);
         // 检测目录是否存在
         if (!fileTempObj.getParentFile().exists()) {
             fileTempObj.getParentFile().mkdirs();
@@ -94,11 +120,33 @@ public class UploadFileServiceImpl implements UploadFileService {
             result.put("error", e.getMessage());
             return result.toString();
         }
-        result.put("success,存储路径为：", uploadFilePath + "/" + fileName);
+        result.put("success,存储路径为：",  commonConfig.getUploadFilePath() + "/" + fileName);
 //        csvService.transmit();
 //        asyncService.asyncTransmit();
         String s=result.toString().replace("\\","");
         return s;
     }
 
+    @Override
+    public String download(HttpServletResponse response, String fileName) throws JSONException, IOException {
+        JSONObject result = new JSONObject();
+
+        File file = new File( commonConfig.getUploadFilePath() + '/' + fileName);
+        if (!file.exists()) {
+            result.put("error", "下载文件不存在!");
+            return result.toString();
+        }
+
+        response.reset();
+        response.setContentType("application/octet-stream");
+        response.setCharacterEncoding("utf-8");
+        response.setContentLength((int) file.length());
+        response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
+
+        byte[] readBytes = FileUtil.readBytes(file);
+        OutputStream os = response.getOutputStream();
+        os.write(readBytes);
+        result.put("success", "下载成功!");
+        return result.toString();
+    }
 }
