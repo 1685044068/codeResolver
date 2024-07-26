@@ -3,6 +3,7 @@ package com.icbc.codeResolver.controller;
 import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
+import com.icbc.codeResolver.entity.neo4jSimilarNode;
 import com.icbc.codeResolver.service.CodeResolverService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -127,6 +128,14 @@ public class JoernController {
         System.out.println("目标四：获取热点节点 包名"+packetName);
         System.out.println("目标四：获取热点节点 节点数"+maxNumber);
         List<neo4jHotNode> ans=joernService.getHotNode(packetName,maxNumber);
+        return ans;
+    }
+
+    @GetMapping("/getSimilar")
+    @Operation(summary = "目标五 获取相似方法", description = "需要包名")
+    public List<neo4jSimilarNode> getSimilar(@RequestParam("packetName")String packetName,@RequestParam("identify")String identify,@RequestParam("threshold")Double threshold) {
+        System.out.println("目标五：获取相似方法 包名"+packetName);
+        List<neo4jSimilarNode> ans=joernService.getSimilar(packetName,identify,threshold);
         return ans;
     }
 

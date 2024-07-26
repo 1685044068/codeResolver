@@ -8,6 +8,7 @@ import com.alibaba.druid.util.JdbcConstants;
 import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
+import com.icbc.codeResolver.entity.neo4jSimilarNode;
 import com.icbc.codeResolver.mapper.JoernMapper;
 import jakarta.annotation.Resource;
 import org.neo4j.driver.internal.InternalNode;
@@ -213,7 +214,10 @@ public class JoernMapperImpl implements JoernMapper {
         }
         return ans;
     }
-
+    /**
+     * 根据包名筛选业务内容，返回前maxNumber的热点节点
+     * @return
+     */
     @Override
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber) {
         String init=".<init>:";
@@ -247,12 +251,53 @@ public class JoernMapperImpl implements JoernMapper {
                 nodeObject=list_followers.get(i);
                 if(nodeObject instanceof InternalNode){
                     class_node = (InternalNode) nodeObject;
-                    node=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
-                    followers_node.add(node);
+                    neo4jNode node1=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+                    followers_node.add(node1);
                 }
             }
             ans.add(new neo4jHotNode(node,number,followers_node));
         }
+        return ans;
+    }
+    @Override
+    public List<neo4jSimilarNode> getSimilar(String packetName){
+        String cypherQuery="MATCH p1 = (startNode1:METHOD)-[:CALL|CONTAINS*]->(nextNodes1:METHOD) WHERE (NOT (nextNodes1)-[:CONTAINS]->(:CALL)) and startNode1.FULL_NAME starts WITH $PACK" +
+                " UNWIND nodes(p1) AS node1" +
+                " with startNode1, COLLECT(ID(node1)) as nodeId1" +
+                " MATCH p2 = (startNode2:METHOD)-[:CALL|CONTAINS*]->(nextNodes2:METHOD) WHERE startNode1<>startNode2 and (NOT (nextNodes2)-[:CONTAINS]->(:CALL)) and (startNode2.FULL_NAME starts WITH $PACK)" +
+                " UNWIND nodes(p2) AS node2" +
+                " with startNode1,startNode2,nodeId1,COLLECT(ID(node2)) as nodeId2" +
+                " RETURN startNode1 AS from," +
+                " startNode2 AS to," +
+                " gds.similarity.jaccard(nodeId1, nodeId2) AS similarity order by similarity desc";
+        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
+                .bind(packetName).to("PACK")
+                .fetch()
+                .all();
+        List<Map<String, Object>> resultList = new ArrayList<>(result);
+        List<neo4jSimilarNode> ans = new ArrayList<>();
+        InternalNode class_node=null;
+        Double similarity=0d;
+        for (int i=0;i<resultList.size();i+=2){
+            Map<String, Object> record=resultList.get(i);
+            Object nodeObject = record.get("from");
+            if (nodeObject instanceof InternalNode) {
+                class_node = (InternalNode) nodeObject;
+            }
+            neo4jNode nodeFrom=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+            nodeObject = record.get("to");
+            if (nodeObject instanceof InternalNode) {
+                class_node = (InternalNode) nodeObject;
+            }
+            neo4jNode nodeTo=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+            Object object=record.get("similarity");
+            if(object instanceof Double){
+                similarity=(Double)object;
+            }
+            neo4jSimilarNode resNode=new neo4jSimilarNode(nodeFrom,nodeTo,similarity);
+            ans.add(resNode);
+        }
+        System.out.println("方法对数量："+ans.size());
         return ans;
     }
 
