@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: code-resolver-consumer
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      config:
+        server-addr: 192.168.100.188:8848
+        file-extension: yml
+        namespace: e4606ca1-438a-41af-a415-ec6ae37b7df9
