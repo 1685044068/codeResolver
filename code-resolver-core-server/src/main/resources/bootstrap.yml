@@ -1,6 +1,6 @@
 spring:
   application:
-    name: joern-service-provider
+    name: resolver-service-provider
   profiles:
     active: dev
   cloud:
@@ -10,4 +10,7 @@ spring:
       config:
         server-addr: 192.168.100.188:8848
         file-extension: yml
-        namespace: e4606ca1-438a-41af-a415-ec6ae37b7df9
+        namespace: e5a19f29-da81-4174-a2f8-b6d6f1348e1f
+dubbo:
+  application:
+    qos-enable: false

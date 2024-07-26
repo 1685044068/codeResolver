@@ -9,5 +9,5 @@ spring:
         server-addr: 192.168.100.188:8848
       config:
         server-addr: 192.168.100.188:8848
-        file-extension: properties
-        namespace: e4606ca1-438a-41af-a415-ec6ae37b7df9
+        file-extension: yml
+        namespace: e5a19f29-da81-4174-a2f8-b6d6f1348e1f
