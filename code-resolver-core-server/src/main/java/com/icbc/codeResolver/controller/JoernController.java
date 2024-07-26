@@ -3,24 +3,26 @@ package com.icbc.codeResolver.controller;
 import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
+import com.icbc.codeResolver.entity.neo4jSimilarNode;
 import com.icbc.codeResolver.service.CodeResolverService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+
 /**
- * 分布式调用controller
+ * 本地测试controller
  */
 @RestController
 @RequestMapping(value = "/resolver")
-@Tag(name = "DubboJoern", description = "Dubbojoern接口")
+@Tag(name = "Joern", description = "joern接口")
 public class JoernController {
-    @DubboReference(group = "joern")
+    @Autowired
     CodeResolverService joernService;
-
     /**
      * 方法追踪 类名 方法名
      * @return
@@ -51,10 +53,14 @@ public class JoernController {
      * @return
      */
     @GetMapping("/urlPath")
-    
     @Operation(summary = "目标二：url查找", description = "url的形式为/*/*/*")
     public List<neo4jPath> getUrlPath(@RequestParam("url") String url) {
         System.out.println("目标二：url查找 url"+url);
+//        String[] urlField = url.split("/");
+//        String Info=url.substring(urlField[1].length()+1,url.length());
+//        List<String> data=new ArrayList<>();
+//        data.add("/"+urlField[1]);
+//        data.add(Info);
         return joernService.getUrlPath(url);
     }
 
@@ -101,8 +107,8 @@ public class JoernController {
     @Operation(summary = "目标一优化：获取唯一方法的调用链路", description = "根据前端传递过来的类名以及方法名及其参数获取到该唯一方法的调用链路")
     public List<neo4jPath> showMethodName(@RequestParam("className")String className, @RequestParam("methodName")String methodName,@RequestParam("isDown")String isDown) {
         System.out.println("目标一优化：获取唯一方法的调用链路 类名"+className);
-        System.out.println("目标一优化：获取唯一方法的调用链路 包名"+methodName);
-        System.out.println("目标一优化：获取唯一方法的调用链路 isDown"+methodName);
+        System.out.println("目标一优化：获取唯一方法的调用链路 方法名"+methodName);
+        System.out.println("目标一优化：获取唯一方法的调用链路 isDown"+isDown);
         return joernService.showInvocationLink(className + ".java", methodName,Boolean.valueOf(isDown));
     }
 
@@ -119,6 +125,14 @@ public class JoernController {
         System.out.println("目标四：获取热点节点 包名"+packetName);
         System.out.println("目标四：获取热点节点 节点数"+maxNumber);
         List<neo4jHotNode> ans=joernService.getHotNode(packetName,maxNumber);
+        return ans;
+    }
+
+    @GetMapping("/getSimilar")
+    @Operation(summary = "目标五 获取相似方法", description = "需要包名")
+    public List<neo4jSimilarNode> getSimilar(@RequestParam("packetName")String packetName,@RequestParam("identify")String identify,@RequestParam("threshold")Double threshold) {
+        System.out.println("目标五：获取相似方法 包名"+packetName);
+        List<neo4jSimilarNode> ans=joernService.getSimilar(packetName,identify,threshold);
         return ans;
     }
 
