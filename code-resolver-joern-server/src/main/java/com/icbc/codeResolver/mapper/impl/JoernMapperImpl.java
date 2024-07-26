@@ -247,8 +247,8 @@ public class JoernMapperImpl implements JoernMapper {
                 nodeObject=list_followers.get(i);
                 if(nodeObject instanceof InternalNode){
                     class_node = (InternalNode) nodeObject;
-                    node=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
-                    followers_node.add(node);
+                    neo4jNode node1=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+                    followers_node.add(node1);
                 }
             }
             ans.add(new neo4jHotNode(node,number,followers_node));

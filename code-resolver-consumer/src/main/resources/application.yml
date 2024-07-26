@@ -21,7 +21,7 @@ spring:
       matching-strategy: ant_path_matcher
   data:
     neo4j:
-      database: mvc
+      database: resolvertest
     redis:
       host: localhost
       port: 6379
@@ -36,7 +36,7 @@ spring:
   neo4j:
     authentication:
       username: neo4j
-      password: 12345678
+      password: chenqiujian123
     uri: bolt://127.0.0.1:7687
   thymeleaf:
     cache: false

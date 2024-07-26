@@ -55,6 +55,7 @@ import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-
     // 基于准备好的dom，初始化echarts实例
     var myChart = echarts.init(mycharts.value);
     var option;
+    var x,y;
     myChart.showLoading();
     myChart.hideLoading();
     myChart.setOption(
@@ -95,11 +96,12 @@ import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-
     //保存拖拽节点位置
     myChart.on("mouseup", params => {
       let index = params.dataIndex
-      option.series[0].data[index].x = myChart._chartsViews[0]._symbolDraw._data._itemLayouts[index][0]
-      option.series[0].data[index].y = myChart._chartsViews[0]._symbolDraw._data._itemLayouts[index][1]
+      x = myChart._chartsViews[0]._symbolDraw._data._itemLayouts[index][0]
+      y = myChart._chartsViews[0]._symbolDraw._data._itemLayouts[index][1]
       //node_array也要更新
-      node_array[index].x = option.series[0].data[index].x
-      node_array[index].y = option.series[0].data[index].y
+      node_array[index].x = x
+      node_array[index].y = y
+      console.log("target log")
     })
 
     myChart.on("dblclick", params => {
@@ -264,9 +266,12 @@ const handleSelect = (key) =>{
   else if(key == '1-4'){
     selectvalue.value = 'Object4'
   }
+  else if(key == '1-5'){
+    selectvalue.value = 'Object5'
+  }  
   else{
 
-  }  
+  }
 }
 
 
@@ -983,7 +988,7 @@ const onSubmit3 = () => {
     response.data.forEach((p_item, p_index, p_arr) => {
       p_item.pathMember.forEach((item, index, arr) => {
         if(!node_data.some(item2 => item2.id == item.id)){
-        console.log(item,item.label)
+        //console.log(item,item.label)
         node_array.push({
           x: 150 + Math.random() * 100,
           y: 150 + Math.random() * 100,
@@ -1087,7 +1092,7 @@ const onSubmit4 = () =>{
   }
 
   if(form4.maxnumber == '' || isNaN(form4.maxnumber) || Number(form4.maxnumber) <= 0 || !Number.isInteger(Number(form4.maxnumber))){
-    console.log(form4.maxnumber)
+    //console.log(form4.maxnumber)
     ElMessageBox.alert('请输入一个正整数','提示',{
       confirmButtonText: '确认',
     })
@@ -1120,31 +1125,40 @@ const onSubmit4 = () =>{
   .then(response => {
     console.log(response.data)
     response.data.forEach((item, index, arr) => {
-      if(!node_data.some(item2 => item2.id == item.node.id && item2.number != 0)){
-      console.log(item,item.node.label)
-      node_array.push({
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        id: item.node.id,
-        name: item.node.name,
-        symbolSize: 50,
-        draggable: true,
-        itemStyle: {
-          color: mapcolor.get(item.node.label)
-        },
-        label:{
-          show:true   //在最后产生的方法上
-        },
-      })
-      node_data.push({
-        label: item.node.label,
-        name: item.node.name,
-        code:item.node.code,
-        fullname: item.node.fullName,
-        filename: item.node.fileName,
-        id: item.node.id,
-        number: item.number,
-      })
+      //要筛选掉都为热节点的重复节点
+      if(!node_data.some(item2 => item2.id == item.node.id && item2.number != 0 && item.number != 0)){
+      //console.log(item)  
+      let index = node_data.findIndex(item2 => item2.id == item.node.id && item2.number == 0)
+      //如果item2节点为热点节点
+      if(index == -1){
+        node_array.push({
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          id: item.node.id,
+          name: item.node.name,
+          symbolSize: 90,
+          draggable: true,
+          itemStyle: {
+            color: mapcolor.get(item.node.label)
+          },
+          label:{
+            show:true   //在最后产生的方法上
+          },
+        })
+        node_data.push({
+          label: item.node.label,
+          name: item.node.name,
+          code:item.node.code,
+          fullname: item.node.fullName,
+          filename: item.node.fileName,
+          id: item.node.id,
+          number: item.number,
+        })
+      }
+      else{
+        node_data[index].number = item.number
+        node_array[index].symbolSize = 90
+      }
       let itarget = item.node.id
       //这里要把所有的follow节点找出来，并连接边
       item.followNode.forEach((itemf,indexf,arrf) => {
@@ -1278,6 +1292,7 @@ const onReset4 = () => {
               <el-menu-item index="1-2">根据url查找</el-menu-item>
               <el-menu-item index="1-3">根据表名查找</el-menu-item>
               <el-menu-item index="1-4">热点查找</el-menu-item>
+              <el-menu-item index="1-5">相似图分析</el-menu-item>
             </el-menu-item-group>
           </el-sub-menu>
           <el-menu-item index="2">
