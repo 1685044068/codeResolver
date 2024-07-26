@@ -9,6 +9,8 @@ import * as echarts from 'echarts';
 import 'animate.css';
 import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-vue'
 
+//当前已有的标签类型
+const labeltype = ["METHOD", "TYPE_DECL", "ANNOTATION", "SELECTED"]
 
 //设置颜色映射
  const mapcolor = new Map([
@@ -17,6 +19,41 @@ import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-
   ["ANNOTATION", '#4CC8F5'],
   ["SELECTED", '#C9181E'],
  ])
+
+const legend_data ={
+        data: [
+          'METHOD','TYPE_DECL','ANNOTATION','SELECTED'
+      ]
+      }
+
+//设置类别
+const categories = [
+        {
+            name: "METHOD",
+            itemStyle:{
+              color: mapcolor.get("METHOD"),
+            },
+        },
+        {
+            name: "TYPE_DECL",
+            itemStyle:{
+              color: mapcolor.get("TYPE_DECL"),
+            },
+        },
+        {
+            name: "ANNOTATION",
+            itemStyle:{
+              color: mapcolor.get("ANNOTATION"),
+            },
+        },
+        {
+            name: "SELECTED",
+            itemStyle:{
+              color: mapcolor.get("SELECTED"),
+            },
+        },
+
+    ]
 
 //定义选择目标的绑定变量
   //这里的array用于存图中的信息
@@ -56,13 +93,12 @@ import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-
     var myChart = echarts.init(mycharts.value);
     var option;
     var x,y;
-    myChart.showLoading();
-    myChart.hideLoading();
     myChart.setOption(
       (option = {
         title: {
           text: ''
         },
+        legend: legend_data,
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
         series: [
@@ -72,6 +108,7 @@ import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-
             // progressiveThreshold: 700,
             data: node_array,
             edges: edge_array,
+            categories: categories,
             emphasis: {
               focus: 'adjacency',
               label: {
@@ -110,6 +147,7 @@ import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-
         title: {
           text: ''
         },
+        legend: legend_data,
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
         series: [
@@ -126,6 +164,7 @@ import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-
                 show: true
               }
             },
+            categories: categories,
             edgeSymbol: ['', 'arrow'],
             roam: true,
             draggable: true,
@@ -139,10 +178,10 @@ import {Document, Menu as IconMenu,Location,Setting,} from '@element-plus/icons-
       }
         let index = params.dataIndex
         if(old_selectindex != -1 && old_selectindex != index){
-            option.series[0].data[old_selectindex].itemStyle.color = mapcolor.get(node_data[old_selectindex].label)
+            option.series[0].data[old_selectindex].category = labeltype.indexOf(node_data[old_selectindex].label)
 
         }
-        option.series[0].data[index].itemStyle.color = mapcolor.get('SELECTED')
+        option.series[0].data[index].category = labeltype.indexOf('SELECTED')
         old_selectindex=index
         myChart.setOption(option)
         //然后在节点属性栏显示
@@ -275,6 +314,47 @@ const handleSelect = (key) =>{
 }
 
 
+const setChartinit = () => {
+  var myChart = echarts.init(mycharts.value)
+  var option
+  myChart.setOption(
+      (option = {
+        title: {
+          text: ''
+        },
+        legend: legend_data,
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        series: [
+          {
+            type: 'graph',
+            layout: 'none',
+            // progressiveThreshold: 700,
+            data: [],
+            edges: [],
+            categories: categories,
+            emphasis: {
+              focus: 'adjacency',
+              label: {
+                position: 'right',
+                show: true
+              }
+            },
+            edgeSymbol: ['', 'arrow'],
+            roam: true,
+            draggable: true,
+            lineStyle: {
+              width: 0.5,
+              curveness: 0.3,
+              opacity: 0.7
+            }
+          }
+        ]
+      }),
+      true
+    );
+}
+
 //查找给出的包下的类
 const getClass = () => {
   old_selectindex = -1
@@ -320,13 +400,12 @@ const getClass = () => {
       name: item.name,
       symbolSize: 50,
       draggable: true,
-      itemStyle: {
-        color: mapcolor.get(item.label)
-      },
+      category: labeltype.indexOf(item.label),
       label:{
         show:true   //在最后产生的方法上
       },
     })
+    console.log(node_array)
     node_data.push({
       label: item.label,
       name: item.name,
@@ -342,6 +421,7 @@ const getClass = () => {
         title: {
           text: ''
         },
+        legend: legend_data,
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
         series: [
@@ -351,6 +431,7 @@ const getClass = () => {
             // progressiveThreshold: 700,
             data: node_array,
             edges: edge_array,
+            categories: categories,
             emphasis: {
               focus: 'adjacency',
               label: {
@@ -399,7 +480,7 @@ const classback = () => {
 
   old_selectindex = -1
   node_data.forEach((item,index,arr) => {
-      node_array[index].itemStyle.color = mapcolor.get(node_data[index].label)
+      node_array[index].category = labeltype.indexOf(node_data[index].label)
   })
 
   console.log(old_edge_array)
@@ -409,6 +490,7 @@ const classback = () => {
         title: {
           text: ''
         },
+        legend: legend_data,
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
         series: [
@@ -418,6 +500,7 @@ const classback = () => {
             // progressiveThreshold: 700,
             data: node_array,
             edges: edge_array,
+            categories:categories,
             emphasis: {
               focus: 'adjacency',
               label: {
@@ -487,9 +570,7 @@ const getMethod = () => {
       name: item.name,
       symbolSize: 50,
       draggable: true,
-      itemStyle: {
-        color: mapcolor.get(item.label)
-      },
+      category: labeltype.indexOf(item.label),
       label:{
         show:true   //在最后产生的方法上
       },
@@ -518,6 +599,7 @@ const getMethod = () => {
         title: {
           text: ''
         },
+        legend: legend_data,
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
         series: [
@@ -527,6 +609,7 @@ const getMethod = () => {
             // progressiveThreshold: 700,
             data: node_array,
             edges: edge_array,
+            categories: categories,
             emphasis: {
               focus: 'adjacency',
               label: {
@@ -633,7 +716,7 @@ const methodback = () =>  {
 
   old_selectindex = -1
   node_data.forEach((item,index,arr) => {
-      node_array[index].itemStyle.color = mapcolor.get(node_data[index].label)
+      node_array[index].category = labeltype.indexOf(node_data[index].label)
 
   })
 
@@ -644,6 +727,7 @@ const methodback = () =>  {
         title: {
           text: ''
         },
+        legend: legend_data,
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
         series: [
@@ -653,6 +737,7 @@ const methodback = () =>  {
             // progressiveThreshold: 700,
             data: node_array,
             edges: edge_array,
+            categories: categories,
             emphasis: {
               focus: 'adjacency',
               label: {
@@ -720,9 +805,7 @@ const onSubmit1_update = () => {
         name: item.name,
         symbolSize: 50,
         draggable: true,
-        itemStyle: {
-          color: mapcolor.get(item.label)
-        },
+        category: labeltype.indexOf(item.label),
         label:{
           show:true   //在最后产生的方法上
         },
@@ -753,6 +836,7 @@ const onSubmit1_update = () => {
         title: {
           text: ''
         },
+        legend: legend_data,
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
         series: [
@@ -762,6 +846,7 @@ const onSubmit1_update = () => {
             // progressiveThreshold: 700,
             data: node_array,
             edges: edge_array,
+            categories: categories,
             emphasis: {
               focus: 'adjacency',
               label: {
@@ -815,6 +900,7 @@ const onReset1_update = () => {
   old_selectindex = -1 
   var myChart = echarts.init(mycharts.value);
   myChart.clear()
+  setChartinit()
 }
 
 const onSubmit2 = () => {
@@ -858,9 +944,7 @@ const onSubmit2 = () => {
           name: item.name,
           symbolSize: 50,
           draggable: true,
-          itemStyle: {
-            color: mapcolor.get(item.label)
-          },
+          category: labeltype.indexOf(item.label),
           label:{
             show:true   //在最后产生的方法上
           },
@@ -942,6 +1026,7 @@ const onReset2 = () => {
   edge_array.splice(0,edge_array.length)
   var myChart = echarts.init(mycharts.value);
   myChart.clear()
+  setChartinit()
 }
 
 const onSubmit3 = () => {
@@ -996,9 +1081,7 @@ const onSubmit3 = () => {
           name: item.name,
           symbolSize: 50,
           draggable: true,
-          itemStyle: {
-            color: mapcolor.get(item.label)
-          },
+          category: labeltype.indexOf(item.label),
           label:{
             show:true   //在最后产生的方法上
           },
@@ -1029,6 +1112,7 @@ const onSubmit3 = () => {
         title: {
           text: ''
         },
+        legend: legend_data,
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
         series: [
@@ -1038,6 +1122,7 @@ const onSubmit3 = () => {
             // progressiveThreshold: 700,
             data: node_array,
             edges: edge_array,
+            categories: categories,
             emphasis: {
               focus: 'adjacency',
               label: {
@@ -1081,6 +1166,7 @@ const onReset3 = () => {
   edge_array.splice(0,edge_array.length)
   var myChart = echarts.init(mycharts.value);
   myChart.clear()
+  setChartinit()
 }
 
 const onSubmit4 = () =>{
@@ -1138,9 +1224,7 @@ const onSubmit4 = () =>{
           name: item.node.name,
           symbolSize: 90,
           draggable: true,
-          itemStyle: {
-            color: mapcolor.get(item.node.label)
-          },
+          category: labeltype.indexOf(item.node.label),
           label:{
             show:true   //在最后产生的方法上
           },
@@ -1170,9 +1254,7 @@ const onSubmit4 = () =>{
           name: itemf.name,
           symbolSize: 50,
           draggable: true,
-          itemStyle: {
-            color: mapcolor.get(itemf.label)
-          },
+          category: labeltype.indexOf(itemf.label),
           label:{
             show:true   //在最后产生的方法上
           },
@@ -1207,6 +1289,7 @@ const onSubmit4 = () =>{
         title: {
           text: ''
         },
+        legend: legend_data,
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
         series: [
@@ -1216,6 +1299,7 @@ const onSubmit4 = () =>{
             // progressiveThreshold: 700,
             data: node_array,
             edges: edge_array,
+            categories: categories,
             emphasis: {
               focus: 'adjacency',
               label: {
@@ -1260,6 +1344,7 @@ const onReset4 = () => {
   edge_array.splice(0,edge_array.length)
   var myChart = echarts.init(mycharts.value);
   myChart.clear()
+  setChartinit()
 }
 
 //定义提交和重置的函数
@@ -1310,12 +1395,7 @@ const onReset4 = () => {
     <el-col :span="14">
       
         <div>
-        <el-card style="max-width: 900px; margin-left:5%">
-          <template #header>
-            <div class="card-header">
-                <div class="chaindisplayhead">调用链</div>
-            </div>
-          </template>
+        <el-card style="max-width: 900px; margin-left:5%; margin-top:2%">
           <!--调用链显示框-->
           <div>
               <!--
@@ -1343,7 +1423,7 @@ const onReset4 = () => {
       </Transition>
     <el-col :span="10">
       <Transition appear :duration="800" enter-active-class="animate__animated animate__backInDown animate__faster">
-      <el-card style="max-width: 400px; margin-left: 5%;">
+      <el-card style="max-width: 400px; margin-left: 5%; margin-top:2.7%">
         <template #header>
           <div class="card-header">
               <div class="propertydisplayhead">节点属性</div>
