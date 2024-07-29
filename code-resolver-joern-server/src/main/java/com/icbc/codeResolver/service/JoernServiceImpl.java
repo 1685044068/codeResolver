@@ -32,8 +32,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getMethodUp(String methodFullName,String methodCode) {
-//        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
-        return joernMapper.getMethodUp(methodFullName,methodCode);
+        return cacheClient.queryLinkByClassAndMethod(methodFullName,methodCode,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
+        //return joernMapper.getMethodUp(methodFullName,methodCode);
     }
 
 
@@ -44,8 +44,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getMethodDown(String methodFullName,String methodCode) {
-//        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
-        return joernMapper.getMethodDown(methodFullName,methodCode);
+        return cacheClient.queryLinkByClassAndMethod(methodFullName,methodCode,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
+        //return joernMapper.getMethodDown(methodFullName,methodCode);
     }
 
     /**
@@ -79,8 +79,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jNode> showClassName(String packetName) {
-//        return cacheClient.queryClassNameByPacket(packetName,100000L, TimeUnit.SECONDS);
-        return joernMapper.getClassName(packetName);
+        return cacheClient.queryClassNameByPacket(packetName,100000L, TimeUnit.SECONDS);
+        //return joernMapper.getClassName(packetName);
     }
 
     /**
@@ -90,8 +90,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jNode> showMethodName(String classFullName) {
-//        return cacheClient.queryMethodNameByClass(className,100000L, TimeUnit.SECONDS);
-        return joernMapper.getMethodName(classFullName);
+        return cacheClient.queryMethodNameByClass(classFullName,100000L, TimeUnit.SECONDS);
+        //return joernMapper.getMethodName(classFullName);
     }
 
     /**

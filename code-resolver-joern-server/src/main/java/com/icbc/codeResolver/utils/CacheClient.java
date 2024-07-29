@@ -7,13 +7,13 @@ import cn.hutool.json.JSONUtil;
 import com.icbc.codeResolver.entity.RedisData;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
+import com.icbc.codeResolver.entity.neo4jSimilarNode;
 import com.icbc.codeResolver.mapper.JoernMapper;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 
 import static com.icbc.codeResolver.utils.RedisConstants.LOCK_SHOP_KEY;
+import static com.icbc.codeResolver.utils.RedisConstants.LOCK_SIMILARITY_KEY;
 
 /**
  * @BelongsProject: code-resolver
@@ -296,6 +297,78 @@ public class CacheClient {
         }
     }
 
+    /**
+     * 相似度缓存
+     * @param packetName
+     * @param identify
+     * @param similarNode
+     * @param time
+     * @param unit
+     * @return
+     */
+    public List<neo4jSimilarNode> catchSimilar(String packetName,String identify,List<neo4jSimilarNode> similarNode,Long time, TimeUnit unit){
+        String key=LOCK_SIMILARITY_KEY+packetName+identify;
+        List<neo4jSimilarNode> similarNodes=null;
+        //1.查询缓存
+        String json=stringRedisTemplate.opsForValue().get(key);
+        //2.判断是否存在
+        if (StrUtil.isBlank(json)){
+            //3.不存在，这里应该去查数据库然后存入缓存
+            System.out.println("需要到数据库中进行查询");
+            List<neo4jSimilarNode> allSimilarNodes=joernMapper.getSimilar(packetName);
+            //数据处理
+            similarNodes= new ArrayList<>();
+            for(int i=0;i<allSimilarNodes.size();i++){
+                neo4jSimilarNode node=allSimilarNodes.get(i);
+                if(node.from.id.equals(identify)){
+                    similarNodes.add(node);
+                }
+            }
+            Collections.sort(similarNodes);
+            //4.存入到缓存
+            this.setWithLogicalExpire(key,similarNodes,time,unit);
+            //5.返回
+            return similarNodes;
+        }else {//存在
+            RedisData redisData=JSONUtil.toBean(json,RedisData.class);
+            similarNodes=JSONUtil.toList((JSONArray) redisData.getData(), neo4jSimilarNode.class);
+            LocalDateTime expireTime=redisData.getExpireTime();
+            //判断是否过期
+            if (expireTime.isAfter(LocalDateTime.now())){
+                //未过期，直接返回对应信息
+                return similarNodes;
+            }
+            //已经过期，重建缓存
+            boolean isLock=tryLock(key);
+            if (isLock){
+                CACHE_REBUILD_EXECUTOR.submit(()->{
+                    List<neo4jSimilarNode>linksRebuild=null;
+                    try {
+                        //重建缓存
+                        //1查询数据库
+                        List<neo4jSimilarNode> allSimilarNodes=joernMapper.getSimilar(packetName);
+                        //2.数据处理
+                        linksRebuild= new ArrayList<>();
+                        for(int i=0;i<allSimilarNodes.size();i++){
+                            neo4jSimilarNode node=allSimilarNodes.get(i);
+                            if(node.from.id.equals(identify)){
+                                linksRebuild.add(node);
+                            }
+                        }
+                        Collections.sort(linksRebuild);
+                        //4.存入到缓存
+                        this.setWithLogicalExpire(key,linksRebuild,time,unit);
+                        //3.存储到缓存中
+                    }catch (Exception e){
+                        throw new RuntimeException(e);
+                    }finally {
+                        unlock(key);
+                    }
+                });
+            }
+            return similarNodes;
+        }
+    }
 
 
 

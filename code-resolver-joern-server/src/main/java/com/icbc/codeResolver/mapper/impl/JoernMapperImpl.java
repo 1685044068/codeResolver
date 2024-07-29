@@ -33,6 +33,12 @@ public class JoernMapperImpl implements JoernMapper {
     @Resource
     private Neo4jClient neo4jClient;
 
+    /**
+     * 方法溯源
+     * @param className
+     * @param methodName
+     * @return
+     */
     @Override
     public List<neo4jPath> getMethodUp(String methodFullName, String methodCode) {
         String cypherQuery = "MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.CODE=$CODE AND endNode.FULL_NAME starts with $FULL_NAME) RETURN p ORDER BY LENGTH(p)";
@@ -45,6 +51,12 @@ public class JoernMapperImpl implements JoernMapper {
         return linkToPath(res);
     }
 
+    /**
+     * 方法追踪
+     * @param className
+     * @param methodName
+     * @return
+     */
     @Override
     public List<neo4jPath> getMethodDown(String methodFullName, String methodCode) {
         String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE (NOT (nextNodes)-[:CONTAINS]->(:CALL)) and (startNode.CODE=$CODE AND startNode.FULL_NAME starts with $FULL_NAME) RETURN p";
@@ -59,23 +71,22 @@ public class JoernMapperImpl implements JoernMapper {
 
     @Override
     public List<neo4jPath> getUrlPath(String url) {
-        String name="RequestMapping";
-        String like="Mapping";
-        String n_code= "@RequestMapping\\(\"([^\"]+)\"\\)";
-        String n1_code="@[a-zA-Z]+Mapping\\(\"([^\"]+)\"\\)";
-        String cypherQuery = "WITH $URL AS str"+
-                " MATCH (n:ANNOTATION)<-[:AST]-(c:TYPE_DECL)-[:AST]->(m:METHOD)-[:AST]->(n1:ANNOTATION)"+
-                " WHERE n.NAME = $NAME"+
-                " AND n1.NAME contains $LIKE"+
-                " AND n.CODE =~$N_CODE"+
-                " AND n1.CODE =~$N1_CODE"+
-//                " RETURN n,c,m,n1";
-                " WITH n, n1, m,"+
+        String name="RequestMapping";//要查找的注解名称
+        String like="Mapping";//要查找的注解名称包含该字符串
+        String n_code= "@RequestMapping\\(\"([^\"]+)\"\\)";//正则表达式, 用于匹配 @RequestMapping("XXX")
+        String n1_code="@[a-zA-Z]+Mapping\\(\"([^\"]+)\"\\)";//正则表达式, 用于匹配 @XXXMapping("XXX")
+        String cypherQuery = "WITH $URL AS str"+//使用 WITH 子句定义了一个名为 $URL 的参数
+                " MATCH (n:ANNOTATION)<-[:AST]-(c:TYPE_DECL)-[:AST]->(m:METHOD)-[:AST]->(n1:ANNOTATION)"+//使用 MATCH 子句查找满足以下条件的节点,存在一个 ANNOTATION 节点 n, 它有一条 AST 关系指向一个 TYPE_DECL 节点 c,c 节点有一条 AST 关系指向一个 METHOD 节点 m,m 节点有一条 AST 关系指向一个 ANNOTATION 节点 n1
+                " WHERE n.NAME = $NAME"+//n 的 NAME 属性等于 $NAME (即 "RequestMapping")
+                " AND n1.NAME contains $LIKE"+//n1 的 NAME 属性包含 $LIKE (即 "Mapping")
+                " AND n.CODE =~$N_CODE"+//n 的 CODE 属性匹配 $N_CODE 正则表达式
+                " AND n1.CODE =~$N1_CODE"+//n1 的 CODE 属性匹配 $N1_CODE 正则表达式
+                " WITH n, n1, m,"+//接下来使用 WITH 子句提取 n, n1, m 节点, 以及从它们的 CODE 属性中提取的 code1 和 code2 字符串
                 " substring(n.CODE, apoc.text.indexOf(n.CODE, '\"') + 1, apoc.text.indexOf(n.CODE, '\")') - apoc.text.indexOf(n.CODE, '\"') - 1) AS code1,"+
                 " substring(n1.CODE, apoc.text.indexOf(n1.CODE, '\"') + 1, apoc.text.indexOf(n1.CODE, '\")') - apoc.text.indexOf(n1.CODE, '\"') - 1) AS code2"+
                 " WHERE code1 + code2 = str"+
-                " MATCH p=(m)-[:CALL|CONTAINS*]->(nextNodes:METHOD)"+
-                " WHERE NOT (nextNodes)-[:CONTAINS]->(:CALL)"+
+                " MATCH p=(m)-[:CALL|CONTAINS*]->(nextNodes:METHOD)"+//最后使用 MATCH 子句查找从 m 节点开始, 通过 CALL 或 CONTAINS 关系到达的nextNodes:METHOD 节点,
+                " WHERE NOT (nextNodes)-[:CONTAINS]->(:CALL)"+//并且这些 nextNodes 节点没有 CONTAINS 关系指向其他 CALL 节点
                 " RETURN p";
 
         System.out.println(cypherQuery);
@@ -89,7 +100,6 @@ public class JoernMapperImpl implements JoernMapper {
                 .all();
         List<neo4jNode> res = findRelation(result);
         return linkToPath(res);
-
     }
 
     @Override
