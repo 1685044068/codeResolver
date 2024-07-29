@@ -3,18 +3,16 @@ package com.icbc.codeResolver.service;
 import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
+import com.icbc.codeResolver.entity.neo4jSimilarNode;
 import com.icbc.codeResolver.mapper.JoernMapper;
 import com.icbc.codeResolver.utils.CacheClient;
+
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import jakarta.annotation.Resource;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 
 @DubboService(group = "joern")
@@ -120,5 +118,19 @@ public class JoernServiceImpl implements CodeResolverService {
     @Override
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber) {
         return joernMapper.getHotNode(packetName,maxNumber);
+    }
+
+    @Override
+    public List<neo4jSimilarNode> getSimilar(String packetName,String identify,Double threshold) {
+        List<neo4jSimilarNode> ans=joernMapper.getSimilar(packetName);
+        List<neo4jSimilarNode> res = new ArrayList<>();
+        for(int i=0;i<ans.size();i++){
+            neo4jSimilarNode node=ans.get(i);
+            if((node.from.id.equals(identify))&&(node.similarity>=threshold)){
+                res.add(node);
+            }
+        }
+        Collections.sort(res);
+        return res;
     }
 }

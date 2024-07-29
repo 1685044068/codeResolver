@@ -3,6 +3,7 @@ package com.icbc.codeResolver.service;
 import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
+import com.icbc.codeResolver.entity.neo4jSimilarNode;
 
 import java.util.List;
 
@@ -63,5 +64,7 @@ public interface CodeResolverService {
 
 
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber);
+
+    public List<neo4jSimilarNode> getSimilar(String packetName, String identify, Double threshold);
 
 }
