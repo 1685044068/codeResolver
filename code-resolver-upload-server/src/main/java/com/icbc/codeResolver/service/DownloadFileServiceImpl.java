@@ -25,7 +25,7 @@ public class DownloadFileServiceImpl implements DownloadFileService {
 
             File file = new File(uploadFilePath + '/' + fileName);
             if (!file.exists()) {
-                return Result.fail("文件不存在！");
+                return Result.error("文件不存在！");
             }
 
             response.reset();
@@ -37,6 +37,6 @@ public class DownloadFileServiceImpl implements DownloadFileService {
             byte[] readBytes = FileUtil.readBytes(file);
             OutputStream os = response.getOutputStream();
             os.write(readBytes);
-            return Result.ok("下载成功");
+            return Result.successful("下载成功");
     }
 }

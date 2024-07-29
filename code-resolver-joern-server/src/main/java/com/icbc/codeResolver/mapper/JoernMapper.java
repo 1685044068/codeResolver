@@ -3,7 +3,7 @@ package com.icbc.codeResolver.mapper;
 import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
-
+import com.icbc.codeResolver.entity.neo4jSimilarNode;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,7 @@ public interface JoernMapper {
 
     public List<neo4jPath> getMethodDown(String className,String methodName);
 
-    public List<neo4jPath> getUrlPath(List<String> url);
+    public List<neo4jPath> getUrlPath(String url);
 
     public List<neo4jPath> getDataBaseInfo(String dataBaseName, String tableName, String fieldName);
 
@@ -30,6 +30,8 @@ public interface JoernMapper {
     public List<neo4jNode> getMethodName(String className);
 
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber);
+
+    public List<neo4jSimilarNode> getSimilar(String packetName);
 
 
 }

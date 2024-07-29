@@ -10,5 +10,6 @@ package com.icbc.codeResolver.utils;
  */
 public class RedisConstants {
     public static final String LOCK_SHOP_KEY = "lock:";
+    public static final String LOCK_SIMILARITY_KEY="similarity";
 
 }

@@ -54,13 +54,7 @@ public class JoernController {
     
     @Operation(summary = "目标二：url查找", description = "url的形式为/*/*/*")
     public List<neo4jPath> getUrlPath(@RequestParam("url") String url) {
-        System.out.println("目标二：url查找 url"+url);
-        String[] urlField = url.split("/");
-        String Info=url.substring(urlField[1].length()+1,url.length());
-        List<String> data=new ArrayList<>();
-        data.add("/"+urlField[1]);
-        data.add(Info);
-        return joernService.getUrlPath(data);
+        return joernService.getUrlPath(url);
     }
 
     /**

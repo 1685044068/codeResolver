@@ -2,6 +2,8 @@ package com.icbc.codeResolver.service;
 
 import com.icbc.codeResolver.entity.Result;
 
+import java.io.IOException;
+
 /**
  * @BelongsProject: code-resolver
  * @BelongsPackage: com.icbc.codeResolver.service
@@ -16,7 +18,7 @@ public interface JoernParseService {
      * @param url
      * @return
      */
-    public Result parse(String url);
+    public Result parse(String url) throws IOException;
 
     public Result getFileList();
 }

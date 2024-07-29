@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 /**
  * @BelongsProject: code-resolver
  * @BelongsPackage: com.icbc.coderesolverconsumber.controller
@@ -25,11 +27,17 @@ public class ParseController {
 
     @GetMapping("/parseCode")
     @Operation(summary = "解析文件", description = "解析文件")
-    public Result parseAndImport(@RequestParam("url") String url){
+    public Result parseAndImport(@RequestParam("url") String url) throws IOException {
         Result result=joernParseService.parse(url);
         System.out.println(result);
         return result;
     }
+
+    /**
+     * 解析路径下的所有文件
+     * TODO 做一下过滤，只保留jar文件
+     * @return
+     */
     @GetMapping("/getFileList")
     @ResponseBody
     @Operation(summary = "获取解析目录下的所有文件", description = "获取解析目录下的所有文件")

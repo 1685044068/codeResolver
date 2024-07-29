@@ -19,14 +19,14 @@ import java.util.Objects;
 
 @Service
 @Slf4j
-@DubboService(group = "upload")
+@DubboService(group = "upload",timeout = 10000)
 public class UploadFileServiceImpl implements UploadFileService {
     @Value("${file.upload.dir}")
     private String uploadFilePath;
     @Override
     public Result upload(MultipartFile file) throws JSONException {
         if (file.isEmpty()) {
-            return Result.fail("错误！空文件!");
+            return Result.error("错误！空文件!");
         }
         // 文件名
         String fileName = file.getOriginalFilename();
@@ -40,23 +40,23 @@ public class UploadFileServiceImpl implements UploadFileService {
         }
         // 使用文件名称检测文件是否已经存在
         if (fileTempObj.exists()) {
-            return Result.fail("错误！文件已经存在!");
+            return Result.error("错误！文件已经存在!");
         }
 
         try {
             FileUtil.writeBytes(file.getBytes(), fileTempObj);
         } catch (Exception e) {
             log.error("发生错误: {}", e);
-            return Result.fail("错误！"+e.getMessage());
+            return Result.error("错误！"+e.getMessage());
         }
-        return Result.ok(uploadFilePath + "/" + fileName);
+        return Result.successful(uploadFilePath + "/" + fileName);
     }
 
     @Override
     public Result upload(byte[] file,String fileName,String suffixName) throws JSONException {
         System.out.println("++++++++++++++++++++++++++++++++++进入一次");
         if (Objects.isNull(file)) {
-            return Result.fail("错误！空文件!");
+            return Result.error("错误！空文件!");
         }
         log.info("上传文件名称为:{}, 后缀名为:{}!", fileName, suffixName);
         File fileTempObj = new File(uploadFilePath + "/" + fileName);
@@ -67,15 +67,15 @@ public class UploadFileServiceImpl implements UploadFileService {
         // 使用文件名称检测文件是否已经存在
         if (fileTempObj.exists()) {
             System.out.println("#########################################文件已存在");
-            return Result.fail("错误！文件已经存在!");
+            return Result.error("错误！文件已经存在!");
         }
         try {
             FileUtil.writeBytes(file, fileTempObj);
         } catch (Exception e) {
             log.error("发生错误: {}", e);
-            return Result.fail("错误！"+e.getMessage());
+            return Result.error("错误！"+e.getMessage());
         }
-        return Result.ok(uploadFilePath + "/" + fileName);
+        return Result.successful(uploadFilePath + "/" + fileName);
     }
 
 }

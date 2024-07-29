@@ -23,7 +23,7 @@ public class DeleteFileServiceImpl implements DeleteFileService {
         File file = new File(uploadFilePath + '/' + fileName);
         // 判断文件不为null或文件目录存在
         if (file == null || !file.exists()) {
-            return Result.fail("文件不存在！");
+            return Result.error("文件不存在！");
         }
         try {
             if (file.isFile()) file.delete();
@@ -36,8 +36,8 @@ public class DeleteFileServiceImpl implements DeleteFileService {
             }
         } catch (Exception e) {
             log.error("发生错误: {}", e);
-            return Result.fail("发生错误！");
+            return Result.error("发生错误！");
         }
-        return Result.ok("删除成功");
+        return Result.successful("删除成功");
     }
 }

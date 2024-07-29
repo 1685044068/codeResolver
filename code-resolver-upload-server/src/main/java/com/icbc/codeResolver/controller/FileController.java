@@ -22,8 +22,7 @@ import java.io.IOException;
 @RequestMapping("file")
 @Slf4j
 public class FileController {
-    @Value("${file.upload.dir}")
-    private String uploadFilePath;
+
 
     @GetMapping(value = {"", "/", "/index"})
     public String index() {

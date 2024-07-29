@@ -26,7 +26,7 @@ spring:
       matching-strategy: ant_path_matcher
   data:
     neo4j:
-      database: mvc
+      database: hmdp
     redis:
       host: 127.0.0.1
       port: 6379

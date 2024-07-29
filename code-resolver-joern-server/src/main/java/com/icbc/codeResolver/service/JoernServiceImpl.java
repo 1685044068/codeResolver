@@ -8,11 +8,6 @@ import com.icbc.codeResolver.utils.CacheClient;
 import java.util.concurrent.TimeUnit;
 import jakarta.annotation.Resource;
 import org.apache.dubbo.config.annotation.DubboService;
-import org.neo4j.driver.internal.InternalNode;
-import org.neo4j.driver.types.Node;
-import org.neo4j.driver.types.Path;
-import org.springframework.data.neo4j.core.Neo4jClient;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -61,7 +56,7 @@ public class JoernServiceImpl implements CodeResolverService {
      * @return
      */
     @Override
-    public List<neo4jPath> getUrlPath(List<String> url) {
+    public List<neo4jPath> getUrlPath(String url) {
         return joernMapper.getUrlPath(url);
     }
 

@@ -37,6 +37,7 @@ public class UploadController {
 
     /**
      * MultipartFile改为可序列化的模式
+     * TODO 上传之后前端要重新加载对应路径下的所有文件
      * @param file
      * @return
      * @throws JSONException

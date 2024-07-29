@@ -3,11 +3,13 @@ package com.icbc.codeResolver.service;
 import com.icbc.codeResolver.entity.FileDto;
 import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.utils.StreamGobbler;
+import org.apache.commons.io.FileUtils;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -40,7 +42,11 @@ public class JoernParseServiceImpl implements JoernParseService {
      * @return
      */
     @Override
-    public Result parse(String url){
+    public Result parse(String url) throws IOException {
+        //删除原来数据库文件夹下的旧csv文件
+        File directory = new File("E:\\software\\Neo4j\\Data\\relate-data\\dbmss\\dbms-dc752007-1b88-4751-adae-6f161a7539d7\\import");
+        FileUtils.cleanDirectory(directory);
+
         System.out.println("url为"+url);
         List<String> commands=new ArrayList<>();
         int i=0;
@@ -66,7 +72,7 @@ public class JoernParseServiceImpl implements JoernParseService {
                 e.printStackTrace();
             }
         }
-        return Result.ok();
+        return Result.successful("解析成功");
     }
 
     /**
@@ -85,6 +91,6 @@ public class JoernParseServiceImpl implements JoernParseService {
             if (!end.equals("jar")) continue;
             fileDtoList.add(new FileDto(file1.getName(),file1.getPath()));
         }
-        return Result.ok(fileDtoList,files.length);
+        return Result.successful(fileDtoList);
     }
 }
