@@ -26,26 +26,26 @@ public class JoernServiceImpl implements CodeResolverService {
     private JoernMapper joernMapper;
 
     /**
-     * @param className
-     * @param methodName
+     * @param methodFullName
+     * @param methodCode
      * @return
      */
     @Override
-    public List<neo4jPath> getMethodUp(String className,String methodName) {
+    public List<neo4jPath> getMethodUp(String methodFullName,String methodCode) {
 //        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
-        return joernMapper.getMethodUp(className,methodName);
+        return joernMapper.getMethodUp(methodFullName,methodCode);
     }
 
 
     /**
-     * @param className
-     * @param methodName
+     * @param methodFullName
+     * @param methodCode
      * @return
      */
     @Override
-    public List<neo4jPath> getMethodDown(String className,String methodName) {
+    public List<neo4jPath> getMethodDown(String methodFullName,String methodCode) {
 //        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
-        return joernMapper.getMethodDown(className,methodName);
+        return joernMapper.getMethodDown(methodFullName,methodCode);
     }
 
     /**
@@ -85,13 +85,13 @@ public class JoernServiceImpl implements CodeResolverService {
 
     /**
      * 前端传递类名返回方法名
-     * @param className
+     * @param classFullName
      * @return
      */
     @Override
-    public List<neo4jNode> showMethodName(String className) {
+    public List<neo4jNode> showMethodName(String classFullName) {
 //        return cacheClient.queryMethodNameByClass(className,100000L, TimeUnit.SECONDS);
-        return joernMapper.getMethodName(className);
+        return joernMapper.getMethodName(classFullName);
     }
 
     /**
@@ -133,4 +133,16 @@ public class JoernServiceImpl implements CodeResolverService {
         Collections.sort(res);
         return res;
     }
+
+    @Override
+    public List<neo4jPath> getShortestPath(String methodFullName,String methodCode) {
+        return joernMapper.getShortestPath(methodFullName,methodCode);
+    }
+
+    @Override
+    public List<neo4jPath> getCollectionPath(List<String> list){
+        return joernMapper.getCollectionPath(list);
+    }
+
+
 }

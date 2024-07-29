@@ -24,33 +24,6 @@ public class JoernController {
     CodeResolverService joernService;
 
     /**
-     * 方法追踪 类名 方法名
-     * @return
-     */
-    @GetMapping("/methodDown")
-    
-    @Operation(summary = "目标一：方法追踪", description = "根据类名以及方法名进行方法追踪")
-    public List<neo4jPath> getMethodNodeDown(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
-        System.out.println("目标一：方法追踪 className"+className);
-        System.out.println("目标一：方法追踪 methodName"+methodName);
-        return joernService.getMethodDown(className+".java",methodName);
-    }
-
-    /**
-     * 方法溯源
-     * @return
-     */
-    @GetMapping("/methodUp")
-    
-    @Operation(summary = "目标一：方法溯源", description = "根据类名以及方法名进行方法溯源")
-    public List<neo4jPath> getMethodNodeUp(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
-        System.out.println("目标一：方法溯源 className"+className);
-        System.out.println("目标一：方法溯源 methodName"+methodName);
-        return joernService.getMethodUp(className+".java",methodName);
-    }
-
-
-    /**
      * url精确查找 url-》斜杠分割 List<String>
      * @return
      */
@@ -89,24 +62,24 @@ public class JoernController {
     
     @GetMapping("/showMethodName")
     @Operation(summary = "目标一优化：获取类下所有方法名", description = "根据前端传递过来的类名获取到该类下的所有方法名以及参数")
-    public List<neo4jNode> showMethodName(@RequestParam("className")String className) {
-        System.out.println("目标一优化：获取类下所有方法名 类名"+className);
-        return joernService.showMethodName(className);
+    public List<neo4jNode> showMethodName(@RequestParam("classFullName")String classFullName) {
+        System.out.println("目标一优化：获取类下所有方法名 类名"+classFullName);
+        return joernService.showMethodName(classFullName);
     }
 
     /**
-     * @param className
-     * @param methodName
+     * @param methodFullName
+     * @param methodCode
      * @return
      */
     
     @GetMapping("/showInvocationLink")
     @Operation(summary = "目标一优化：获取唯一方法的调用链路", description = "根据前端传递过来的类名以及方法名及其参数获取到该唯一方法的调用链路")
-    public List<neo4jPath> showMethodName(@RequestParam("className")String className, @RequestParam("methodName")String methodName,@RequestParam("isDown")String isDown) {
-        System.out.println("目标一优化：获取唯一方法的调用链路 类名"+className);
-        System.out.println("目标一优化：获取唯一方法的调用链路 方法名"+methodName);
+    public List<neo4jPath> showMethodName(@RequestParam("methodFullName")String methodFullName, @RequestParam("methodCode")String methodCode,@RequestParam("isDown")String isDown) {
+        System.out.println("目标一优化：获取唯一方法的调用链路 类名"+methodFullName);
+        System.out.println("目标一优化：获取唯一方法的调用链路 方法名"+methodCode);
         System.out.println("目标一优化：获取唯一方法的调用链路 isDown"+isDown);
-        return joernService.showInvocationLink(className + ".java", methodName,Boolean.valueOf(isDown));
+        return joernService.showInvocationLink(methodFullName, methodCode,Boolean.valueOf(isDown));
     }
 
     /**
@@ -132,6 +105,26 @@ public class JoernController {
         System.out.println("目标五：获取相似方法 包名"+packetName);
         List<neo4jSimilarNode> ans=joernService.getSimilar(packetName,identify,threshold);
         return ans;
+    }
+
+    @GetMapping("/getShortestPath")
+    @Operation(summary = "目标六 获取最短路径", description = "需要方法代码")
+    public List<neo4jPath> getShortestPath(@RequestParam("methodFullName")String methodFullName,@RequestParam("methodCode")String methodCode) {
+        System.out.println("目标六：获取最短路径 方法全路径"+methodFullName);
+        System.out.println("目标六：获取最短路径 方法代码"+methodCode);
+        List<neo4jPath> ans=joernService.getShortestPath(methodFullName,methodCode);
+        return ans;
+    }
+
+    @GetMapping("/getCollectionPath")
+    @Operation(summary = "目标七 获取统一路径", description = "需要方法代码")
+    public List<neo4jPath> getCollectionPath(@RequestBody List<neo4jNode> methodList) {
+        List<String> list=new ArrayList<>();
+        for(int i=0;i<methodList.size();i++){
+            neo4jNode node=methodList.get(i);
+            list.add(node.fullName+node.code);
+        }
+        return joernService.getCollectionPath(list);
     }
 
     public List<String> nodeToString(List<neo4jHotNode> path) {

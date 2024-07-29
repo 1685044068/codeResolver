@@ -34,11 +34,11 @@ public class JoernMapperImpl implements JoernMapper {
     private Neo4jClient neo4jClient;
 
     @Override
-    public List<neo4jPath> getMethodUp(String className, String methodName) {
-        String cypherQuery = "MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.NAME=$METHOD_NAME AND endNode.FILENAME ENDS WITH $CLASS_NAME) RETURN p";
+    public List<neo4jPath> getMethodUp(String methodFullName, String methodCode) {
+        String cypherQuery = "MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.CODE=$CODE AND endNode.FULL_NAME starts with $FULL_NAME) RETURN p ORDER BY LENGTH(p)";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
-                .bind(methodName).to("METHOD_NAME")
-                .bind(className).to("CLASS_NAME")
+                .bind(methodFullName).to("FULL_NAME")
+                .bind(methodCode).to("CODE")
                 .fetch()
                 .all();
         List<neo4jNode> res = findRelation(result);
@@ -46,11 +46,11 @@ public class JoernMapperImpl implements JoernMapper {
     }
 
     @Override
-    public List<neo4jPath> getMethodDown(String className, String methodName) {
-        String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE (NOT (nextNodes)-[:CONTAINS]->(:CALL)) and (startNode.NAME=$METHOD_NAME AND startNode.FILENAME ENDS WITH $CLASS_NAME) RETURN p";
+    public List<neo4jPath> getMethodDown(String methodFullName, String methodCode) {
+        String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE (NOT (nextNodes)-[:CONTAINS]->(:CALL)) and (startNode.CODE=$CODE AND startNode.FULL_NAME starts with $FULL_NAME) RETURN p";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
-                .bind(methodName).to("METHOD_NAME")
-                .bind(className).to("CLASS_NAME")
+                .bind(methodFullName).to("FULL_NAME")
+                .bind(methodCode).to("CODE")
                 .fetch()
                 .all();
         List<neo4jNode> res = findRelation(result);
@@ -187,15 +187,15 @@ public class JoernMapperImpl implements JoernMapper {
 
     /**
      * 根据类全路径查找
-     * @param className
+     * @param classFullName
      * @return
      */
     @Override
-    public List<neo4jNode> getMethodName(String className) {
+    public List<neo4jNode> getMethodName(String classFullName) {
 
         String cypherQuery = "MATCH (n:METHOD)<-[:AST]-(m:TYPE_DECL) WHERE m.FULL_NAME = $FULL_NAME RETURN m,n";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
-                .bind(className).to("FULL_NAME")
+                .bind(classFullName).to("FULL_NAME")
                 .fetch()
                 .all();
         List<Map<String, Object>> resultList = new ArrayList<>(result);
@@ -208,9 +208,6 @@ public class JoernMapperImpl implements JoernMapper {
             }
             neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
             ans.add(node);
-            String class_method_key="CLASS:"+className;
-
-
         }
         return ans;
     }
@@ -222,7 +219,9 @@ public class JoernMapperImpl implements JoernMapper {
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber) {
         String init=".<init>:";
         Long num=Long.valueOf(maxNumber);
-        String cypherQuery="MATCH p=(n:METHOD)<-[:CALL]-(:CALL)<-[:CONTAINS]-(m:METHOD) WHERE ALL(r IN NODES(p) where (r.FULL_NAME starts with $PACK OR r.METHOD_FULL_NAME starts with $PACK) and (NOT r.FULL_NAME CONTAINS $INIT OR NOT r.METHOD_FULL_NAME CONTAINS $INIT)) RETURN n,collect(m) as follower,count(*) as number order by number desc limit $MAXNUMBER";
+        String cypherQuery="MATCH p=(n:METHOD)<-[:CALL]-(:CALL)<-[:CONTAINS]-(m:METHOD) " +
+                "WHERE ALL(r IN NODES(p) where (r.FULL_NAME starts with $PACK OR r.METHOD_FULL_NAME starts with $PACK) and (NOT r.FULL_NAME CONTAINS $INIT OR NOT r.METHOD_FULL_NAME CONTAINS $INIT)) " +
+                "RETURN n,collect(m) as follower,count(*) as number order by number desc limit $MAXNUMBER";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
                 .bind(packetName).to("PACK")
                 .bind(num).to("MAXNUMBER")
@@ -301,6 +300,20 @@ public class JoernMapperImpl implements JoernMapper {
         return ans;
     }
 
+    @Override
+    public List<neo4jPath> getShortestPath(String methodFullName,String methodCode){
+        String cypherQuery="MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) " +
+                "where (not (prevNodes)<-[:CALL]-()) and (endNode.FULL_NAME starts with $FULL_NAME and endNode.CODE=$CODE)  " +
+                "RETURN p order by length(p) limit 1";
+        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
+                .bind(methodFullName).to("FULL_NAME")
+                .bind(methodCode).to("CODE")
+                .fetch()
+                .all();
+        List<neo4jNode> shortestPath = findRelation(result);
+        return linkToPath(shortestPath);
+    }
+
     public List<neo4jNode> findRelation(Collection<Map<String, Object>> result) {
         List<Map<String, Object>> resultList = new ArrayList<>(result);
         List<neo4jNode> ans = new ArrayList<>();
@@ -339,6 +352,23 @@ public class JoernMapperImpl implements JoernMapper {
             ans.add(head.next);
         }
         return ans;
+    }
+
+    @Override
+    public List<neo4jPath> getCollectionPath(List<String> list){
+        String cypherQuery="WITH $LIST AS cons" +
+                " MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD)" +
+                " WHERE NOT (prevNodes)<-[:CALL]-() AND NOT (endNode)-[:CONTAINS]->(:CALL) " +
+                " WITH p, cons,[consNode IN cons WHERE ANY(n IN nodes(p) WHERE n.FULL_NAME+n.CODE = consNode)] AS matchedNodes" +
+                " WHERE size(matchedNodes) = size(cons)" +
+                " RETURN p" +
+                " ORDER BY length(p) limit 1";
+        Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
+                .bind(list).to("LIST")
+                .fetch()
+                .all();
+        List<neo4jNode> shortestPath = findRelation(result);
+        return linkToPath(shortestPath);
     }
 
     public List<neo4jPath> linkToPath(List<neo4jNode> links){

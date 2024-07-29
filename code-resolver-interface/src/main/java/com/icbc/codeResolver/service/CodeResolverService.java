@@ -10,19 +10,19 @@ import java.util.List;
 public interface CodeResolverService {
     /**
      * 根据类和方法名向上溯源
-     * @param className
-     * @param methodName
+     * @param methodFullName
+     * @param methodCode
      * @return
      */
-    public List<neo4jPath> getMethodUp(String className,String methodName);
+    public List<neo4jPath> getMethodUp(String methodFullName,String methodCode);
 
     /**
      * 根据类和方法名向下追踪
-     * @param className
-     * @param methodName
+     * @param methodFullName
+     * @param methodCode
      * @return
      */
-    public List<neo4jPath> getMethodDown(String className,String methodName);
+    public List<neo4jPath> getMethodDown(String methodFullName,String methodCode);
 
     /**
      * 根据url查询
@@ -56,15 +56,19 @@ public interface CodeResolverService {
 
     /**
      * 前端传递类名和方法名返回调用链路
-     * @param className
-     * @param methodName
+     * @param classFullName
+     * @param methodCode
      * @return
      */
-    public List<neo4jPath> showInvocationLink(String className, String methodName,Boolean isDonw);
+    public List<neo4jPath> showInvocationLink(String classFullName, String methodCode,Boolean isDonw);
 
 
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber);
 
     public List<neo4jSimilarNode> getSimilar(String packetName, String identify, Double threshold);
+
+    public List<neo4jPath> getShortestPath(String methodFullName,String methodCode);
+
+    public List<neo4jPath> getCollectionPath(List<String> list);
 
 }
