@@ -2,13 +2,12 @@ server:
     port: 8084
 dubbo:
   provider:
-    prefer-serialization=fastjson2,hessian2:
+    prefer-serialization: fastjson2,hessian2
   application:
+    logger: slf4j
     name: code-resolver-consumer
     qos-accept-foreign-ip: true
     qos-port: 22226
-    consumer:
-      timeout=60000:
   registry:
     protocol: zookeeper
     address: 127.0.0.1:2181
