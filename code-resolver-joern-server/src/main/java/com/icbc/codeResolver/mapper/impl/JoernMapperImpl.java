@@ -35,8 +35,8 @@ public class JoernMapperImpl implements JoernMapper {
 
     /**
      * 方法溯源
-     * @param className
-     * @param methodName
+     * @param methodFullName
+     * @param methodCode
      * @return
      */
     @Override
@@ -53,8 +53,8 @@ public class JoernMapperImpl implements JoernMapper {
 
     /**
      * 方法追踪
-     * @param className
-     * @param methodName
+     * @param methodFullName
+     * @param methodCode
      * @return
      */
     @Override
