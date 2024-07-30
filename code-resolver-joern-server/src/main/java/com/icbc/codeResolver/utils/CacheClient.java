@@ -188,15 +188,14 @@ public class CacheClient {
 
     /**
      * 查询调用链路(逻辑过期版)
-     * @param className
-     * @param methodName
+     * @param methodFullName
      * @param isDown
      * @param time
      * @param unit
      * @return
      */
-    public List<neo4jPath> queryLinkByClassAndMethod(String className,String methodName,Boolean isDown,Long time, TimeUnit unit){
-        String key=className+methodName;
+    public List<neo4jPath> queryLinkByClassAndMethod(String methodFullName,Boolean isDown,Long time, TimeUnit unit){
+        String key=methodFullName;
         List<neo4jPath> links=null;
         //1.查询缓存
         String json=stringRedisTemplate.opsForValue().get(key);
@@ -205,9 +204,9 @@ public class CacheClient {
             //3.不存在，这里应该去查数据库然后存入缓存
             System.out.println("需要到数据库中进行查询");
             if (isDown){
-                links = joernMapper.getMethodDown(className,methodName);
+                links = joernMapper.getMethodDown(methodFullName);
             }else {
-                links = joernMapper.getMethodUp(className,methodName);
+                links = joernMapper.getMethodUp(methodFullName);
             }
             //4.存入到缓存
             this.setWithLogicalExpire(key,links,time,unit);
@@ -233,9 +232,9 @@ public class CacheClient {
                         //重建缓存
                         //1查询数据库
                         if (isDown){
-                            linksRebuild = joernMapper.getMethodDown(className,methodName);
+                            linksRebuild = joernMapper.getMethodDown(methodFullName);
                         }else {
-                            linksRebuild = joernMapper.getMethodUp(className,methodName);
+                            linksRebuild = joernMapper.getMethodUp(methodFullName);
                         }
                         //2.存储到缓存中
                         this.setWithLogicalExpire(key,linksRebuild,time,unit);

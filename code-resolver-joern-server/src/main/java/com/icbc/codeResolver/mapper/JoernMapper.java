@@ -17,9 +17,9 @@ import java.util.Map;
  * @Version: 1.0
  */
 public interface JoernMapper {
-    public List<neo4jPath> getMethodUp(String methodFullName, String methodCode);
+    public List<neo4jPath> getMethodUp(String methodFullName);
 
-    public List<neo4jPath> getMethodDown(String methodFullName,String methodCode);
+    public List<neo4jPath> getMethodDown(String methodFullName);
 
     public List<neo4jPath> getUrlPath(String url);
 
@@ -33,7 +33,7 @@ public interface JoernMapper {
 
     public List<neo4jSimilarNode> getSimilar(String packetName);
 
-    public List<neo4jPath> getShortestPath(String methodFullName,String methodCode);
+    public List<neo4jPath> getShortestPath(String methodFullName);
 
     public List<neo4jPath> getCollectionPath(List<String> list);
 

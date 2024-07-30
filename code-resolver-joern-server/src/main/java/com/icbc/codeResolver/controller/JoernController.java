@@ -69,17 +69,15 @@ public class JoernController {
 
     /**
      * @param methodFullName
-     * @param methodCode
      * @return
      */
     
     @GetMapping("/showInvocationLink")
     @Operation(summary = "目标一优化：获取唯一方法的调用链路", description = "根据前端传递过来的类名以及方法名及其参数获取到该唯一方法的调用链路")
-    public List<neo4jPath> showMethodName(@RequestParam("methodFullName")String methodFullName, @RequestParam("methodCode")String methodCode,@RequestParam("isDown")String isDown) {
+    public List<neo4jPath> showInvocationLink(@RequestParam("methodFullName")String methodFullName,@RequestParam("isDown")String isDown) {
         System.out.println("目标一优化：获取唯一方法的调用链路 类名"+methodFullName);
-        System.out.println("目标一优化：获取唯一方法的调用链路 方法名"+methodCode);
         System.out.println("目标一优化：获取唯一方法的调用链路 isDown"+isDown);
-        return joernService.showInvocationLink(methodFullName, methodCode,Boolean.valueOf(isDown));
+        return joernService.showInvocationLink(methodFullName,Boolean.valueOf(isDown));
     }
 
     /**
@@ -109,32 +107,16 @@ public class JoernController {
 
     @GetMapping("/getShortestPath")
     @Operation(summary = "目标六 获取最短路径", description = "需要方法代码")
-    public List<neo4jPath> getShortestPath(@RequestParam("methodFullName")String methodFullName,@RequestParam("methodCode")String methodCode) {
+    public List<neo4jPath> getShortestPath(@RequestParam("methodFullName")String methodFullName) {
         System.out.println("目标六：获取最短路径 方法全路径"+methodFullName);
-        System.out.println("目标六：获取最短路径 方法代码"+methodCode);
-        List<neo4jPath> ans=joernService.getShortestPath(methodFullName,methodCode);
+        List<neo4jPath> ans=joernService.getShortestPath(methodFullName);
         return ans;
     }
 
     @GetMapping("/getCollectionPath")
     @Operation(summary = "目标七 获取统一路径", description = "需要方法代码")
-    public List<neo4jPath> getCollectionPath(@RequestBody List<neo4jNode> methodList) {
-        List<String> list=new ArrayList<>();
-        for(int i=0;i<methodList.size();i++){
-            neo4jNode node=methodList.get(i);
-            list.add(node.fullName+node.code);
-        }
-        return joernService.getCollectionPath(list);
+    public List<neo4jPath> getCollectionPath(@RequestBody List<String> methodList) {
+        return joernService.getCollectionPath(methodList);
     }
 
-    public List<String> nodeToString(List<neo4jHotNode> path) {
-        List<String> sbrList = new ArrayList<>();
-        for (int i = 0; i < path.size(); i++) {
-            neo4jHotNode r = path.get(i);
-            System.out.println(r.number);
-            String str=('('+r.node.label+')'+r.node.fullName+"     "+r.number);
-            sbrList.add(str);
-        }
-        return sbrList;
-    }
 }

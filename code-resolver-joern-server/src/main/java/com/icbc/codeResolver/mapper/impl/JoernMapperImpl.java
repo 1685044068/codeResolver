@@ -35,16 +35,14 @@ public class JoernMapperImpl implements JoernMapper {
 
     /**
      * 方法溯源
-     * @param className
-     * @param methodName
+     * @param methodFullName
      * @return
      */
     @Override
-    public List<neo4jPath> getMethodUp(String methodFullName, String methodCode) {
-        String cypherQuery = "MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.CODE=$CODE AND endNode.FULL_NAME starts with $FULL_NAME) RETURN p ORDER BY LENGTH(p)";
+    public List<neo4jPath> getMethodUp(String methodFullName) {
+        String cypherQuery = "MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.FULL_NAME starts with $FULL_NAME) RETURN p ORDER BY LENGTH(p)";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
                 .bind(methodFullName).to("FULL_NAME")
-                .bind(methodCode).to("CODE")
                 .fetch()
                 .all();
         List<neo4jNode> res = findRelation(result);
@@ -53,16 +51,14 @@ public class JoernMapperImpl implements JoernMapper {
 
     /**
      * 方法追踪
-     * @param className
-     * @param methodName
+     * @param methodFullName
      * @return
      */
     @Override
-    public List<neo4jPath> getMethodDown(String methodFullName, String methodCode) {
-        String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE (NOT (nextNodes)-[:CONTAINS]->(:CALL)) and (startNode.CODE=$CODE AND startNode.FULL_NAME starts with $FULL_NAME) RETURN p";
+    public List<neo4jPath> getMethodDown(String methodFullName) {
+        String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->(nextNodes:METHOD) WHERE (NOT (nextNodes)-[:CONTAINS]->(:CALL)) and (startNode.FULL_NAME starts with $FULL_NAME) RETURN p";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
                 .bind(methodFullName).to("FULL_NAME")
-                .bind(methodCode).to("CODE")
                 .fetch()
                 .all();
         List<neo4jNode> res = findRelation(result);
@@ -311,13 +307,12 @@ public class JoernMapperImpl implements JoernMapper {
     }
 
     @Override
-    public List<neo4jPath> getShortestPath(String methodFullName,String methodCode){
+    public List<neo4jPath> getShortestPath(String methodFullName){
         String cypherQuery="MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) " +
-                "where (not (prevNodes)<-[:CALL]-()) and (endNode.FULL_NAME starts with $FULL_NAME and endNode.CODE=$CODE)  " +
+                "where (not (prevNodes)<-[:CALL]-()) and (endNode.FULL_NAME starts with $FULL_NAME)  " +
                 "RETURN p order by length(p) limit 1";
         Collection<Map<String, Object>> result = neo4jClient.query(cypherQuery)
                 .bind(methodFullName).to("FULL_NAME")
-                .bind(methodCode).to("CODE")
                 .fetch()
                 .all();
         List<neo4jNode> shortestPath = findRelation(result);

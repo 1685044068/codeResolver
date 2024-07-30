@@ -27,25 +27,23 @@ public class JoernServiceImpl implements CodeResolverService {
 
     /**
      * @param methodFullName
-     * @param methodCode
      * @return
      */
     @Override
-    public List<neo4jPath> getMethodUp(String methodFullName,String methodCode) {
-        return cacheClient.queryLinkByClassAndMethod(methodFullName,methodCode,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
-        //return joernMapper.getMethodUp(methodFullName,methodCode);
+    public List<neo4jPath> getMethodUp(String methodFullName) {
+        //return cacheClient.queryLinkByClassAndMethod(methodFullName,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
+        return joernMapper.getMethodUp(methodFullName);
     }
 
 
     /**
      * @param methodFullName
-     * @param methodCode
      * @return
      */
     @Override
-    public List<neo4jPath> getMethodDown(String methodFullName,String methodCode) {
-        return cacheClient.queryLinkByClassAndMethod(methodFullName,methodCode,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
-        //return joernMapper.getMethodDown(methodFullName,methodCode);
+    public List<neo4jPath> getMethodDown(String methodFullName) {
+        //return cacheClient.queryLinkByClassAndMethod(methodFullName,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
+        return joernMapper.getMethodDown(methodFullName);
     }
 
     /**
@@ -96,16 +94,15 @@ public class JoernServiceImpl implements CodeResolverService {
 
     /**
      * 前端传递类名和方法名返回调用链路
-     * @param className
-     * @param methodName
+     * @param methodFullName
      * @return
      */
     @Override
-    public List<neo4jPath> showInvocationLink(String className, String methodName,Boolean isDonw) {
+    public List<neo4jPath> showInvocationLink(String methodFullName,Boolean isDonw) {
         if (isDonw){
-            return joernMapper.getMethodDown(className,methodName);
+            return joernMapper.getMethodDown(methodFullName);
         }else {
-            return joernMapper.getMethodUp(className,methodName);
+            return joernMapper.getMethodUp(methodFullName);
         }
     }
 
@@ -135,8 +132,8 @@ public class JoernServiceImpl implements CodeResolverService {
     }
 
     @Override
-    public List<neo4jPath> getShortestPath(String methodFullName,String methodCode) {
-        return joernMapper.getShortestPath(methodFullName,methodCode);
+    public List<neo4jPath> getShortestPath(String methodFullName) {
+        return joernMapper.getShortestPath(methodFullName);
     }
 
     @Override
