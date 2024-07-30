@@ -4,11 +4,13 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
+import com.icbc.codeResolver.controller.JoernController;
 import com.icbc.codeResolver.entity.RedisData;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
 import com.icbc.codeResolver.entity.neo4jSimilarNode;
 import com.icbc.codeResolver.mapper.JoernMapper;
+import org.apache.log4j.Logger;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +35,9 @@ import static com.icbc.codeResolver.utils.RedisConstants.LOCK_SIMILARITY_KEY;
  */
 @Component
 public class CacheClient {
+
+    //日志
+    private static Logger logger = Logger.getLogger(CacheClient.class);
     private StringRedisTemplate stringRedisTemplate;
 
     private JoernMapper joernMapper;
@@ -96,7 +101,7 @@ public class CacheClient {
         //2.判断是否存在
         if (StrUtil.isBlank(json)){
             //3.不存在，这里应该去查数据库然后存入缓存
-            System.out.println("需要到数据库中进行查询");
+            logger.info("需要到数据库中进行查询");
             List<neo4jNode> classNeo4j = joernMapper.getClassName(packetName);
             //4.存入到缓存
             this.setWithLogicalExpire(packetName,classNeo4j,time,unit);
@@ -147,7 +152,7 @@ public class CacheClient {
         //2.判断是否存在
         if (StrUtil.isBlank(json)){
             //3.不存在，这里应该去查数据库然后存入缓存
-            System.out.println("需要到数据库中进行查询");
+            logger.info("需要到数据库中进行查询");
             List<neo4jNode> methodNeo4j = joernMapper.getMethodName(className);
             //4.存入到缓存
             this.setWithLogicalExpire(className,methodNeo4j,time,unit);
@@ -202,7 +207,7 @@ public class CacheClient {
         //2.判断是否存在
         if (StrUtil.isBlank(json)){
             //3.不存在，这里应该去查数据库然后存入缓存
-            System.out.println("需要到数据库中进行查询");
+            logger.info("需要到数据库中进行查询");
             if (isDown){
                 links = joernMapper.getMethodDown(methodFullName);
             }else {
@@ -257,7 +262,7 @@ public class CacheClient {
         //2.判断是否存在
         if (StrUtil.isBlank(json)){
             //3.不存在，这里应该去查数据库然后存入缓存
-            System.out.println("需要到数据库中进行查询");
+            logger.info("需要到数据库中进行查询");
             links=joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
             //4.存入到缓存
             this.setWithLogicalExpire(key,links,time,unit);
@@ -313,7 +318,7 @@ public class CacheClient {
         //2.判断是否存在
         if (StrUtil.isBlank(json)){
             //3.不存在，这里应该去查数据库然后存入缓存
-            System.out.println("需要到数据库中进行查询");
+            logger.info("需要到数据库中进行查询");
             List<neo4jSimilarNode> allSimilarNodes=joernMapper.getSimilar(packetName);
             //数据处理
             similarNodes= new ArrayList<>();

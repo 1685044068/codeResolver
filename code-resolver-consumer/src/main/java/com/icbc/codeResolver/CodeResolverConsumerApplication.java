@@ -14,6 +14,7 @@ public class CodeResolverConsumerApplication {
 
     public static void main(String[] args) {
         JSON.config(LargeObject, true);
+
         SpringApplication.run(CodeResolverConsumerApplication.class, args);
 
     }

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.apache.log4j.Logger;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,8 @@ import java.io.IOException;
 @Tag(name = "DubboUpload", description = "upload接口")
 public class UploadController {
 
+    //日志信息
+    private static Logger logger = Logger.getLogger(UploadController.class);
     @DubboReference(group = "upload")
     UploadFileService uploadFileService;
     @DubboReference(group = "upload")
@@ -37,7 +40,6 @@ public class UploadController {
 
     /**
      * MultipartFile改为可序列化的模式
-     * TODO 上传之后前端要重新加载对应路径下的所有文件
      * @param file
      * @return
      * @throws JSONException
@@ -45,7 +47,7 @@ public class UploadController {
     @PostMapping("/uploadFile")
     @Operation(summary = "上传文件", description = "上传文件")
     public Result fileUpload(@RequestParam("file") MultipartFile file) throws JSONException {
-        System.out.println("controller++++++++++++++++++++++++++++++++++++");
+        logger.info("+++++++++++++++++开始上传文件+++++++++++++++++");
         byte[] arr=null;
         try{
             arr=file.getBytes();
@@ -62,6 +64,7 @@ public class UploadController {
     @GetMapping("/downloadFile")
     @Operation(summary = "下载文件", description = "下载文件")
     public Result fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException, IOException {
+        logger.info("开始下载文件");
         return downloadFileService.download(response,fileName);
     }
 
@@ -70,6 +73,7 @@ public class UploadController {
     @GetMapping("/deleteFile")
     @Operation(summary = "删除文件", description = "删除文件")
     public Result deleteFile(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException {
+        logger.info("开始删除文件");
         return deleteFileService.delete(response,fileName);
     }
 }
