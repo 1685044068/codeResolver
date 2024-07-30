@@ -5,13 +5,13 @@ dubbo:
     logger: slf4j
     name: joern-service-provider
     qos-accept-foreign-ip: true
-    qos-port: 22223
+    qos-port: -1
   registry:
     protocol: zookeeper
     address: 127.0.0.1:2181
   protocol:
     name: dubbo
-    port: 20888
+    port: -1
     payload: 2010241024
   metrics:
     enable-jvm: true

@@ -7,7 +7,7 @@ dubbo:
     logger: slf4j
     name: code-resolver-consumer
     qos-accept-foreign-ip: true
-    qos-port: 22226
+    qos-port: -1
   registry:
     protocol: zookeeper
     address: 127.0.0.1:2181
