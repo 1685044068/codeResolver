@@ -364,7 +364,7 @@ public class JoernMapperImpl implements JoernMapper {
         String cypherQuery="WITH $LIST AS cons" +
                 " MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD)" +
                 " WHERE NOT (prevNodes)<-[:CALL]-() AND NOT (endNode)-[:CONTAINS]->(:CALL) " +
-                " WITH p, cons,[consNode IN cons WHERE ANY(n IN nodes(p) WHERE n.FULL_NAME+n.CODE = consNode)] AS matchedNodes" +
+                " WITH p, cons,[consNode IN cons WHERE ANY(n IN nodes(p) WHERE elementId(n) = consNode)] AS matchedNodes" +
                 " WHERE size(matchedNodes) = size(cons)" +
                 " RETURN p" +
                 " ORDER BY length(p) limit 1";

@@ -113,8 +113,11 @@ public class JoernController {
     }
 
     @GetMapping("/getCollectionPath")
-    @Operation(summary = "目标七 获取统一路径", description = "需要方法代码")
+    @Operation(summary = "目标七 获取统一路径", description = "需要方法全名")
     public List<neo4jPath> getCollectionPath(@RequestBody List<String> methodList) {
+        for(int i=0;i<methodList.size();i++){
+            System.out.println("方法"+i+":"+methodList.get(i));
+        }
         return joernService.getCollectionPath(methodList);
     }
 
