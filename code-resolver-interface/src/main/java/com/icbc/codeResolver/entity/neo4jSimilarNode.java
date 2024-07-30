@@ -1,5 +1,13 @@
 package com.icbc.codeResolver.entity;
 
+/**
+ * @BelongsProject: code-resolver
+ * @BelongsPackage: com.icbc.codeResolver.entity
+ * @Author: zero
+ * @CreateTime: 2024-07-29  08:58
+ * @Description: TODO
+ * @Version: 1.0
+ */
 import lombok.Data;
 
 import java.io.Serializable;
