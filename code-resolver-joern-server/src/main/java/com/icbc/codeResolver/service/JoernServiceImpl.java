@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.service;
 
+import com.icbc.codeResolver.controller.JoernController;
 import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
@@ -11,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import jakarta.annotation.Resource;
 import org.apache.dubbo.config.annotation.DubboService;
+import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,9 @@ import org.springframework.stereotype.Service;
 
 @Component
 public class JoernServiceImpl implements CodeResolverService {
+
+    //日志
+    private static Logger logger = Logger.getLogger(JoernServiceImpl.class);
     @Resource
     private CacheClient cacheClient;
 
@@ -65,7 +70,7 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getDataBaseInfo(String dataBaseName, String tableName, String fieldName) {
-
+        logger.info("进入getDataBaseInfo");
         return cacheClient.queryDataBaseInfo(dataBaseName,tableName,fieldName,100000L, TimeUnit.SECONDS);
         //return joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
     }
@@ -114,6 +119,7 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber) {
+        logger.info("进入getHotNode");
         return joernMapper.getHotNode(packetName,maxNumber);
     }
 
