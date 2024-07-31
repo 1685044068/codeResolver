@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.service;
 
+import com.icbc.codeResolver.entity.AsyncTaskProgress;
 import com.icbc.codeResolver.entity.Result;
 
 import java.io.IOException;
@@ -20,5 +21,8 @@ public interface JoernParseService {
      */
     public Result parse(String url) throws IOException;
 
+    public void AsyncParse(String url,String taskId) throws IOException;
+
     public Result getFileList();
+    public AsyncTaskProgress getAsyncTaskProgress(String taskId);
 }
