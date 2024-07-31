@@ -17,24 +17,26 @@ import java.util.Map;
  * @Version: 1.0
  */
 public interface JoernMapper {
-    public List<neo4jPath> getMethodUp(String methodFullName);
+    public Collection<Map<String, Object>> getMethodUp(String methodFullName);
 
-    public List<neo4jPath> getMethodDown(String methodFullName);
+    public Collection<Map<String, Object>> getMethodDown(String methodFullName);
 
-    public List<neo4jPath> getUrlPath(String url);
+    public Collection<Map<String, Object>> getUrlPath(String url);
 
-    public List<neo4jPath> getDataBaseInfo(String dataBaseName, String tableName, String fieldName);
+    public Collection<Map<String, Object>> getDataBaseInfo(String dataBaseName, String tableName, String fieldName);
 
-    public List<neo4jNode> getClassName(String packetName);
+    public Collection<Map<String, Object>> getClassName(String packetName);
 
-    public List<neo4jNode> getMethodName(String classFullName);
+    public Collection<Map<String, Object>> getMethodName(String classFullName);
 
-    public List<neo4jHotNode> getHotNode(String packetName, String maxNumber);
+    public Collection<Map<String, Object>> getHotNode(String packetName, String maxNumber);
 
-    public List<neo4jSimilarNode> getSimilar(String packetName);
+    public Collection<Map<String, Object>> getSimilar(String packetName);
 
-    public List<neo4jPath> getShortestPath(String methodFullName);
+    public Collection<Map<String, Object>> getShortestPath(String methodFullName);
 
-    public List<neo4jPath> getCollectionPath(List<String> list);
+    public Collection<Map<String, Object>> getCollectionPath(List<String> list);
+
+    public Collection<Map<String, Object>> getMethodInformation(String methodName);
 
 }

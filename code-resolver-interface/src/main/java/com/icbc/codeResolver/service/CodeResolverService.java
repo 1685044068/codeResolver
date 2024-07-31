@@ -68,4 +68,8 @@ public interface CodeResolverService {
 
     public List<neo4jPath> getCollectionPath(List<String> list);
 
+    public List<neo4jNode> getMethodInformation(String methodName);
+
+
+
 }

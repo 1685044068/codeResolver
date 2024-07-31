@@ -11,6 +11,9 @@ import com.icbc.codeResolver.entity.neo4jPath;
 import com.icbc.codeResolver.entity.neo4jSimilarNode;
 import com.icbc.codeResolver.mapper.JoernMapper;
 import org.apache.log4j.Logger;
+import org.neo4j.driver.internal.InternalNode;
+import org.neo4j.driver.types.Node;
+import org.neo4j.driver.types.Path;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +22,6 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
 
 
 import static com.icbc.codeResolver.utils.RedisConstants.LOCK_SHOP_KEY;
@@ -85,7 +87,7 @@ public class CacheClient {
     /**
      * 创建线程池
      */
-    private static final ExecutorService CACHE_REBUILD_EXECUTOR= Executors.newFixedThreadPool(100);
+    private static final ExecutorService CACHE_REBUILD_EXECUTOR= Executors.newFixedThreadPool(10);
 
 
     /**
@@ -102,7 +104,20 @@ public class CacheClient {
         if (StrUtil.isBlank(json)){
             //3.不存在，这里应该去查数据库然后存入缓存
             logger.info("需要到数据库中进行查询");
-            List<neo4jNode> classNeo4j = joernMapper.getClassName(packetName);
+
+            Collection<Map<String, Object>> result = joernMapper.getClassName(packetName);
+            List<Map<String, Object>> resultList = new ArrayList<>(result);
+            List<neo4jNode> classNeo4j = new ArrayList<>();
+            InternalNode class_node=null;
+            for (Map<String, Object> record : resultList) {
+                Object nodeObject = record.get("n");
+                if (nodeObject instanceof InternalNode) {
+                    class_node = (InternalNode) nodeObject;
+                }
+                neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+                classNeo4j.add(node);
+            }
+
             //4.存入到缓存
             this.setWithLogicalExpire(packetName,classNeo4j,time,unit);
             //5.返回
@@ -125,7 +140,18 @@ public class CacheClient {
                     try {
                         //重建缓存
                         //1查询数据库
-                        List<neo4jNode> classNeo4jRebuild = joernMapper.getClassName(packetName);
+                        Collection<Map<String, Object>> result = joernMapper.getClassName(packetName);
+                        List<Map<String, Object>> resultList = new ArrayList<>(result);
+                        List<neo4jNode> classNeo4jRebuild = new ArrayList<>();
+                        InternalNode class_node=null;
+                        for (Map<String, Object> record : resultList) {
+                            Object nodeObject = record.get("n");
+                            if (nodeObject instanceof InternalNode) {
+                                class_node = (InternalNode) nodeObject;
+                            }
+                            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+                            classNeo4jRebuild.add(node);
+                        }
                         //2.存储到缓存中
                         this.setWithLogicalExpire(packetName,classNeo4jRebuild,time,unit);
                     }catch (Exception e){
@@ -153,7 +179,19 @@ public class CacheClient {
         if (StrUtil.isBlank(json)){
             //3.不存在，这里应该去查数据库然后存入缓存
             logger.info("需要到数据库中进行查询");
-            List<neo4jNode> methodNeo4j = joernMapper.getMethodName(className);
+            Collection<Map<String, Object>> result = joernMapper.getMethodName(className);
+            List<Map<String, Object>> resultList = new ArrayList<>(result);
+            List<neo4jNode> methodNeo4j = new ArrayList<>();
+            InternalNode class_node=null;
+            for (Map<String, Object> record : resultList) {
+                Object nodeObject = record.get("n");
+                if (nodeObject instanceof InternalNode) {
+                    class_node = (InternalNode) nodeObject;
+                }
+                neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+                methodNeo4j.add(node);
+            }
+
             //4.存入到缓存
             this.setWithLogicalExpire(className,methodNeo4j,time,unit);
             //5.返回
@@ -176,7 +214,20 @@ public class CacheClient {
                     try {
                         //重建缓存
                         //1查询数据库
-                        List<neo4jNode> methodNeo4jRebuild = joernMapper.getMethodName(className);
+
+                        Collection<Map<String, Object>> result = joernMapper.getMethodName(className);
+                        List<Map<String, Object>> resultList = new ArrayList<>(result);
+                        List<neo4jNode> methodNeo4jRebuild = new ArrayList<>();
+                        InternalNode class_node=null;
+                        for (Map<String, Object> record : resultList) {
+                            Object nodeObject = record.get("n");
+                            if (nodeObject instanceof InternalNode) {
+                                class_node = (InternalNode) nodeObject;
+                            }
+                            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+                            methodNeo4jRebuild.add(node);
+                        }
+
                         //2.存储到缓存中
                         this.setWithLogicalExpire(className,methodNeo4jRebuild,time,unit);
                     }catch (Exception e){
@@ -209,9 +260,11 @@ public class CacheClient {
             //3.不存在，这里应该去查数据库然后存入缓存
             logger.info("需要到数据库中进行查询");
             if (isDown){
-                links = joernMapper.getMethodDown(methodFullName);
+                Collection<Map<String, Object>> result=joernMapper.getMethodDown(methodFullName);
+                links= linkToPath(findRelation(result));
             }else {
-                links = joernMapper.getMethodUp(methodFullName);
+                Collection<Map<String, Object>> result=joernMapper.getMethodUp(methodFullName);
+                links= linkToPath(findRelation(result));
             }
             //4.存入到缓存
             this.setWithLogicalExpire(key,links,time,unit);
@@ -237,9 +290,11 @@ public class CacheClient {
                         //重建缓存
                         //1查询数据库
                         if (isDown){
-                            linksRebuild = joernMapper.getMethodDown(methodFullName);
+                            Collection<Map<String, Object>> result=joernMapper.getMethodDown(methodFullName);
+                            linksRebuild= linkToPath(findRelation(result));
                         }else {
-                            linksRebuild = joernMapper.getMethodUp(methodFullName);
+                            Collection<Map<String, Object>> result=joernMapper.getMethodUp(methodFullName);
+                            linksRebuild= linkToPath(findRelation(result));
                         }
                         //2.存储到缓存中
                         this.setWithLogicalExpire(key,linksRebuild,time,unit);
@@ -262,10 +317,10 @@ public class CacheClient {
         //2.判断是否存在
         if (StrUtil.isBlank(json)){
             //3.不存在，这里应该去查数据库然后存入缓存
-            logger.info("需要到数据库中进行查询");
-            links=joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
-            //4.存入到缓存
-            this.setWithLogicalExpire(key,links,time,unit);
+//            logger.info("需要到数据库中进行查询");
+//            links=linkToPath(joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName));
+//            //4.存入到缓存
+//            this.setWithLogicalExpire(key,links,time,unit);
             //5.返回
             return links;
         }else{//6.如果存在
@@ -287,9 +342,9 @@ public class CacheClient {
                     try {
                         //重建缓存
                         //1查询数据库
-                        linksRebuild=joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
-                        //2.存储到缓存中
-                        this.setWithLogicalExpire(key,linksRebuild,time,unit);
+//                        linksRebuild=linkToPath(joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName));
+//                        //2.存储到缓存中
+//                        this.setWithLogicalExpire(key,linksRebuild,time,unit);
                     }catch (Exception e){
                         throw new RuntimeException(e);
                     }finally {
@@ -318,16 +373,16 @@ public class CacheClient {
         //2.判断是否存在
         if (StrUtil.isBlank(json)){
             //3.不存在，这里应该去查数据库然后存入缓存
-            logger.info("需要到数据库中进行查询");
-            List<neo4jSimilarNode> allSimilarNodes=joernMapper.getSimilar(packetName);
-            //数据处理
-            similarNodes= new ArrayList<>();
-            for(int i=0;i<allSimilarNodes.size();i++){
-                neo4jSimilarNode node=allSimilarNodes.get(i);
-                if(node.from.id.equals(identify)){
-                    similarNodes.add(node);
-                }
-            }
+//            logger.info("需要到数据库中进行查询");
+//            List<neo4jSimilarNode> allSimilarNodes=joernMapper.getSimilar(packetName);
+//            //数据处理
+//            similarNodes= new ArrayList<>();
+//            for(int i=0;i<allSimilarNodes.size();i++){
+//                neo4jSimilarNode node=allSimilarNodes.get(i);
+//                if(node.from.id.equals(identify)){
+//                    similarNodes.add(node);
+//                }
+//            }
             Collections.sort(similarNodes);
             //4.存入到缓存
             this.setWithLogicalExpire(key,similarNodes,time,unit);
@@ -350,15 +405,15 @@ public class CacheClient {
                     try {
                         //重建缓存
                         //1查询数据库
-                        List<neo4jSimilarNode> allSimilarNodes=joernMapper.getSimilar(packetName);
-                        //2.数据处理
-                        linksRebuild= new ArrayList<>();
-                        for(int i=0;i<allSimilarNodes.size();i++){
-                            neo4jSimilarNode node=allSimilarNodes.get(i);
-                            if(node.from.id.equals(identify)){
-                                linksRebuild.add(node);
-                            }
-                        }
+//                        List<neo4jSimilarNode> allSimilarNodes=joernMapper.getSimilar(packetName);
+//                        //2.数据处理
+//                        linksRebuild= new ArrayList<>();
+//                        for(int i=0;i<allSimilarNodes.size();i++){
+//                            neo4jSimilarNode node=allSimilarNodes.get(i);
+//                            if(node.from.id.equals(identify)){
+//                                linksRebuild.add(node);
+//                            }
+//                        }
                         Collections.sort(linksRebuild);
                         //4.存入到缓存
                         this.setWithLogicalExpire(key,linksRebuild,time,unit);
@@ -374,29 +429,61 @@ public class CacheClient {
         }
     }
 
+    public List<neo4jNode> findRelation(Collection<Map<String, Object>> result) {
+        List<Map<String, Object>> resultList = new ArrayList<>(result);
+        List<neo4jNode> ans = new ArrayList<>();
+        String label;
+        for (Map<String, Object> record : resultList) {
+            Path path = (Path) record.get("p");
+            neo4jNode head = new neo4jNode("1", "1","1","1","1","1");
+            neo4jNode cur = head;
+            int x = 0;
+            for (Path.Segment segment : path) {
+                Node startNode;
+                if (x == 0) {
+                    startNode = segment.start();
+                    label = startNode.labels().iterator().next();
+                    if(label.equals("ANNOTATION")){
+                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),startNode.get("CODE").asString(),startNode.elementId());
+                    }
+                    else{
+                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),startNode.get("CODE").asString(),startNode.get("FILENAME").asString(), startNode.elementId());
+                    }
+                    cur = cur.next;
+                    x = 1;
+                }
+                Node endNode = segment.end();
+                label = endNode.labels().iterator().next();
+                if(label.equals("METHOD")||label.equals("ANNOTATION")){
+                    if(label.equals("ANNOTATION")){
+                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),endNode.get("CODE").asString(),endNode.elementId());
+                    }
+                    else{
+                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),endNode.get("CODE").asString(),endNode.get("FILENAME").asString(),endNode.elementId());
+                    }
+                    cur = cur.next;
+                }
+            }
+            ans.add(head.next);
+        }
+        return ans;
+    }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    public List<neo4jPath> linkToPath(List<neo4jNode> links){
+        List<neo4jPath> paths=new ArrayList<>();
+        for (neo4jNode node:links){
+            neo4jPath path=new neo4jPath();
+            int len=0;
+            while(node!=null){
+                len++;
+                path.pathMember.add(node);
+                node=node.next;
+            }
+            path.setPathLen(len);
+            paths.add(path);
+        }
+        return paths;
+    }
 
 }
