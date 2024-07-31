@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.apache.log4j.Logger;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +25,7 @@ import java.io.IOException;
 @RequestMapping(value = "/file")
 @Tag(name = "DubboUpload", description = "upload接口")
 public class UploadController {
+    private static Logger logger = Logger.getLogger(UploadController.class);
 
     @DubboReference(group = "upload")
     FileService fileService;
@@ -37,7 +39,7 @@ public class UploadController {
     @PostMapping("/uploadFile")
     @Operation(summary = "上传文件", description = "上传文件")
     public Result fileUpload(@RequestParam("file") MultipartFile file) throws JSONException {
-        System.out.println("controller++++++++++++++++++++++++++++++++++++");
+        logger.info("+++++++++++++++++开始上传文件+++++++++++++++++");
         byte[] arr=null;
         try{
             arr=file.getBytes();
@@ -54,12 +56,14 @@ public class UploadController {
     @GetMapping("/downloadFile")
     @Operation(summary = "下载文件", description = "下载文件")
     public Result fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException, IOException {
+        logger.info("开始下载文件");
         return fileService.download(response,fileName);
     }
     
     @GetMapping("/deleteFile")
     @Operation(summary = "删除文件", description = "删除文件")
     public Result deleteFile(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException {
+        logger.info("开始删除文件");
         return fileService.delete(response,fileName);
     }
 }

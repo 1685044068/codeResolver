@@ -5,7 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @BelongsProject: code-resolver
@@ -16,24 +18,26 @@ import java.util.List;
  * @Version: 1.0
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Result implements Serializable {
-    private Boolean success;
-    private String errorMsg;
-    private Object data;
-    private Integer total;
-
-    public static Result ok(){
-        return new Result(true, null, null,null);
+public class Result<T> implements Serializable {
+    private Integer code;
+    private String msg;
+    private T data;
+    private Map map=new HashMap();
+    public static<T> Result<T> successful(T object){
+        Result<T> result=new Result<>();
+        result.setCode(1);
+        result.setData(object);
+        return result;
     }
-    public static Result ok(Object data){
-        return new Result(true, null, data,null);
+    public static<T> Result<T> error(String msg){
+        Result<T> result=new Result<>();
+        result.setCode(0);
+        result.setMsg(msg);
+        return result;
     }
-    public static Result ok(List<?> data, Integer total){
-        return new Result(true, null, data,total);
-    }
-    public static Result fail(String errorMsg){
-        return new Result(false, errorMsg, null,null);
+    public Result<T> add(String key,Object value){
+        this.map.put(key,value);
+        return this;
     }
 }
+

@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.service;
 
+import com.icbc.codeResolver.controller.JoernController;
 import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
@@ -11,11 +12,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import jakarta.annotation.Resource;
 import org.apache.dubbo.config.annotation.DubboService;
-import org.neo4j.driver.internal.InternalNode;
-import org.neo4j.driver.types.Node;
-import org.neo4j.driver.types.Path;
-import org.springframework.data.neo4j.core.Neo4jClient;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +21,9 @@ import org.springframework.stereotype.Service;
 
 @Component
 public class JoernServiceImpl implements CodeResolverService {
+
+    //日志
+    private static Logger logger = Logger.getLogger(JoernServiceImpl.class);
     @Resource
     private CacheClient cacheClient;
 
@@ -31,26 +31,24 @@ public class JoernServiceImpl implements CodeResolverService {
     private JoernMapper joernMapper;
 
     /**
-     * @param className
-     * @param methodName
+     * @param methodFullName
      * @return
      */
     @Override
-    public List<neo4jPath> getMethodUp(String className,String methodName) {
-        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
-        //return joernMapper.getMethodUp(className,methodName);
+    public List<neo4jPath> getMethodUp(String methodFullName) {
+        //return cacheClient.queryLinkByClassAndMethod(methodFullName,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
+        return joernMapper.getMethodUp(methodFullName);
     }
 
 
     /**
-     * @param className
-     * @param methodName
+     * @param methodFullName
      * @return
      */
     @Override
-    public List<neo4jPath> getMethodDown(String className,String methodName) {
-        return cacheClient.queryLinkByClassAndMethod(className,methodName,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
-    //    return joernMapper.getMethodDown(className,methodName);
+    public List<neo4jPath> getMethodDown(String methodFullName) {
+        //return cacheClient.queryLinkByClassAndMethod(methodFullName,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
+        return joernMapper.getMethodDown(methodFullName);
     }
 
     /**
@@ -72,7 +70,7 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getDataBaseInfo(String dataBaseName, String tableName, String fieldName) {
-
+        logger.info("进入getDataBaseInfo");
         return cacheClient.queryDataBaseInfo(dataBaseName,tableName,fieldName,100000L, TimeUnit.SECONDS);
         //return joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
     }
@@ -85,32 +83,31 @@ public class JoernServiceImpl implements CodeResolverService {
     @Override
     public List<neo4jNode> showClassName(String packetName) {
         return cacheClient.queryClassNameByPacket(packetName,100000L, TimeUnit.SECONDS);
-    //    return joernMapper.getClassName(packetName);
+        //return joernMapper.getClassName(packetName);
     }
 
     /**
      * 前端传递类名返回方法名
-     * @param className
+     * @param classFullName
      * @return
      */
     @Override
-    public List<neo4jNode> showMethodName(String className) {
-        return cacheClient.queryMethodNameByClass(className,100000L, TimeUnit.SECONDS);
-        //return joernMapper.getMethodName(className);
+    public List<neo4jNode> showMethodName(String classFullName) {
+        return cacheClient.queryMethodNameByClass(classFullName,100000L, TimeUnit.SECONDS);
+        //return joernMapper.getMethodName(classFullName);
     }
 
     /**
      * 前端传递类名和方法名返回调用链路
-     * @param className
-     * @param methodName
+     * @param methodFullName
      * @return
      */
     @Override
-    public List<neo4jPath> showInvocationLink(String className, String methodName,Boolean isDonw) {
+    public List<neo4jPath> showInvocationLink(String methodFullName,Boolean isDonw) {
         if (isDonw){
-            return joernMapper.getMethodDown(className,methodName);
+            return joernMapper.getMethodDown(methodFullName);
         }else {
-            return joernMapper.getMethodUp(className,methodName);
+            return joernMapper.getMethodUp(methodFullName);
         }
     }
 
@@ -122,6 +119,7 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber) {
+        logger.info("进入getHotNode");
         return joernMapper.getHotNode(packetName,maxNumber);
     }
 
@@ -138,4 +136,16 @@ public class JoernServiceImpl implements CodeResolverService {
         Collections.sort(res);
         return res;
     }
+
+    @Override
+    public List<neo4jPath> getShortestPath(String methodFullName) {
+        return joernMapper.getShortestPath(methodFullName);
+    }
+
+    @Override
+    public List<neo4jPath> getCollectionPath(List<String> list){
+        return joernMapper.getCollectionPath(list);
+    }
+
+
 }

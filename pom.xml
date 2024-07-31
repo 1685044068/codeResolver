@@ -8,6 +8,8 @@
     <artifactId>code-resolver</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
+
     <modules>
         <module>code-resolver-interface</module>
         <module>code-resolver-core-server</module>
@@ -106,6 +108,11 @@
                 <version>0.2.12</version>
             </dependency>
 
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>1.2.17</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
