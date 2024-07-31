@@ -12,10 +12,10 @@ import java.util.List;
 
 public interface FileService {
 
-    Result delete(HttpServletResponse response, String fileName) throws JSONException;
+    void delete(String fileName);
 
-    Result multiUpload(List<FileInfo> files);
+    void multiUpload(List<FileInfo> files);
 
-    Result download(HttpServletResponse response,String fileName) throws JSONException, IOException;
+    void download(HttpServletResponse response,String fileName) throws IOException;
 
 }
