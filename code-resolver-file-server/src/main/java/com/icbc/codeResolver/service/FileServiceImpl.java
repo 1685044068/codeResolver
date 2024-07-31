@@ -4,6 +4,7 @@ import cn.hutool.core.io.FileUtil;
 
 import com.icbc.codeResolver.config.CommonConfig;
 import com.icbc.codeResolver.entity.Result;
+import com.icbc.codeResolver.utils.FileInfo;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
@@ -18,6 +19,7 @@ import java.io.File;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Objects;
 
 
@@ -56,41 +58,20 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public Result upload(MultipartFile file) throws JSONException {
-        if (file.isEmpty()) {
-            return Result.error("错误！空文件!");
+    public Result multiUpload(List<FileInfo> files){
+        for (FileInfo file : files) {
+            upload(file.getBytes(),file.getName());
         }
-        // 文件名
-        String fileName = file.getOriginalFilename();
-        String suffixName = fileName.substring(fileName.lastIndexOf("."));
-        log.info("上传文件名称为:{}, 后缀名为:{}!", fileName, suffixName);
-
-        File fileTempObj = new File(uploadFilePath + "/" + fileName);
-        // 检测目录是否存在
-        if (!fileTempObj.getParentFile().exists()) {
-            fileTempObj.getParentFile().mkdirs();
-        }
-        // 使用文件名称检测文件是否已经存在
-        if (fileTempObj.exists()) {
-            return Result.error("错误！文件已经存在!");
-        }
-
-        try {
-            FileUtil.writeBytes(file.getBytes(), fileTempObj);
-        } catch (Exception e) {
-            log.error("发生错误: {}", e);
-            return Result.error("错误！" + e.getMessage());
-        }
-        return Result.successful(uploadFilePath + "/" + fileName);
+        return Result.successful(uploadFilePath);
     }
 
-    @Override
-    public Result upload(byte[] file, String fileName, String suffixName) throws JSONException {
+    public Result upload(byte[] file, String fileName){
         System.out.println("++++++++++++++++++++++++++++++++++进入一次");
         if (Objects.isNull(file)) {
             return Result.error("错误！空文件!");
         }
-        log.info("上传文件名称为:{}, 后缀名为:{}!", fileName, suffixName);
+        log.info("上传路径为:{}!", uploadFilePath);
+        log.info("上传文件名称为:{}!", fileName);
         File fileTempObj = new File(uploadFilePath + "/" + fileName);
         // 检测目录是否存在
         if (!fileTempObj.getParentFile().exists()) {

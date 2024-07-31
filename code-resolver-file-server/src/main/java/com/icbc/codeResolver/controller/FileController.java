@@ -3,6 +3,7 @@ package com.icbc.codeResolver.controller;
 import com.icbc.codeResolver.config.CommonConfig;
 import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.service.FileService;
+import com.icbc.codeResolver.utils.FileUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,8 +32,8 @@ public class FileController {
     }
 
     @PostMapping("/uploadFile")
-    public Result fileUpload(@RequestParam("file") MultipartFile file) throws JSONException {
-        return fileService.upload(file);
+    public Result fileUpload(@RequestParam("files") MultipartFile[] files) throws IOException {
+        return fileService.multiUpload(FileUtils.MultiFilesToFileInfo(files));
     }
     // 下载到了默认的位置
     @GetMapping("/downloadFile")
