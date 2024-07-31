@@ -1,14 +1,13 @@
 package com.icbc.codeResolver.controller;
 
+import cn.hutool.core.lang.UUID;
 import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.service.JoernParseService;
+import com.icbc.codeResolver.entity.AsyncTaskProgress;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -18,11 +17,15 @@ import java.io.IOException;
 public class JoernParseController {
     @Autowired
     JoernParseService joernParseService;
+
+    public static String generateTaskId() {
+        return UUID.randomUUID().toString();
+    }
     @GetMapping("/parseCode")
     public Result parseAndImport(@RequestParam("url") String url) throws IOException {
-        Result result=joernParseService.parse(url);
-        System.out.println(result);
-        return result;
+        String taskId = generateTaskId();
+        joernParseService.AsyncParse(url,taskId);
+        return Result.waiting("任务进行中.....",taskId);
     }
 
     @GetMapping("/getFileList")
@@ -31,5 +34,15 @@ public class JoernParseController {
         Result result=joernParseService.getFileList();
         System.out.println(result);
         return result;
+    }
+
+    /**
+     * 前端通过该接口查询进度
+     * @param taskId
+     * @return
+     */
+    @GetMapping("/progress")
+    public AsyncTaskProgress getAsyncTaskProgress(@RequestParam("taskId") String taskId) {
+        return joernParseService.getAsyncTaskProgress(taskId);
     }
 }
