@@ -2,7 +2,9 @@ package com.icbc.codeResolver.service;
 
 import cn.hutool.core.io.FileUtil;
 
+import com.icbc.codeResolver.config.CommonConfig;
 import com.icbc.codeResolver.entity.Result;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,21 +16,19 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Objects;
 
 
 @Service
 @Slf4j
-@DubboService(group = "upload",timeout = 10000)
-public class UploadFileServiceImpl implements UploadFileService {
-    @Value("${file.upload.dir}")
-    private String uploadFilePath;
-@DubboService(group = "upload")
+@DubboService(group = "upload", timeout = 10000)
 public class FileServiceImpl implements FileService {
 
     String uploadFilePath;
 
-    public FileServiceImpl(CommonConfig commonConfig){
+    public FileServiceImpl(CommonConfig commonConfig) {
         this.uploadFilePath = commonConfig.getUploadFilePath();
     }
 
@@ -37,7 +37,7 @@ public class FileServiceImpl implements FileService {
         File file = new File(uploadFilePath + '/' + fileName);
         // 判断文件不为null或文件目录存在
         if (file == null || !file.exists()) {
-            return Result.fail("文件不存在！");
+            return Result.error("文件不存在！");
         }
         try {
             if (file.isFile()) file.delete();
@@ -50,9 +50,9 @@ public class FileServiceImpl implements FileService {
             }
         } catch (Exception e) {
             log.error("发生错误: {}", e);
-            return Result.fail("发生错误！");
+            return Result.error("发生错误！");
         }
-        return Result.ok("删除成功");
+        return Result.successful("删除成功");
     }
 
     @Override
@@ -79,13 +79,13 @@ public class FileServiceImpl implements FileService {
             FileUtil.writeBytes(file.getBytes(), fileTempObj);
         } catch (Exception e) {
             log.error("发生错误: {}", e);
-            return Result.error("错误！"+e.getMessage());
+            return Result.error("错误！" + e.getMessage());
         }
         return Result.successful(uploadFilePath + "/" + fileName);
     }
 
     @Override
-    public Result upload(byte[] file,String fileName,String suffixName) throws JSONException {
+    public Result upload(byte[] file, String fileName, String suffixName) throws JSONException {
         System.out.println("++++++++++++++++++++++++++++++++++进入一次");
         if (Objects.isNull(file)) {
             return Result.error("错误！空文件!");
@@ -105,7 +105,7 @@ public class FileServiceImpl implements FileService {
             FileUtil.writeBytes(file, fileTempObj);
         } catch (Exception e) {
             log.error("发生错误: {}", e);
-            return Result.error("错误！"+e.getMessage());
+            return Result.error("错误！" + e.getMessage());
         }
         return Result.successful(uploadFilePath + "/" + fileName);
     }
@@ -114,7 +114,7 @@ public class FileServiceImpl implements FileService {
     public Result download(HttpServletResponse response, String fileName) throws JSONException, IOException {
         File file = new File(uploadFilePath + '/' + fileName);
         if (!file.exists()) {
-            return Result.fail("文件不存在！");
+            return Result.error("文件不存在！");
         }
 
         response.reset();
@@ -126,6 +126,6 @@ public class FileServiceImpl implements FileService {
         byte[] readBytes = FileUtil.readBytes(file);
         OutputStream os = response.getOutputStream();
         os.write(readBytes);
-        return Result.ok("下载成功");
+        return Result.successful("下载成功");
     }
 }

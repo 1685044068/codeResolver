@@ -3,13 +3,16 @@ package com.icbc.codeResolver.controller;
 import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
+import com.icbc.codeResolver.entity.neo4jSimilarNode;
 import com.icbc.codeResolver.service.CodeResolverService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.dubbo.config.annotation.DubboReference;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -97,7 +100,7 @@ public class JoernController {
 
     @GetMapping("/getSimilar")
     @Operation(summary = "目标五 获取相似方法", description = "需要包名")
-    public List<neo4jSimilarNode> getSimilar(@RequestParam("packetName")String packetName,@RequestParam("identify")String identify) {
+    public List<neo4jSimilarNode> getSimilar(@RequestParam("packetName")String packetName, @RequestParam("identify")String identify) {
         Double threshold=0.2;
         System.out.println("目标五：获取相似方法 包名"+packetName);
         List<neo4jSimilarNode> ans=joernService.getSimilar(packetName,identify,threshold);

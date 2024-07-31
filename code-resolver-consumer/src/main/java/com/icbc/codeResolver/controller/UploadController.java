@@ -1,15 +1,13 @@
 package com.icbc.codeResolver.controller;
 
 import com.icbc.codeResolver.entity.Result;
-import com.icbc.codeResolver.service.DeleteFileService;
-import com.icbc.codeResolver.service.DownloadFileService;
-import com.icbc.codeResolver.service.UploadFileService;
+import com.icbc.codeResolver.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.apache.log4j.Logger;
 import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,6 +25,7 @@ import java.io.IOException;
 @RequestMapping(value = "/file")
 @Tag(name = "DubboUpload", description = "upload接口")
 public class UploadController {
+    private static Logger logger = Logger.getLogger(UploadController.class);
 
     @DubboReference(group = "upload")
     FileService fileService;

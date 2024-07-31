@@ -3,13 +3,14 @@ package com.icbc.codeResolver.controller;
 import com.icbc.codeResolver.entity.neo4jHotNode;
 import com.icbc.codeResolver.entity.neo4jNode;
 import com.icbc.codeResolver.entity.neo4jPath;
+import com.icbc.codeResolver.entity.neo4jSimilarNode;
 import com.icbc.codeResolver.service.CodeResolverService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 /**
  * 分布式调用controller
@@ -24,31 +25,6 @@ public class JoernController {
 
     @DubboReference(group = "joern")
     CodeResolverService joernService;
-
-    /**
-     * 方法追踪 类名 方法名
-     * @return
-     */
-    @GetMapping("/methodDown")
-    @Operation(summary = "目标一：方法追踪", description = "根据类名以及方法名进行方法追踪")
-    public List<neo4jPath> getMethodNodeDown(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
-        System.out.println("目标一：方法追踪 className"+className);
-        System.out.println("目标一：方法追踪 methodName"+methodName);
-        return joernService.getMethodDown(className+".java",methodName);
-    }
-
-    /**
-     * 方法溯源
-     * @return
-     */
-    @GetMapping("/methodUp")
-    @Operation(summary = "目标一：方法溯源", description = "根据类名以及方法名进行方法溯源")
-    public List<neo4jPath> getMethodNodeUp(@RequestParam("className") String className,@RequestParam("methodName") String methodName) {
-        System.out.println("目标一：方法溯源 className"+className);
-        System.out.println("目标一：方法溯源 methodName"+methodName);
-        return joernService.getMethodUp(className+".java",methodName);
-    }
-
 
     /**
      * url精确查找 url-》斜杠分割 List<String>

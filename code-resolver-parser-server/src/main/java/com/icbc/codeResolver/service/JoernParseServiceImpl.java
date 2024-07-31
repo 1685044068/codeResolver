@@ -2,10 +2,9 @@ package com.icbc.codeResolver.service;
 
 import com.icbc.codeResolver.entity.FileDto;
 import com.icbc.codeResolver.entity.Result;
-import com.icbc.codeResolver.service.JoernParseService;
 import com.icbc.codeResolver.utils.StreamGobbler;
-import org.apache.commons.io.FileUtils;
 import org.apache.dubbo.config.annotation.DubboService;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 
