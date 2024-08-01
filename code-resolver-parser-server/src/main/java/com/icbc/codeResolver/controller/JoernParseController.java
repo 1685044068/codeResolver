@@ -25,7 +25,7 @@ public class JoernParseController {
     public Result parseAndImport(@RequestParam("url") String url) throws IOException {
         String taskId = generateTaskId();
         joernParseService.AsyncParse(url,taskId);
-        return Result.waiting("任务进行中.....",taskId);
+        return Result.processing("任务进行中.....",taskId);
     }
 
     @GetMapping("/getFileList")
