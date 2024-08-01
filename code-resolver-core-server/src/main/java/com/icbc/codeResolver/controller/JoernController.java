@@ -25,7 +25,6 @@ import java.util.List;
 public class JoernController {
     @Autowired
     CodeResolverService joernService;
-
     /**
      * url精确查找 url-》斜杠分割 List<String>
      *
@@ -92,7 +91,6 @@ public class JoernController {
 
     /**
      * 获取热点节点
-     *
      * @param packetName
      * @param maxNumber
      * @return

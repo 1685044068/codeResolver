@@ -44,8 +44,8 @@ public class JoernParseServiceImpl implements JoernParseService {
     @Value("${upload.dir}")
     private String upload_dir;
 
-
     private static final String REDIS_PREFIX = "ASYNC_TASK_"; // Redis中保存异步任务进度对象的前缀
+
     @Autowired
     public RedisTemplate redisTemplate;
     //生成异步任务的id，用于前端查询改任务的进度使用

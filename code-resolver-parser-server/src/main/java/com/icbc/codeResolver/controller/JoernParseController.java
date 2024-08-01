@@ -14,7 +14,6 @@ import java.io.IOException;
 
 @RequestMapping("/parser")
 @RestController
-@Slf4j
 public class JoernParseController {
     @Autowired
     JoernParseService joernParseService;
@@ -46,6 +45,7 @@ public class JoernParseController {
      * @return
      */
     @GetMapping("/progress")
+    @WebLog("查询解析进度")
     public AsyncTaskProgress getAsyncTaskProgress(@RequestParam("taskId") String taskId) {
         return joernParseService.getAsyncTaskProgress(taskId);
     }
