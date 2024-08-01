@@ -3,7 +3,6 @@ package com.icbc.codeResolver.service;
 import com.icbc.codeResolver.config.AsyncThreadPoolConfig;
 import com.icbc.codeResolver.entity.AsyncTaskProgress;
 import com.icbc.codeResolver.entity.FileDto;
-import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.utils.StreamGobbler;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.apache.log4j.Logger;
@@ -59,7 +58,7 @@ public class JoernParseServiceImpl implements JoernParseService {
      * @return
      */
     @Override
-    public Result parse(String url) throws IOException {
+    public String parse(String url) throws IOException {
         //删除原来数据库文件夹下的旧csv文件
         File directory = new File("E:\\software\\Neo4j\\Data\\relate-data\\dbmss\\dbms-dc752007-1b88-4751-adae-6f161a7539d7\\import");
         FileUtils.cleanDirectory(directory);
@@ -93,7 +92,7 @@ public class JoernParseServiceImpl implements JoernParseService {
             }
         }
         logger.info("解析成功！");
-        return Result.success("解析成功");
+        return "解析成功";
     }
 
 
@@ -155,7 +154,6 @@ public class JoernParseServiceImpl implements JoernParseService {
                 logger.info(command+res);
             }, AsyncThreadPoolConfig.getExecutor());
         }
-
     }
 
 
@@ -220,7 +218,7 @@ public class JoernParseServiceImpl implements JoernParseService {
      * @return
      */
     @Override
-    public Result getFileList() {
+    public List<FileDto> getFileList() {
         //表示一个文件路径
         File file = new File(upload_dir);
         //用数组把文件夹下的文件存起来
@@ -231,6 +229,6 @@ public class JoernParseServiceImpl implements JoernParseService {
             if (!end.equals("jar")) continue;
             fileDtoList.add(new FileDto(file1.getName(),file1.getPath()));
         }
-        return Result.success(fileDtoList);
+        return fileDtoList;
     }
 }

@@ -2,16 +2,17 @@ package com.icbc.codeResolver.controller;
 
 import cn.hutool.core.lang.UUID;
 import com.icbc.codeResolver.entity.AsyncTaskProgress;
+import com.icbc.codeResolver.entity.FileDto;
 import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.service.JoernParseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @BelongsProject: code-resolver
@@ -23,7 +24,6 @@ import java.io.IOException;
  */
 @RestController
 @RequestMapping(value = "/parser")
-@Slf4j
 @Tag(name = "DubboParse", description = "Dubboparse接口")
 public class ParseController {
 
@@ -52,7 +52,8 @@ public class ParseController {
     @GetMapping("/parseCode")
     @Operation(summary = "同步单线程进行解析", description = "同步单线程进行解析")
     public Result parseAndImport(@RequestParam("url") String url) throws IOException {
-        return joernParseService.parse(url);
+        String res=joernParseService.parse(url);
+        return Result.success(res);
     }
 
 
@@ -77,8 +78,9 @@ public class ParseController {
      */
     @GetMapping("/progress")
     @Operation(summary = "查看后端导入进度", description = "查看后端导入进度")
-    public AsyncTaskProgress getAsyncTaskProgress(@RequestParam("taskId") String taskId) {
-        return joernParseService.getAsyncTaskProgress(taskId);
+    public Result getAsyncTaskProgress(@RequestParam("taskId") String taskId) {
+        AsyncTaskProgress res=joernParseService.getAsyncTaskProgress(taskId);
+        return Result.success(res);
     }
 
     /**
@@ -89,9 +91,8 @@ public class ParseController {
     @ResponseBody
     @Operation(summary = "获取解析目录下的所有文件", description = "获取解析目录下的所有文件")
     public Result getFileList(){
-        Result result=joernParseService.getFileList();
-        logger.info("获取到的文件为"+result);
-        return result;
+        List<FileDto> result=joernParseService.getFileList();
+        return Result.success(result);
     }
 
 }
