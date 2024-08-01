@@ -28,6 +28,12 @@ public class JoernParseController {
         return Result.processing("任务进行中.....",taskId);
     }
 
+    @GetMapping("/AsyncParseCode")
+    public Result AsyncparseAndImport(@RequestParam("url") String url) throws IOException {
+        joernParseService.AsyncParse(url,"1");
+        return Result.wait("等待任务结束");
+    }
+
     @GetMapping("/getFileList")
     @Operation(summary = "获取解析目录下的所有文件", description = "获取解析目录下的所有文件")
     public Result getFileList(){

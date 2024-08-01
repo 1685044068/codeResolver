@@ -28,14 +28,12 @@ public class ParseController {
 
     @DubboReference(group = "parse")
     JoernParseService joernParseService;
-
     @GetMapping("/parseCode")
     @Operation(summary = "解析文件", description = "解析文件")
     public Result parseAndImport(@RequestParam("url") String url) throws IOException {
         logger.info("开始解析jar包");
-        Result result=joernParseService.parse(url);
-        logger.info("解析结果为 "+result);
-        return result;
+        joernParseService.AsyncParse(url,"1");
+        return null;
     }
 
     /**

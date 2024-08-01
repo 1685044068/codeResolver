@@ -19,10 +19,10 @@ public interface JoernParseService {
      * @param url
      * @return
      */
+    public void AsyncParse(String url,String taskId) throws IOException;
     public Result parse(String url) throws IOException;
 
-    public void AsyncParse(String url,String taskId) throws IOException;
-
     public Result getFileList();
+
     public AsyncTaskProgress getAsyncTaskProgress(String taskId);
 }
