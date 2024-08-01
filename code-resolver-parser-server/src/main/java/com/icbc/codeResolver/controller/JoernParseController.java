@@ -1,6 +1,8 @@
 package com.icbc.codeResolver.controller;
 
 import cn.hutool.core.lang.UUID;
+import com.icbc.codeResolver.aop.WebLog;
+import com.icbc.codeResolver.entity.FileDto;
 import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.service.JoernParseService;
 import com.icbc.codeResolver.entity.AsyncTaskProgress;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RequestMapping("/parser")
 @RestController
@@ -20,6 +23,7 @@ public class JoernParseController {
     public static String generateTaskId() {
         return UUID.randomUUID().toString();
     }
+
     @GetMapping("/parseCode")
     @Operation(summary = "同步单线程进行解析", description = "同步单线程进行解析")
     @WebLog("解析代码文件并导入数据库")
