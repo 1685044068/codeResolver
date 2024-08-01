@@ -9,6 +9,6 @@ import com.icbc.codeResolver.entity.ResultCode;
 public class ClientException extends GlobalException {
 
     public ClientException(String message) {
-        super(ResultCode.CLIENT_FAILED,message);
+        super(ResultCode.CLIENT_ERROR,message);
     }
 }

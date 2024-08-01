@@ -29,22 +29,23 @@ public class FileController {
         return "index";
     }
 
-    @PostMapping("/uploadFile")
-    public Result fileUpload(@RequestParam("files") MultipartFile[] files) throws IOException {
+    @PostMapping("/upload")
+    public Result fileUpload(@RequestParam("files") MultipartFile[] files) {
         fileService.multiUpload(FileUtils.multipartFilesToFileInfo(files));
         return Result.success("");
     }
     // 下载到了默认的位置
-    @GetMapping("/downloadFile")
-    public Result fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException, IOException {
+    @GetMapping("/download")
+    public Result fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws IOException {
         fileService.download(response,fileName);
         return Result.success("");
     }
 
-    @GetMapping("/deleteFile")
+    @GetMapping("/delete")
     public Result deleteFile(@RequestParam("fileName") String fileName) throws JSONException {
         fileService.delete(fileName);
         return Result.success("");
     }
+
 
 }

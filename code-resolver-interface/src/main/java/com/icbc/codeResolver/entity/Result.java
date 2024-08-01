@@ -43,8 +43,8 @@ public class Result<T> implements Serializable {
      * @param msg 返回的错误信息
      * @return {@link Result}<{@link T}>
      */
-    public static<T> Result<T> failed(ResultCode errorCode, String msg){
-        return errorCode==ResultCode.CLIENT_FAILED?clientFailed(msg):serverFailed(msg);
+    public static<T> Result<T> error(ResultCode errorCode, String msg){
+        return errorCode==ResultCode.CLIENT_ERROR ? clientError(msg): serverError(msg);
     }
 
     /**
@@ -52,8 +52,18 @@ public class Result<T> implements Serializable {
      * @param msg 返回的错误信息
      * @return {@link Result}<{@link T}>
      */
-    public static<T> Result<T> clientFailed(String msg){
-        return new Result<>(ResultCode.CLIENT_FAILED.getCode(), msg);
+    public static<T> Result<T> clientError(String msg){
+        return new Result<>(ResultCode.CLIENT_ERROR.getCode(), msg);
+    }
+    /**
+     * 由客户端引起的请求失败，如参数填写错误，请求的文件不存在等
+     * <br/>
+     * 可自定义状态码，用于接收springmvc抛出的异常
+     * @param msg 返回的错误信息
+     * @return {@link Result}<{@link T}>
+     */
+    public static<T> Result<T> clientErrorWithCode(int code,String msg){
+        return new Result<>(code, msg);
     }
 
     /**
@@ -61,8 +71,18 @@ public class Result<T> implements Serializable {
      * @param msg 返回的错误信息
      * @return {@link Result}<{@link T}>
      */
-    public static<T> Result<T> serverFailed(String msg){
-        return new Result<>(ResultCode.SERVER_FAILED.getCode(), msg);
+    public static<T> Result<T> serverError(String msg){
+        return new Result<>(ResultCode.SERVER_ERROR.getCode(), msg);
+    }
+
+    /**
+     * 由服务端引起的请求失败，如IO操作失败，空指针异常等
+     * 可自定义状态码，用于接收springmvc抛出的异常
+     * @param msg 返回的错误信息
+     * @return {@link Result}<{@link T}>
+     */
+    public static<T> Result<T> serverErrorWithCode(int code, String msg){
+        return new Result<>(code, msg);
     }
 
     /**

@@ -20,12 +20,11 @@ public enum ResultCode {
     /**
      * 400：客户端错误
      */
-    CLIENT_FAILED(400),
+    CLIENT_ERROR(400),
     /**
      * 500：服务端错误
      */
-    SERVER_FAILED(500);
-
+    SERVER_ERROR(500);
 
     private final int code;
 
