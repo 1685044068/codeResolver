@@ -1,6 +1,7 @@
 package com.icbc.codeResolver.entity;
 
 import lombok.Data;
+import lombok.ToString;
 
 import java.io.Serializable;
 

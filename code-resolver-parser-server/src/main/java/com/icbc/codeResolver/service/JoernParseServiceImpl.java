@@ -77,6 +77,7 @@ public class JoernParseServiceImpl implements JoernParseService {
             }
 
             System.out.println("url为"+url);
+
             List<String> commands=new ArrayList<>();
             int i=0;
             System.setProperty("com/icbc/codeResolver",joern_dir);
@@ -148,6 +149,9 @@ public class JoernParseServiceImpl implements JoernParseService {
         commands.add("joern-parse "+url+" -o "+cpg_dir);
         commands.add("joern-export.bat --repr=all --format=neo4jcsv "+cpg_dir);
         commands.add("move "+source_dir+" "+import_dir);
+
+
+
         commands.add("for %f in ("+node_dir+") do bin\\cypher-shell -u neo4j -p 19990528 -d mvc --file %f");
         commands.add("for %f in ("+edge_dir+") do bin\\cypher-shell -u neo4j -p 19990528 -d mvc --file %f");
         for (String command : commands) {
@@ -165,7 +169,7 @@ public class JoernParseServiceImpl implements JoernParseService {
                 e.printStackTrace();
             }
         }
-        return Result.successful("解析成功");
+        return Result.success("解析成功");
     }
 
     /**
@@ -184,6 +188,6 @@ public class JoernParseServiceImpl implements JoernParseService {
             if (!end.equals("jar")) continue;
             fileDtoList.add(new FileDto(file1.getName(),file1.getPath()));
         }
-        return Result.successful(fileDtoList);
+        return Result.success(fileDtoList);
     }
 }
