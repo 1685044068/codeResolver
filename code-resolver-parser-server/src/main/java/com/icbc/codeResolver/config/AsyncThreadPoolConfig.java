@@ -27,13 +27,12 @@ public class AsyncThreadPoolConfig implements AsyncConfigurer {
     //设置最大线程数
     private static final int maxPoolSize = 1000;
     //设置线程空闲时间(秒)
-    private static final int keepAliveTime = 60;
+    private static final int keepAliveTime = 1;
     //设置主线程等待时间
     private static final int awaitTerminationSeconds = 120;
     //缓存队列数
     private static final int queueCapacity = 200;
     //线程池前缀名
-    private static final String threadNamePrefix = "parseExecutor-";
 
     public static ThreadPoolTaskExecutor getExecutor() {
         return executor;
@@ -48,7 +47,6 @@ public class AsyncThreadPoolConfig implements AsyncConfigurer {
         executor.setQueueCapacity(queueCapacity);
         //空闲时间
         executor.setKeepAliveSeconds(keepAliveTime);
-        executor.setThreadNamePrefix(threadNamePrefix);
         executor.setAwaitTerminationSeconds(awaitTerminationSeconds);
         executor.setWaitForTasksToCompleteOnShutdown(true);
         // RejectedExecutionHandler:当pool已经达到max-size的时候，如何处理新任务
