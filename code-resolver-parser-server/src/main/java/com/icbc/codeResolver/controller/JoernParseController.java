@@ -22,16 +22,17 @@ public class JoernParseController {
         return UUID.randomUUID().toString();
     }
     @GetMapping("/parseCode")
+    @Operation(summary = "同步单线程进行解析", description = "同步单线程进行解析")
     public Result parseAndImport(@RequestParam("url") String url) throws IOException {
-        String taskId = generateTaskId();
-        joernParseService.AsyncParse(url,taskId);
-        return Result.processing("任务进行中.....",taskId);
+        return joernParseService.parse(url);
     }
 
     @GetMapping("/AsyncParseCode")
+    @Operation(summary = "异步多线程进行解析", description = "异步多线程进行解析")
     public Result AsyncparseAndImport(@RequestParam("url") String url) throws IOException {
-        joernParseService.AsyncParse(url,"1");
-        return Result.wait("等待任务结束");
+        String taskId=generateTaskId();
+        joernParseService.AsyncParse(url,taskId);
+        return Result.processing("等待任务结束",taskId);
     }
 
     @GetMapping("/getFileList")
@@ -48,6 +49,7 @@ public class JoernParseController {
      * @return
      */
     @GetMapping("/progress")
+    @Operation(summary = "查看后端导入进度", description = "查看后端导入进度")
     public AsyncTaskProgress getAsyncTaskProgress(@RequestParam("taskId") String taskId) {
         return joernParseService.getAsyncTaskProgress(taskId);
     }

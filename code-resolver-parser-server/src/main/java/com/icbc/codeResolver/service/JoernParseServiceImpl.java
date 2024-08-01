@@ -93,7 +93,7 @@ public class JoernParseServiceImpl implements JoernParseService {
             }
         }
         logger.info("解析成功！");
-        return Result.successful("解析成功");
+        return Result.success("解析成功");
     }
 
 
@@ -231,6 +231,6 @@ public class JoernParseServiceImpl implements JoernParseService {
             if (!end.equals("jar")) continue;
             fileDtoList.add(new FileDto(file1.getName(),file1.getPath()));
         }
-        return Result.successful(fileDtoList);
+        return Result.success(fileDtoList);
     }
 }
