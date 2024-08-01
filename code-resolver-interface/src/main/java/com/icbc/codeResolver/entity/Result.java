@@ -1,12 +1,9 @@
 package com.icbc.codeResolver.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,6 +32,13 @@ public class Result<T> implements Serializable {
         result.setMsg(msg);
         return result;
     }
+    public static<T> Result<T> wait(String msg){
+        Result<T> result=new Result<>();
+        result.setCode(2);
+        result.setMsg(msg);
+        return result;
+    }
+
     public Result<T> add(String key,Object value){
         this.map.put(key,value);
         return this;
