@@ -19,5 +19,4 @@ public class AsyncTaskProgress implements Serializable {
     private Integer progress; // 任务进度：0-100
     private String result; // 任务结果（仅在状态为SUCCESS时有用）
     private String error; // 任务失败原因（仅在状态为FAILURE时有用）
-
 }
