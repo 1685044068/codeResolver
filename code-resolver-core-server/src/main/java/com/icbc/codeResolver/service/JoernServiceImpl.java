@@ -40,20 +40,7 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jNode> showClassName(String packetName) {
-        Collection<Map<String, Object>> result = joernMapper.getClassName(packetName);
-        List<Map<String, Object>> resultList = new ArrayList<>(result);
-        List<neo4jNode> ans = new ArrayList<>();
-        InternalNode class_node=null;
-        for (Map<String, Object> record : resultList) {
-            Object nodeObject = record.get("n");
-            if (nodeObject instanceof InternalNode) {
-                class_node = (InternalNode) nodeObject;
-            }
-            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
-            ans.add(node);
-        }
-        return ans;
-        //return joernMapper.getClassName(packetName);
+        return cacheClient.queryClassNameByPacket(packetName,100000L, TimeUnit.SECONDS);
 
     }
 
@@ -64,20 +51,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jNode> showMethodName(String classFullName) {
-        Collection<Map<String, Object>> result = joernMapper.getMethodName(classFullName);
-        List<Map<String, Object>> resultList = new ArrayList<>(result);
-        List<neo4jNode> ans = new ArrayList<>();
-        InternalNode class_node=null;
-        for (Map<String, Object> record : resultList) {
-            Object nodeObject = record.get("n");
-            if (nodeObject instanceof InternalNode) {
-                class_node = (InternalNode) nodeObject;
-            }
-            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
-            ans.add(node);
-        }
-        //return cacheClient.queryMethodNameByClass(classFullName,100000L, TimeUnit.SECONDS);
-        return ans;
+        return cacheClient.queryMethodNameByClass(classFullName,100000L, TimeUnit.SECONDS);
+
     }
 
     /**
@@ -102,9 +77,9 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getMethodUp(String methodFullName) {
-        //return cacheClient.queryLinkByClassAndMethod(methodFullName,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
-        Collection<Map<String, Object>> result=joernMapper.getMethodUp(methodFullName);
-        return linkToPath(findRelation(result));
+        return cacheClient.queryLinkByClassAndMethod(methodFullName,Boolean.FALSE, 100000L, TimeUnit.SECONDS);
+//        Collection<Map<String, Object>> result=joernMapper.getMethodUp(methodFullName);
+//        return linkToPath(findRelation(result));
     }
 
 
@@ -114,9 +89,9 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getMethodDown(String methodFullName) {
-        //return cacheClient.queryLinkByClassAndMethod(methodFullName,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
-        Collection<Map<String, Object>> result=joernMapper.getMethodDown(methodFullName);
-        return linkToPath(findRelation(result));
+        return cacheClient.queryLinkByClassAndMethod(methodFullName,Boolean.TRUE, 100000L, TimeUnit.SECONDS);
+//        Collection<Map<String, Object>> result=joernMapper.getMethodDown(methodFullName);
+//        return linkToPath(findRelation(result));
     }
 
     /**
@@ -235,6 +210,10 @@ public class JoernServiceImpl implements CodeResolverService {
         return ans;
     }
 
+    /**
+     * 查询相似度
+     * @return
+     */
     @Override
     public List<neo4jSimilarNode> getSimilar(String packetName,String methodElementId,Double threshold) {
 
@@ -277,18 +256,30 @@ public class JoernServiceImpl implements CodeResolverService {
         return res;
     }
 
+    /**
+     * 查询最短路径
+     * @return
+     */
     @Override
     public List<neo4jPath> getShortestPath(String methodFullName) {
         Collection<Map<String, Object>> result=joernMapper.getShortestPath(methodFullName);
         return linkToPath(findRelation(result));
     }
 
+    /**
+     * 查询集中路径
+     * @return
+     */
     @Override
     public List<neo4jPath> getCollectionPath(List<String> list){
         Collection<Map<String, Object>> result=joernMapper.getCollectionPath(list);
         return linkToPath(findRelation(result));
     }
 
+    /**
+     * 根据方法名查询方法信息
+     * @return
+     */
     @Override
     public List<neo4jNode> getMethodInformation(String methodName){
         Collection<Map<String, Object>> result = joernMapper.getMethodInformation(methodName);
@@ -307,6 +298,10 @@ public class JoernServiceImpl implements CodeResolverService {
         return ans;
     }
 
+    /**
+     * 查询调用
+     * @return
+     */
     public List<neo4jNode> findRelation(Collection<Map<String, Object>> result) {
         List<Map<String, Object>> resultList = new ArrayList<>(result);
         List<neo4jNode> ans = new ArrayList<>();

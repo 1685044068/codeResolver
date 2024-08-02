@@ -214,7 +214,7 @@ public class CacheClient {
                     try {
                         //重建缓存
                         //1查询数据库
-
+                        //s
                         Collection<Map<String, Object>> result = joernMapper.getMethodName(className);
                         List<Map<String, Object>> resultList = new ArrayList<>(result);
                         List<neo4jNode> methodNeo4jRebuild = new ArrayList<>();
