@@ -1,9 +1,10 @@
 package com.icbc.codeResolver.service;
 
 import com.icbc.codeResolver.entity.AsyncTaskProgress;
-import com.icbc.codeResolver.entity.Result;
+import com.icbc.codeResolver.entity.FileDto;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @BelongsProject: code-resolver
@@ -19,10 +20,10 @@ public interface JoernParseService {
      * @param url
      * @return
      */
-    public Result parse(String url) throws IOException;
-
     public void AsyncParse(String url,String taskId) throws IOException;
+    public String parse(String url) throws IOException;
 
-    public Result getFileList();
+    public List<FileDto> getFileList();
+
     public AsyncTaskProgress getAsyncTaskProgress(String taskId);
 }

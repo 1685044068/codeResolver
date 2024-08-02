@@ -4,20 +4,21 @@ import cn.hutool.core.io.FileUtil;
 
 import com.icbc.codeResolver.config.CommonConfig;
 import com.icbc.codeResolver.entity.Result;
+import com.icbc.codeResolver.exception.ClientException;
+import com.icbc.codeResolver.exception.ServerException;
+import com.icbc.codeResolver.utils.FileInfo;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 
 import java.io.File;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Objects;
 
 
@@ -33,14 +34,16 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public Result delete(HttpServletResponse response, String fileName) throws JSONException {
+    public void delete(String fileName) {
         File file = new File(uploadFilePath + '/' + fileName);
         // 判断文件不为null或文件目录存在
-        if (file == null || !file.exists()) {
-            return Result.error("文件不存在！");
+        if (!file.exists()) {
+            throw new ClientException("所选文件不存在！");
         }
         try {
-            if (file.isFile()) file.delete();
+            if (file.isFile()){
+                file.delete();
+            }
             else {
                 // 文件夹, 需要先删除文件夹下面所有的文件, 然后删除
                 for (File temp : file.listFiles()) {
@@ -49,48 +52,24 @@ public class FileServiceImpl implements FileService {
                 file.delete();
             }
         } catch (Exception e) {
-            log.error("发生错误: {}", e);
-            return Result.error("发生错误！");
+            throw new ServerException("删除文件时发生错误：" + e.getMessage());
         }
-        return Result.successful("删除成功");
     }
 
     @Override
-    public Result upload(MultipartFile file) throws JSONException {
-        if (file.isEmpty()) {
-            return Result.error("错误！空文件!");
+    public void multiUpload(List<FileInfo> files){
+        for (FileInfo file : files) {
+            upload(file.getBytes(),file.getName());
         }
-        // 文件名
-        String fileName = file.getOriginalFilename();
-        String suffixName = fileName.substring(fileName.lastIndexOf("."));
-        log.info("上传文件名称为:{}, 后缀名为:{}!", fileName, suffixName);
-
-        File fileTempObj = new File(uploadFilePath + "/" + fileName);
-        // 检测目录是否存在
-        if (!fileTempObj.getParentFile().exists()) {
-            fileTempObj.getParentFile().mkdirs();
-        }
-        // 使用文件名称检测文件是否已经存在
-        if (fileTempObj.exists()) {
-            return Result.error("错误！文件已经存在!");
-        }
-
-        try {
-            FileUtil.writeBytes(file.getBytes(), fileTempObj);
-        } catch (Exception e) {
-            log.error("发生错误: {}", e);
-            return Result.error("错误！" + e.getMessage());
-        }
-        return Result.successful(uploadFilePath + "/" + fileName);
     }
 
-    @Override
-    public Result upload(byte[] file, String fileName, String suffixName) throws JSONException {
-        System.out.println("++++++++++++++++++++++++++++++++++进入一次");
+    public void upload(byte[] file, String fileName){
+        log.info("++++++++++++++++++++++++++++++++++进入一次");
         if (Objects.isNull(file)) {
-            return Result.error("错误！空文件!");
+             throw new ClientException("错误！空文件!");
         }
-        log.info("上传文件名称为:{}, 后缀名为:{}!", fileName, suffixName);
+        log.info("上传路径为:{}!", uploadFilePath);
+        log.info("上传文件名称为:{}!", fileName);
         File fileTempObj = new File(uploadFilePath + "/" + fileName);
         // 检测目录是否存在
         if (!fileTempObj.getParentFile().exists()) {
@@ -98,34 +77,33 @@ public class FileServiceImpl implements FileService {
         }
         // 使用文件名称检测文件是否已经存在
         if (fileTempObj.exists()) {
-            System.out.println("#########################################文件已存在");
-            return Result.error("错误！文件已经存在!");
+            throw new ClientException("文件已存在！");
         }
         try {
             FileUtil.writeBytes(file, fileTempObj);
         } catch (Exception e) {
-            log.error("发生错误: {}", e);
-            return Result.error("错误！" + e.getMessage());
+            throw new ServerException("上传错误：" + e.getMessage());
         }
-        return Result.successful(uploadFilePath + "/" + fileName);
     }
 
     @Override
-    public Result download(HttpServletResponse response, String fileName) throws JSONException, IOException {
+    public void download(HttpServletResponse response, String fileName) {
         File file = new File(uploadFilePath + '/' + fileName);
         if (!file.exists()) {
-            return Result.error("文件不存在！");
+            throw new ClientException("所选文件不存在！");
         }
-
         response.reset();
         response.setContentType("application/octet-stream");
         response.setCharacterEncoding("utf-8");
         response.setContentLength((int) file.length());
         response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
-
         byte[] readBytes = FileUtil.readBytes(file);
-        OutputStream os = response.getOutputStream();
-        os.write(readBytes);
-        return Result.successful("下载成功");
+        OutputStream os = null;
+        try {
+            os = response.getOutputStream();
+            os.write(readBytes);
+        } catch (IOException e) {
+            throw new ServerException("返回文件失败："+e.getMessage());
+        }
     }
 }

@@ -2,6 +2,8 @@ package com.icbc.codeResolver.controller;
 
 import com.icbc.codeResolver.entity.Result;
 import com.icbc.codeResolver.service.FileService;
+import com.icbc.codeResolver.utils.FileInfo;
+import com.icbc.codeResolver.utils.FileUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @BelongsProject: code-resolver
@@ -25,45 +28,33 @@ import java.io.IOException;
 @RequestMapping(value = "/file")
 @Tag(name = "DubboUpload", description = "upload接口")
 public class UploadController {
-    private static Logger logger = Logger.getLogger(UploadController.class);
+    private static final Logger logger = Logger.getLogger(UploadController.class);
 
     @DubboReference(group = "upload")
     FileService fileService;
 
-    /**
-     * MultipartFile改为可序列化的模式
-     * @param file
-     * @return
-     * @throws JSONException
-     */
+    @GetMapping(value = {"", "/", "/index"})
+    public String index() {
+        return "index";
+    }
+
     @PostMapping("/uploadFile")
-    @Operation(summary = "上传文件", description = "上传文件")
-    public Result fileUpload(@RequestParam("file") MultipartFile file) throws JSONException {
-        logger.info("+++++++++++++++++开始上传文件+++++++++++++++++");
-        byte[] arr=null;
-        try{
-            arr=file.getBytes();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        //获取文件名
-        String fileName=file.getOriginalFilename();
-        String suffixName = fileName.substring(fileName.lastIndexOf("."));
-        return fileService.upload(arr,fileName,suffixName);
+    public Result fileUpload(@RequestParam("files") MultipartFile[] files) {
+        fileService.multiUpload(FileUtils.multipartFilesToFileInfo(files));
+        return Result.success("");
     }
     // 下载到了默认的位置
-    
     @GetMapping("/downloadFile")
-    @Operation(summary = "下载文件", description = "下载文件")
-    public Result fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException, IOException {
-        logger.info("开始下载文件");
-        return fileService.download(response,fileName);
+    public Result fileDownload(HttpServletResponse response, @RequestParam("fileName") String fileName) throws IOException {
+        fileService.download(response,fileName);
+        return Result.success("");
     }
-    
+
     @GetMapping("/deleteFile")
-    @Operation(summary = "删除文件", description = "删除文件")
-    public Result deleteFile(HttpServletResponse response, @RequestParam("fileName") String fileName) throws JSONException {
-        logger.info("开始删除文件");
-        return fileService.delete(response,fileName);
+    public Result deleteFile(@RequestParam("fileName") String fileName)  {
+        fileService.delete(fileName);
+        return Result.success("");
     }
+
+
 }
