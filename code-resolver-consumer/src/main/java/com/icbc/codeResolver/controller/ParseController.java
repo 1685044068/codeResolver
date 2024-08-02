@@ -79,6 +79,7 @@ public class ParseController {
     @GetMapping("/progress")
     @Operation(summary = "查看后端导入进度", description = "查看后端导入进度")
     public Result getAsyncTaskProgress(@RequestParam("taskId") String taskId) {
+        logger.info("获取的ID为"+taskId);
         AsyncTaskProgress res=joernParseService.getAsyncTaskProgress(taskId);
         return Result.success(res);
     }
