@@ -71,6 +71,7 @@ public class JoernParseServiceImpl implements JoernParseService {
 
         commands.add("rmdir " + joern_dir + "\\out" );//这里需要先把out删了再后面创建
         commands.add("joern-parse "+url+" -o "+cpg_dir);
+        logger.info("joern-parse "+url+" -o "+cpg_dir);
         commands.add("joern-export.bat --repr=all --format=neo4jcsv "+cpg_dir);
         commands.add("move "+source_dir+" "+import_dir);
         commands.add("for %f in ("+node_dir+") do bin\\cypher-shell -u neo4j -p 12345678 -d "+database+" --file %f");
@@ -135,25 +136,41 @@ public class JoernParseServiceImpl implements JoernParseService {
 
         }
         //导入数据库
-        //获取所有文件路径
-        File file = new File(import_dir);
-        //用数组把文件夹下的文件存起来
-        File[] files = file.listFiles();
+        //获取node和edge文件的路径
+        List<List<File>> nodeAndEdge=GetNodeAndEdge(import_dir);
         logger.info("开始导入");
-        for (File file1:files){
-            String command="bin\\cypher-shell -u neo4j -p 12345678 -d "+database+" --file "+file1;
-            logger.info(command);
-            CompletableFuture<Void> taskFuture = CompletableFuture.runAsync(()->{
-                String res=doCommand("import_db",command);
-                if (res.equals("success")){
-                    success.getAndSet(success.get() + 1);
+        int len=nodeAndEdge.get(0).size()+nodeAndEdge.get(1).size();
+        CompletableFuture.runAsync(()->{
+            for (File file1:nodeAndEdge.get(0)){
+                String command="bin\\cypher-shell -u neo4j -p 12345678 -d "+database+" --file "+file1;
+                logger.info(command);
+                CompletableFuture<Void> taskFuture = CompletableFuture.runAsync(()->{
+                    String res=doCommand("import_db",command);
+                    if (res.equals("success")){
+                        success.getAndSet(success.get() + 1);
 
-                    taskProgress.set(SetAndSaveProgress(taskProgress.get(), taskId, success,files.length));
-                }
-                logger.info("成功数为"+success);
-                logger.info(command+res);
-            }, AsyncThreadPoolConfig.getExecutor());
-        }
+                        taskProgress.set(SetAndSaveProgress(taskProgress.get(), taskId, success,len));
+                    }
+                    logger.info("当前导入为点，总成功数为"+success);
+                    logger.info(command+res);
+                }, AsyncThreadPoolConfig.getExecutor());
+            }
+        },AsyncThreadPoolConfig.getExecutor()).thenRunAsync(()->{
+            for (File file1:nodeAndEdge.get(1)){
+                String command="bin\\cypher-shell -u neo4j -p 12345678 -d "+database+" --file "+file1;
+                logger.info(command);
+                CompletableFuture<Void> taskFuture = CompletableFuture.runAsync(()->{
+                    String res=doCommand("import_db",command);
+                    if (res.equals("success")){
+                        success.getAndSet(success.get() + 1);
+
+                        taskProgress.set(SetAndSaveProgress(taskProgress.get(), taskId, success,len));
+                    }
+                    logger.info("当前导入为边，总成功数为"+success);
+                    logger.info(command+res);
+                }, AsyncThreadPoolConfig.getExecutor());
+            }
+        });
     }
 
 
@@ -230,5 +247,24 @@ public class JoernParseServiceImpl implements JoernParseService {
             fileDtoList.add(new FileDto(file1.getName(),file1.getPath()));
         }
         return fileDtoList;
+    }
+
+    public List<List<File>> GetNodeAndEdge(String path_dir){
+        File file = new File(path_dir);
+        File[] files = file.listFiles();
+        List<File> nodes=new ArrayList<>();
+        List<File> edges=new ArrayList<>();
+        for (File file1:files){
+            String start=file1.getName().substring(0,5);
+            if(start.equals("edges")){
+                edges.add(file1);
+            }else {
+                nodes.add(file1);
+            }
+        }
+        List<List<File>> nodeAndEdge=new ArrayList<>();
+        nodeAndEdge.add(nodes);
+        nodeAndEdge.add(edges);
+        return nodeAndEdge;
     }
 }
