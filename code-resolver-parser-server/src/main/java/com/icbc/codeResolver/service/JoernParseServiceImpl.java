@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
-@DubboService(group = "parse",timeout = 100000000)//设置超时时间
+@DubboService(group = "parse",timeout = 10000)//设置超时时间
 @RefreshScope
 public class JoernParseServiceImpl implements JoernParseService {
     private static Logger logger = Logger.getLogger(JoernParseServiceImpl.class);

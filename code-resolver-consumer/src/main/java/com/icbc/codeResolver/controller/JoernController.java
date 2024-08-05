@@ -100,9 +100,19 @@ public class JoernController {
         return ans;
     }
 
+
+    @GetMapping("/getMethodInformation")
+    @Operation(summary = "目标五六七前置操作", description = "需要方法名")
+    public List<neo4jNode> getMethodInformation(@RequestParam("methodName")String methodName) {
+        System.out.println("目标五六七前置操作：获取方法信息 方法名"+methodName);
+        List<neo4jNode> ans=joernService.getMethodInformation(methodName);
+        return ans;
+    }
+
+
     @GetMapping("/getSimilar")
     @Operation(summary = "目标五 获取相似方法", description = "需要包名")
-    public List<neo4jSimilarNode> getSimilar(@RequestParam("packetName")String packetName, @RequestParam("identify")String identify) {
+    public List<neo4jSimilarNode> getSimilar(@RequestParam("packetName")String packetName, @RequestParam("methodElementId")String identify) {
         Double threshold=0.2;
         logger.info("目标五：获取相似方法 包名"+packetName);
         List<neo4jSimilarNode> ans=joernService.getSimilar(packetName,identify,threshold);

@@ -360,35 +360,34 @@ public class CacheClient {
      * 相似度缓存
      * @param packetName
      * @param identify
-     * @param similarNode
      * @param time
      * @param unit
      * @return
      */
-    public List<neo4jSimilarNode> catchSimilar(String packetName,String identify,List<neo4jSimilarNode> similarNode,Long time, TimeUnit unit){
+    public List<neo4jSimilarNode> getSimilar(String packetName,String identify,Double threshold,Long time, TimeUnit unit){
+        //构建redis的key
         String key=LOCK_SIMILARITY_KEY+packetName+identify;
         List<neo4jSimilarNode> similarNodes=null;
         //1.查询缓存
         String json=stringRedisTemplate.opsForValue().get(key);
         //2.判断是否存在
         if (StrUtil.isBlank(json)){
-            //3.不存在，这里应该去查数据库然后存入缓存
-//            logger.info("需要到数据库中进行查询");
-//            List<neo4jSimilarNode> allSimilarNodes=joernMapper.getSimilar(packetName);
-//            //数据处理
-//            similarNodes= new ArrayList<>();
-//            for(int i=0;i<allSimilarNodes.size();i++){
-//                neo4jSimilarNode node=allSimilarNodes.get(i);
-//                if(node.from.id.equals(identify)){
-//                    similarNodes.add(node);
-//                }
-//            }
+            //3.不存在，重新预热后查询
+            System.out.println("没有预热");
+            //要加锁，估计dubbo会来问三次？
+            Collection<Map<String, Object>> result = joernMapper.getSimilar(packetName);
+            SimilarWarmUp(packetName,result,threshold,time,unit);
+            //4.查询
+            json=stringRedisTemplate.opsForValue().get(key);
+            System.out.println("==========================");
+            System.out.println(json);
+            RedisData redisData=JSONUtil.toBean(json,RedisData.class);
+            similarNodes=JSONUtil.toList((JSONArray) redisData.getData(), neo4jSimilarNode.class);
             Collections.sort(similarNodes);
-            //4.存入到缓存
-            this.setWithLogicalExpire(key,similarNodes,time,unit);
             //5.返回
             return similarNodes;
         }else {//存在
+            System.out.println("预热了");
             RedisData redisData=JSONUtil.toBean(json,RedisData.class);
             similarNodes=JSONUtil.toList((JSONArray) redisData.getData(), neo4jSimilarNode.class);
             LocalDateTime expireTime=redisData.getExpireTime();
@@ -401,23 +400,10 @@ public class CacheClient {
             boolean isLock=tryLock(key);
             if (isLock){
                 CACHE_REBUILD_EXECUTOR.submit(()->{
-                    List<neo4jSimilarNode>linksRebuild=null;
                     try {
                         //重建缓存
-                        //1查询数据库
-//                        List<neo4jSimilarNode> allSimilarNodes=joernMapper.getSimilar(packetName);
-//                        //2.数据处理
-//                        linksRebuild= new ArrayList<>();
-//                        for(int i=0;i<allSimilarNodes.size();i++){
-//                            neo4jSimilarNode node=allSimilarNodes.get(i);
-//                            if(node.from.id.equals(identify)){
-//                                linksRebuild.add(node);
-//                            }
-//                        }
-                        Collections.sort(linksRebuild);
-                        //4.存入到缓存
-                        this.setWithLogicalExpire(key,linksRebuild,time,unit);
-                        //3.存储到缓存中
+                        Collection<Map<String, Object>> result = joernMapper.getSimilar(packetName);
+                        SimilarWarmUp(packetName,result,threshold,1000L,TimeUnit.SECONDS);
                     }catch (Exception e){
                         throw new RuntimeException(e);
                     }finally {
@@ -428,6 +414,69 @@ public class CacheClient {
             return similarNodes;
         }
     }
+
+
+
+
+    /**
+     * 相似度预热
+     * @param packetName
+     * @param result
+     * @param time
+     * @param unit
+     */
+    public void SimilarWarmUp(String packetName,Collection<Map<String, Object>> result,Double threshold,Long time, TimeUnit unit){
+        String lockKey_pre=LOCK_SIMILARITY_KEY+packetName;
+        List<Map<String, Object>> resultList = new ArrayList<>(result);
+        //resultList的数量为相似对对数，list的每一个节点表示一个map，一个map有三个键值对分别是from和对应的值   to和对应的值   similarity和对应的值
+        InternalNode class_node=null;
+        Double similarity=0d;
+        Map<String,List<neo4jSimilarNode>> map=new HashMap<>();
+        for (int i=0;i<resultList.size();i++){
+            Map<String, Object> record=resultList.get(i);//遍历获取map
+            Object nodeObject = record.get("from");
+            if (nodeObject instanceof InternalNode) {
+                class_node = (InternalNode) nodeObject;
+            }
+            neo4jNode nodeFrom=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+            nodeObject = record.get("to");
+            if (nodeObject instanceof InternalNode) {
+                class_node = (InternalNode) nodeObject;
+            }
+            neo4jNode nodeTo=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+            Object object=record.get("similarity");
+            if(object instanceof Double){
+                similarity=(Double)object;
+            }
+            neo4jSimilarNode resNode=new neo4jSimilarNode(nodeFrom,nodeTo,similarity);
+            if (resNode.similarity<threshold) continue;
+            //判断map中是否有名为from对应method名的key，有的话取出key对应的list加入，没有就创建list
+            if (map.containsKey(nodeFrom.getId())){//如果已经有key
+                map.get(nodeFrom.getId()).add(resNode);
+            }else {
+                List<neo4jSimilarNode> list=new ArrayList<>();
+                list.add(resNode);
+                map.put(nodeFrom.getId(),list);
+            }
+        }
+        //遍历存入redis
+        for (String method:map.keySet()){
+            String key=lockKey_pre+method;
+            try {
+                System.out.println("------------------------");
+                System.out.println(key);
+                List<neo4jSimilarNode> nodes=map.get(method);
+                //排序
+                Collections.sort(nodes);
+                //存入缓存
+                this.setWithLogicalExpire(key,nodes,time,unit);
+            }catch (Exception e){
+                throw new RuntimeException(e);
+            }
+        }
+        System.out.println("预热完成");
+    }
+
 
     public List<neo4jNode> findRelation(Collection<Map<String, Object>> result) {
         List<Map<String, Object>> resultList = new ArrayList<>(result);

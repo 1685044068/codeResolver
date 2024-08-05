@@ -60,14 +60,43 @@ public interface CodeResolverService {
     public List<neo4jPath> showInvocationLink(String methodFullName, Boolean isDonw);
 
 
+
+    /**
+     * 获取热点节点
+     * @param packetName
+     * @param maxNumber
+     * @return
+     */
     public List<neo4jHotNode> getHotNode(String packetName, String maxNumber);
 
+    /**
+     * 获取指定节点相似度
+     * @param packetName
+     * @param identify
+     * @param threshold
+     * @return
+     */
     public List<neo4jSimilarNode> getSimilar(String packetName, String identify, Double threshold);
 
+    /**
+     * 获取最短路径
+     * @param methodFullName
+     * @return
+     */
     public List<neo4jPath> getShortestPath(String methodFullName);
 
+    /**
+     * 获取存在多个指定节点的多个链路
+     * @param list
+     * @return
+     */
     public List<neo4jPath> getCollectionPath(List<String> list);
 
+    /**
+     * 获取方法的信息
+     * @param methodName
+     * @return
+     */
     public List<neo4jNode> getMethodInformation(String methodName);
 
 

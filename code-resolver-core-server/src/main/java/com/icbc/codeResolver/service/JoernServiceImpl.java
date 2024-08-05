@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 
-@DubboService(group = "joern")
+@DubboService(group = "joern",timeout = 10000)
 
 @Component
 public class JoernServiceImpl implements CodeResolverService {
@@ -70,6 +70,8 @@ public class JoernServiceImpl implements CodeResolverService {
             return linkToPath(findRelation(result));
         }
     }
+
+
 
     /**
      * @param methodFullName
@@ -216,44 +218,9 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jSimilarNode> getSimilar(String packetName,String methodElementId,Double threshold) {
-
-        //这里需要先去redis查packetName下的所有方法相似度是否存在，返回全部方法相似度ans
-        Collection<Map<String, Object>> result = joernMapper.getSimilar(packetName);
-        List<Map<String, Object>> resultList = new ArrayList<>(result);
-        List<neo4jSimilarNode> ans = new ArrayList<>();
-        InternalNode class_node=null;
-        Double similarity=0d;
-        for (int i=0;i<resultList.size();i++){
-            Map<String, Object> record=resultList.get(i);
-            Object nodeObject = record.get("from");
-            if (nodeObject instanceof InternalNode) {
-                class_node = (InternalNode) nodeObject;
-            }
-            neo4jNode nodeFrom=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
-            nodeObject = record.get("to");
-            if (nodeObject instanceof InternalNode) {
-                class_node = (InternalNode) nodeObject;
-            }
-            neo4jNode nodeTo=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
-            Object object=record.get("similarity");
-            if(object instanceof Double){
-                similarity=(Double)object;
-            }
-            neo4jSimilarNode resNode=new neo4jSimilarNode(nodeFrom,nodeTo,similarity);
-            ans.add(resNode);
-        }
-        System.out.println("方法对数量："+ans.size());
-
-        //寻找指定方法的方法相似度排序返回（也可以写进redis)
-        List<neo4jSimilarNode> res = new ArrayList<>();
-        for(int i=0;i<ans.size();i++){
-            neo4jSimilarNode node=ans.get(i);
-            if((node.from.id.equals(methodElementId))&&(node.similarity>=threshold)){
-                res.add(node);
-            }
-        }
-        Collections.sort(res);
-        return res;
+        //直接到redis中进行查询
+        List<neo4jSimilarNode> result=cacheClient.getSimilar(packetName,methodElementId,threshold,1000L,TimeUnit.MINUTES);
+        return result;
     }
 
     /**
