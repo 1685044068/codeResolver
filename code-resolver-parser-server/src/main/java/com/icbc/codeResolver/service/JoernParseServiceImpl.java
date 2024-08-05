@@ -60,7 +60,7 @@ public class JoernParseServiceImpl implements JoernParseService {
     @Override
     public String parse(String url) throws IOException {
         //删除原来数据库文件夹下的旧csv文件
-        File directory = new File("E:\\software\\Neo4j\\Data\\relate-data\\dbmss\\dbms-dc752007-1b88-4751-adae-6f161a7539d7\\import");
+        File directory = new File("E:\\software\\Neo4j\\Data\\relate-data\\dbmss\\dbms-4c85022a-8cbe-43f5-aaad-6285c97ded69\\import");
         FileUtils.cleanDirectory(directory);
 
         System.out.println("url为"+url);
@@ -109,7 +109,7 @@ public class JoernParseServiceImpl implements JoernParseService {
         redisTemplate.delete(REDIS_PREFIX + taskId);
         AtomicReference<AsyncTaskProgress> taskProgress= new AtomicReference<>(new AsyncTaskProgress());
         AtomicReference<Integer> success= new AtomicReference<>(0);
-        File directory = new File("E:\\software\\Neo4j\\Data\\relate-data\\dbmss\\dbms-dc752007-1b88-4751-adae-6f161a7539d7\\import");
+        File directory = new File("E:\\software\\Neo4j\\Data\\relate-data\\dbmss\\dbms-4c85022a-8cbe-43f5-aaad-6285c97ded69\\import");
         try {
             org.apache.tomcat.util.http.fileupload.FileUtils.cleanDirectory(directory);
         } catch (IOException e) {
