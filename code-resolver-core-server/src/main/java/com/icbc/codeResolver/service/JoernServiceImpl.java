@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import jakarta.annotation.Resource;
 import org.apache.dubbo.config.annotation.DubboService;
+import org.apache.log4j.Logger;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Path;
@@ -23,10 +24,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 
-@DubboService(group = "joern",timeout = 10000)
+@DubboService(group = "joern",timeout = 1000000)
 
 @Component
 public class JoernServiceImpl implements CodeResolverService {
+    private static Logger logger = Logger.getLogger(CacheClient.class);
     @Resource
     private CacheClient cacheClient;
 
@@ -219,6 +221,7 @@ public class JoernServiceImpl implements CodeResolverService {
     @Override
     public List<neo4jSimilarNode> getSimilar(String packetName,String methodElementId,Double threshold) {
         //直接到redis中进行查询
+        logger.info("server 查询相似度一次");
         List<neo4jSimilarNode> result=cacheClient.getSimilar(packetName,methodElementId,threshold,1000L,TimeUnit.MINUTES);
         return result;
     }

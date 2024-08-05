@@ -379,8 +379,6 @@ public class CacheClient {
             SimilarWarmUp(packetName,result,threshold,time,unit);
             //4.查询
             json=stringRedisTemplate.opsForValue().get(key);
-            System.out.println("==========================");
-            System.out.println(json);
             RedisData redisData=JSONUtil.toBean(json,RedisData.class);
             similarNodes=JSONUtil.toList((JSONArray) redisData.getData(), neo4jSimilarNode.class);
             Collections.sort(similarNodes);
