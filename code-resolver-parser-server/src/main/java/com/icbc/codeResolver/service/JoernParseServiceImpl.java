@@ -124,6 +124,9 @@ public class JoernParseServiceImpl implements JoernParseService {
         commands.add("joern-parse "+url+" -o "+cpg_dir);
         commands.add("joern-export.bat --repr=all --format=neo4jcsv "+cpg_dir);//joern-export.bat --repr=all --format=neo4jcsv E:\software\Joern\joern\workspace\hmdp\cpg.bin
         commands.add("move "+source_dir+" "+import_dir);
+        //初始化redis中的数据
+        taskProgress.set(SetAndSaveProgress(taskProgress.get(), taskId, success,1));
+
         //执行前4条命令
         try{
             //前三条命令执行
@@ -140,6 +143,7 @@ public class JoernParseServiceImpl implements JoernParseService {
         List<List<File>> nodeAndEdge=GetNodeAndEdge(import_dir);
         logger.info("开始导入");
         int len=nodeAndEdge.get(0).size()+nodeAndEdge.get(1).size();
+        logger.info("总文件数为"+len);
         CompletableFuture.runAsync(()->{
             for (File file1:nodeAndEdge.get(0)){
                 String command="bin\\cypher-shell -u neo4j -p 12345678 -d "+database+" --file "+file1;
@@ -148,11 +152,11 @@ public class JoernParseServiceImpl implements JoernParseService {
                     String res=doCommand("import_db",command);
                     if (res.equals("success")){
                         success.getAndSet(success.get() + 1);
-
                         taskProgress.set(SetAndSaveProgress(taskProgress.get(), taskId, success,len));
+                        logger.info("当前导入为点，总成功数为"+success);
+                    }else {
+                        logger.info(file1+"导入失败");
                     }
-                    logger.info("当前导入为点，总成功数为"+success);
-                    logger.info(command+res);
                 }, AsyncThreadPoolConfig.getExecutor());
             }
         },AsyncThreadPoolConfig.getExecutor()).thenRunAsync(()->{
@@ -163,11 +167,11 @@ public class JoernParseServiceImpl implements JoernParseService {
                     String res=doCommand("import_db",command);
                     if (res.equals("success")){
                         success.getAndSet(success.get() + 1);
-
                         taskProgress.set(SetAndSaveProgress(taskProgress.get(), taskId, success,len));
+                        logger.info("当前导入为边，总成功数为"+success);
+                    }else {
+                        logger.info(file1+"导入失败");
                     }
-                    logger.info("当前导入为边，总成功数为"+success);
-                    logger.info(command+res);
                 }, AsyncThreadPoolConfig.getExecutor());
             }
         });
