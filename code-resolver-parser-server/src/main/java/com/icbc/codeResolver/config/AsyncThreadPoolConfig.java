@@ -1,7 +1,9 @@
 package com.icbc.codeResolver.config;
 
+import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -19,6 +21,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Configuration
 @EnableAsync
 public class AsyncThreadPoolConfig implements AsyncConfigurer {
+    private static Logger logger = Logger.getLogger(AsyncThreadPoolConfig.class);
     private static ThreadPoolTaskExecutor executor;
     //获取单前机器cpu数量
     private static final int cpu = Runtime.getRuntime().availableProcessors();
@@ -38,7 +41,9 @@ public class AsyncThreadPoolConfig implements AsyncConfigurer {
         return executor;
     }
 
+    //利用Spring容器进行自动注入
     @Bean("parseExecutor")
+    @Lazy
     public ThreadPoolTaskExecutor taskExecutor() {
         executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(corePoolSize);
