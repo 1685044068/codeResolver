@@ -203,6 +203,28 @@ public class JoernMapperImpl implements JoernMapper {
                 .all();
     }
 
+    @Override
+    public Collection<Map<String, Object>> getAstPath(String id){
+        String cypherQuery="MATCH p=(n:METHOD)<-[:CALL]-(c:CALL) <-[:AST*]-(m: METHOD) where elementId(n)=$ID and not m.NAME contains \"<\" " +
+                "with nodes(p) as nodeAll,m " +
+                "MATCH (m)-[:AST]->(in:METHOD_PARAMETER_IN) " +
+                "return nodeAll,collect(in) as memberAll";
+        return neo4jClient.query(cypherQuery)
+                .bind(id).to("ID")
+                .fetch()
+                .all();
+    }
+    @Override
+    public Collection<Map<String, Object>> getMethodByLine(String fileName,Integer lineNumber){
+        String cypherQuery="MATCH (n:METHOD) where n.FILENAME ends with $FILENAME AND n. LINE_NUMBER<=$LINE AND n. LINE_NUMBER_END >=$LINE return n";
+        return neo4jClient.query(cypherQuery)
+                .bind(fileName).to("FILENAME")
+                .bind(lineNumber).to("LINE")
+                .fetch()
+                .all();
+    }
+
+
 }
 
 
