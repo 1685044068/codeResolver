@@ -381,9 +381,12 @@ public class CacheClient {
             json=stringRedisTemplate.opsForValue().get(key);
             RedisData redisData=JSONUtil.toBean(json,RedisData.class);
             similarNodes=JSONUtil.toList((JSONArray) redisData.getData(), neo4jSimilarNode.class);
-            Collections.sort(similarNodes);
+            if (similarNodes!=null){
+                Collections.sort(similarNodes);
+            }
             //5.返回
             return similarNodes;
+
         }else {//存在
             System.out.println("预热了");
             RedisData redisData=JSONUtil.toBean(json,RedisData.class);
