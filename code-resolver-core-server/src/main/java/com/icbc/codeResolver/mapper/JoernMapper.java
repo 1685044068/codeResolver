@@ -39,4 +39,7 @@ public interface JoernMapper {
 
     public Collection<Map<String, Object>> getMethodInformation(String methodName);
 
+    public Collection<Map<String, Object>> getMethodByLine(String fileName,Integer lineNumber);
+    public Collection<Map<String, Object>> getAstPath(String id);
+
 }

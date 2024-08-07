@@ -1,11 +1,9 @@
 package com.icbc.codeResolver.service;
 
-import com.icbc.codeResolver.entity.neo4jHotNode;
-import com.icbc.codeResolver.entity.neo4jNode;
-import com.icbc.codeResolver.entity.neo4jPath;
-import com.icbc.codeResolver.entity.neo4jSimilarNode;
+import com.icbc.codeResolver.entity.*;
 
 import java.util.List;
+import java.util.Map;
 
 public interface CodeResolverService {
     /**
@@ -98,6 +96,9 @@ public interface CodeResolverService {
      * @return
      */
     public List<neo4jNode> getMethodInformation(String methodName);
+
+
+    public Map<neo4jPre, neo4jAst> getDynamicInformation(String fileName, Integer lineNumber);
 
 
 

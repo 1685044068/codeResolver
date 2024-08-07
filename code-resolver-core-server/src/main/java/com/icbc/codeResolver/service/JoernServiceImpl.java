@@ -5,10 +5,7 @@ import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlSchemaStatVisitor;
 import com.alibaba.druid.stat.TableStat;
 import com.alibaba.druid.util.JdbcConstants;
-import com.icbc.codeResolver.entity.neo4jHotNode;
-import com.icbc.codeResolver.entity.neo4jNode;
-import com.icbc.codeResolver.entity.neo4jPath;
-import com.icbc.codeResolver.entity.neo4jSimilarNode;
+import com.icbc.codeResolver.entity.*;
 import com.icbc.codeResolver.mapper.JoernMapper;
 import com.icbc.codeResolver.utils.CacheClient;
 
@@ -264,6 +261,159 @@ public class JoernServiceImpl implements CodeResolverService {
             }
             neo4jNode node = new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(), class_node.get("FULL_NAME").asString(), class_node.get("CODE").asString(), class_node.get("FILENAME").asString(), class_node.elementId());
             ans.add(node);
+        }
+        return ans;
+    }
+
+    @Override
+    public Map<neo4jPre, neo4jAst> getDynamicInformation(String fileName,Integer lineNumber){
+        Map<neo4jPre, neo4jAst> res = new HashMap<>();//最终的结果集
+        List<neo4jPre> ans;//调用者集合
+        //1、定位到方法
+        Collection<Map<String, Object>> result=joernMapper.getMethodByLine(fileName,lineNumber);
+        List<Map<String, Object>> resultList = new ArrayList<>(result);
+        Object n = resultList.get(0).get("n");
+        InternalNode nNode=null;
+        if(n instanceof InternalNode){
+            nNode=(InternalNode)n;
+        }
+        //2、将方法加入到队列，广度优先搜索遍历
+        Queue<neo4jPre> queue = new LinkedList<>();
+        neo4jNode node = new neo4jNode(nNode.labels().iterator().next(), nNode.get("NAME").asString(), nNode.get("FULL_NAME").asString(), nNode.get("CODE").asString(), nNode.get("FILENAME").asString(), nNode.elementId());
+        List<String> firstPre=new ArrayList<>();
+        firstPre.add("("+node.code+")");
+        queue.add(new neo4jPre(node,firstPre));
+        System.out.println(1);
+        while(!queue.isEmpty()){
+            int size= queue.size();
+            for(int s=0;s<size;s++){
+                neo4jPre nextNode=queue.poll();
+                ans=getAstPath(nextNode.getNode().id,res,nextNode.getPrePathList());
+                if(ans.size()==0){
+                    System.out.println(nextNode.getPrePathList());
+                }
+                for(int i=0;i<ans.size();i++){
+                    queue.add(ans.get(i));
+                }
+            }
+        }
+        return res;
+    }
+    public List<neo4jPre> getAstPath(String id,Map<neo4jPre, neo4jAst> res,List<String> pre){
+        //1、根据方法id获取调用该方法的上一级ast。
+        Collection<Map<String, Object>> result = joernMapper.getAstPath(id);
+        List<Map<String, Object>> resultList = new ArrayList<>(result);
+        List<neo4jPre> ans = new ArrayList<>();
+        List<String> strControl=new ArrayList<>();
+        neo4jPre key=null;
+
+        for (Map<String, Object> record : resultList){
+            //1.1获取memberall LIST
+            List<String> memberAllList=new ArrayList<>();
+            Object memberAll=record.get("memberAll");
+            List<Object> objectList=null;
+            InternalNode memberNode;
+            if(memberAll instanceof List<?>){
+                objectList=(List<Object>)memberAll;
+            }
+            for(int i=0;i<objectList.size();i++){
+                Object objectNode=objectList.get(i);
+                if(objectNode instanceof InternalNode){
+                    memberNode = (InternalNode) objectNode;
+                    memberAllList.add(memberNode.get("NAME").asString());
+                }
+            }
+            //1.2获取nodeall list
+            Object nodeAll=record.get("nodeAll");
+            objectList=null;
+            InternalNode methodNode;
+            neo4jNode node=null;
+            StringBuilder stringBuilder = new StringBuilder();
+            StringBuilder controlBuilder=new StringBuilder();
+            boolean elseFlag=false;
+            boolean ifFlag=false;
+            boolean flag=false;
+            if(nodeAll instanceof List<?>){
+                objectList=(List<Object>)nodeAll;
+            }
+            for(int i=0;i<objectList.size();i++){
+                Object objectNode=objectList.get(i);
+                if(objectNode instanceof InternalNode){
+                    methodNode = (InternalNode) objectNode;
+                    node = new neo4jNode(methodNode.labels().iterator().next(), methodNode.get("NAME").asString(), methodNode.get("FULL_NAME").asString(), methodNode.get("CODE").asString(), methodNode.get("FILENAME").asString(), methodNode.elementId());
+                }
+                if(i==0){
+                    //把头节点加入
+                    key=new neo4jPre(node,pre);
+                }
+                else if(i==objectList.size()-1){
+                    //把尾节点加入
+                    break;
+                }
+                else if(node.label.equals("BLOCK")){
+                    //System.out.println("".equals(stringBuilder)+"  "+stringBuilder.length());
+                    if(stringBuilder.length()!=0){
+                        if(!flag){
+                            controlBuilder.append(stringBuilder);
+                            flag=true;
+                        }
+                        else{
+                            controlBuilder.append("&&"+stringBuilder);
+                        }
+
+                    }
+                    //如果是blcok，将标志位复位
+                    stringBuilder = new StringBuilder();;
+                    elseFlag=false;
+                    ifFlag=false;
+                }
+                else if(node.label.equals("CONTROL_STRUCTURE")){
+                    String code=node.code;
+                    if(code.contains("else")){
+                        if(elseFlag==false&&ifFlag==false){
+                            elseFlag=true;
+                        }
+                    }
+                    else if(code.contains("if")){
+                        if(ifFlag==false){//只有前面没有if的情况才能存，存又分两种情况，前面是否存在else和if
+                            if(elseFlag==false){
+                                ifFlag=true;
+                            }
+                            String member=code.substring(code.indexOf("(")+1,code.indexOf(")"));
+                            for(int j=0;j<memberAllList.size();j++){
+                                if(member.contains(memberAllList.get(j))){
+                                    if(!elseFlag){
+                                        //if情况，正常存
+                                        stringBuilder.append("("+member+")");
+                                    }
+                                    else{
+                                        //else情况，取反，然后存，会有多个，需要用and连接
+                                        if(stringBuilder.length()==0){
+                                            stringBuilder.append("("+"!"+"("+member+")"+")");
+                                        }else{
+                                            stringBuilder.append("&&"+"("+"!"+"("+member+")"+")");
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+            String control=controlBuilder.toString();
+            if(control.equals("")) control="any";
+            strControl.add(control);//记录每个m的控制分支
+            List<String> now=new ArrayList<>();
+            //遍历pre拼接
+            for(int i=0;i<pre.size();i++){
+                now.add(pre.get(i)+"<<<-----"+"["+control+"]"+"----"+"("+node.code+")");
+            }
+            ans.add(new neo4jPre(node,now));
+        }
+        if(ans.size()!=0){
+            res.put(key,new neo4jAst(ans,strControl));//ans是list<node>,str是list<string>，size一样对应每个方法。
         }
         return ans;
     }

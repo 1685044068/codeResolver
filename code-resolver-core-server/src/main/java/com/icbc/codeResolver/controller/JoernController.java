@@ -1,10 +1,7 @@
 package com.icbc.codeResolver.controller;
 
 import com.icbc.codeResolver.aop.WebLog;
-import com.icbc.codeResolver.entity.neo4jHotNode;
-import com.icbc.codeResolver.entity.neo4jNode;
-import com.icbc.codeResolver.entity.neo4jPath;
-import com.icbc.codeResolver.entity.neo4jSimilarNode;
+import com.icbc.codeResolver.entity.*;
 import com.icbc.codeResolver.service.CodeResolverService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 本地测试controller
@@ -137,6 +135,13 @@ public class JoernController {
     public List<neo4jPath> getCollectionPath(@RequestParam("methodList") List<String> methodList) {
         System.out.println(methodList);
         return joernService.getCollectionPath(methodList);
+    }
+
+    @GetMapping("/getDynamicInformation")
+    @Operation(summary = "挑战目标", description = "需要方法代码")
+    public Map<neo4jPre, neo4jAst> getDynamicInformation(@RequestParam("fileName") String fileName, @RequestParam("lineNumber") Integer lineNumber) {
+        System.out.println(fileName+"   "+lineNumber);
+        return joernService.getDynamicInformation(fileName,lineNumber);
     }
 
 }
