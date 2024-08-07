@@ -219,6 +219,7 @@ public class JoernParseServiceImpl implements JoernParseService {
         builder.command("cmd.exe", "/c",command);
         builder.directory(new File(System.getProperty(dir)));
         try{
+            logger.info("执行命令:"+command);
             Process process=builder.start();
             StreamGobbler streamGobbler =
                     new StreamGobbler(process.getInputStream(), System.out::println);
@@ -259,6 +260,9 @@ public class JoernParseServiceImpl implements JoernParseService {
         List<File> nodes=new ArrayList<>();
         List<File> edges=new ArrayList<>();
         for (File file1:files){
+            if(!file1.getName().endsWith("cypher.csv")){
+                continue;
+            }
             String start=file1.getName().substring(0,5);
             if(start.equals("edges")){
                 edges.add(file1);

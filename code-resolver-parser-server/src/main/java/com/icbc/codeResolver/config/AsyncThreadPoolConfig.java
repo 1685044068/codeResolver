@@ -26,7 +26,7 @@ public class AsyncThreadPoolConfig implements AsyncConfigurer {
     //获取单前机器cpu数量
     private static final int cpu = Runtime.getRuntime().availableProcessors();
     //设置核心线程数
-    private static final int corePoolSize = cpu;
+    private static final int corePoolSize = 1;
     //设置最大线程数
     private static final int maxPoolSize = 1000;
     //设置线程空闲时间(秒)
