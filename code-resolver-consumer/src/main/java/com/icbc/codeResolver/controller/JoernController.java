@@ -40,7 +40,6 @@ public class JoernController {
 
     /**
      * 查询表字段以及相关关系
-     * @param dataBaseName
      * @param tableName
      * @param fieldName
      * @return
@@ -48,11 +47,10 @@ public class JoernController {
 
     @GetMapping("/dataBaseInfo")
     @Operation(summary = "目标三：数据库表字段关系", description = "根据数据库名，表名，字段名查询")
-    public List<neo4jPath> getDataBaseInfo(@RequestParam("dataBaseName")String dataBaseName, @RequestParam("tableName")String tableName, @RequestParam("fieldName")String fieldName) {
-        logger.info("目标三：数据库表字段关系 数据库名"+dataBaseName);
+    public List<neo4jPath> getDataBaseInfo(@RequestParam("tableName")String tableName, @RequestParam("fieldName")String fieldName) {
         logger.info("目标三：数据库表字段关系 表名"+tableName);
         logger.info("目标三：数据库表字段关系 字段名查询"+fieldName);
-        return joernService.getDataBaseInfo(dataBaseName,tableName,fieldName);
+        return joernService.getDataBaseInfo(tableName,fieldName);
     }
 
 
@@ -133,6 +131,7 @@ public class JoernController {
         logger.info("目标七 获取统一路径 方法列表"+methodList);
         return joernService.getCollectionPath(methodList);
     }
+
 
 
 

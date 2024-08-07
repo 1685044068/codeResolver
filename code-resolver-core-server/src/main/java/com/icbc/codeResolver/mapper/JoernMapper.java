@@ -23,7 +23,7 @@ public interface JoernMapper {
 
     public Collection<Map<String, Object>> getUrlPath(String url);
 
-    public Collection<Map<String, Object>> getDataBaseInfo(String dataBaseName, String tableName, String fieldName);
+    public Collection<Map<String, Object>> getDataBaseInfo();
 
     public Collection<Map<String, Object>> getClassName(String packetName);
 
@@ -41,5 +41,6 @@ public interface JoernMapper {
 
     public Collection<Map<String, Object>> getMethodByLine(String fileName,Integer lineNumber);
     public Collection<Map<String, Object>> getAstPath(String id);
+    public boolean createDatabase(String databaseName);
 
 }

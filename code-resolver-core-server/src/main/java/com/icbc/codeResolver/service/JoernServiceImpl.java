@@ -108,14 +108,13 @@ public class JoernServiceImpl implements CodeResolverService {
 
     /**
      * 查询表字段以及相关关系
-     * @param dataBaseName
      * @param tableName
      * @param fieldName
      * @return
      */
     @Override
-    public List<neo4jPath> getDataBaseInfo(String dataBaseName, String tableName, String fieldName) {
-        Collection<Map<String, Object>> result=joernMapper.getDataBaseInfo(dataBaseName,tableName,fieldName);
+    public List<neo4jPath> getDataBaseInfo(String tableName, String fieldName) {
+        Collection<Map<String, Object>> result=joernMapper.getDataBaseInfo();
         List<Map<String, Object>> resultList = new ArrayList<>(result);
         List<neo4jNode> ans = new ArrayList<>();
         InternalNode annotation_node=null;
@@ -416,6 +415,11 @@ public class JoernServiceImpl implements CodeResolverService {
             res.put(key,new neo4jAst(ans,strControl));//ans是list<node>,str是list<string>，size一样对应每个方法。
         }
         return ans;
+    }
+
+    @Override
+    public boolean createDatabase(String databaseName){
+        return joernMapper.createDatabase(databaseName);
     }
 
     /**

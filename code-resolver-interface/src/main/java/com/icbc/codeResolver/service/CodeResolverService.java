@@ -29,12 +29,11 @@ public interface CodeResolverService {
 
     /**
      * 查询表字段以及相关关系
-     * @param dataBaseName
      * @param tableName
      * @param fieldName
      * @return
      */
-    public List<neo4jPath> getDataBaseInfo(String dataBaseName,String tableName,String fieldName);
+    public List<neo4jPath> getDataBaseInfo(String tableName,String fieldName);
 
     /**
      * 前端传递包名返回类名
@@ -101,5 +100,6 @@ public interface CodeResolverService {
     public Map<neo4jPre, neo4jAst> getDynamicInformation(String fileName, Integer lineNumber);
 
 
+    public boolean createDatabase(String databaseName);
 
 }

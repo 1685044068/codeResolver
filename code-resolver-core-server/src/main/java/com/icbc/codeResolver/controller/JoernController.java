@@ -6,10 +6,7 @@ import com.icbc.codeResolver.service.CodeResolverService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -38,7 +35,6 @@ public class JoernController {
 
     /**
      * 查询表字段以及相关关系
-     * @param dataBaseName
      * @param tableName
      * @param fieldName
      * @return
@@ -47,11 +43,10 @@ public class JoernController {
     @GetMapping("/dataBaseInfo")
     @Operation(summary = "目标三：数据库表字段关系", description = "根据数据库名，表名，字段名查询")
     @WebLog("目标三：数据库表字段关系,根据数据库名，表名，字段名查询")
-    public List<neo4jPath> getDataBaseInfo(@RequestParam("dataBaseName") String dataBaseName, @RequestParam("tableName") String tableName, @RequestParam("fieldName") String fieldName) {
-        System.out.println("目标三：数据库表字段关系 数据库名" + dataBaseName);
+    public List<neo4jPath> getDataBaseInfo(@RequestParam("tableName") String tableName, @RequestParam("fieldName") String fieldName) {
         System.out.println("目标三：数据库表字段关系 表名" + tableName);
         System.out.println("目标三：数据库表字段关系 字段名查询" + fieldName);
-        return joernService.getDataBaseInfo(dataBaseName, tableName, fieldName);
+        return joernService.getDataBaseInfo(tableName, fieldName);
     }
 
     
@@ -121,7 +116,7 @@ public class JoernController {
     }
 
     @GetMapping("/getShortestPath")
-    @Operation(summary = "目标六 获取最短路径", description = "需要方法代码")
+    @Operation(summary = "目标六 获取最短路径", description = "需要方法全名")
     @WebLog("目标六 获取最短路径,需要方法代码")
     public List<neo4jPath> getShortestPath(@RequestParam("methodFullName") String methodFullName) {
         System.out.println("目标六：获取最短路径 方法全路径" + methodFullName);
@@ -130,7 +125,7 @@ public class JoernController {
     }
 
     @GetMapping("/getCollectionPath")
-    @Operation(summary = "目标七 获取统一路径", description = "需要方法代码")
+    @Operation(summary = "目标七 获取统一路径", description = "需要方法id list")
     @WebLog("目标七 获取统一路径,需要方法代码")
     public List<neo4jPath> getCollectionPath(@RequestParam("methodList") List<String> methodList) {
         System.out.println(methodList);
@@ -138,10 +133,17 @@ public class JoernController {
     }
 
     @GetMapping("/getDynamicInformation")
-    @Operation(summary = "挑战目标", description = "需要方法代码")
+    @Operation(summary = "挑战目标", description = "需要文件全名和变动行数字")
     public Map<neo4jPre, neo4jAst> getDynamicInformation(@RequestParam("fileName") String fileName, @RequestParam("lineNumber") Integer lineNumber) {
         System.out.println(fileName+"   "+lineNumber);
         return joernService.getDynamicInformation(fileName,lineNumber);
+    }
+
+    @GetMapping("/createDatabase")
+    @Operation(summary = "创建数据库", description = "需要文件全名和变动行数字")
+    public boolean createDatabase(@RequestParam("databaseName") String databaseName) {
+        System.out.println("需要创建的数据库名称"+databaseName);
+        return joernService.createDatabase(databaseName);
     }
 
 }
