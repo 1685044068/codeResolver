@@ -276,7 +276,7 @@ public class JoernServiceImpl implements CodeResolverService {
         if(n instanceof InternalNode){
             nNode=(InternalNode)n;
         }
-        //2、将方法加入到队列，广度优先搜索遍历
+        //2、将方法加入到队列，广度优先搜索向上遍历每一级方法
         Queue<neo4jPre> queue = new LinkedList<>();
         neo4jNode node = new neo4jNode(nNode.labels().iterator().next(), nNode.get("NAME").asString(), nNode.get("FULL_NAME").asString(), nNode.get("CODE").asString(), nNode.get("FILENAME").asString(), nNode.elementId());
         List<String> firstPre=new ArrayList<>();
@@ -289,6 +289,7 @@ public class JoernServiceImpl implements CodeResolverService {
                 neo4jPre nextNode=queue.poll();
                 ans=getAstPath(nextNode.getNode().id,res,nextNode.getPrePathList());
                 if(ans.size()==0){
+                    res.put(nextNode,new neo4jAst(new ArrayList<>(),new ArrayList<>()));
                     System.out.println(nextNode.getPrePathList());
                 }
                 for(int i=0;i<ans.size();i++){
@@ -420,6 +421,11 @@ public class JoernServiceImpl implements CodeResolverService {
     @Override
     public boolean createDatabase(String databaseName){
         return joernMapper.createDatabase(databaseName);
+    }
+
+    @Override
+    public boolean changeDataBase(String databaseName){
+        return joernMapper.changeDataBase(databaseName);
     }
 
     /**

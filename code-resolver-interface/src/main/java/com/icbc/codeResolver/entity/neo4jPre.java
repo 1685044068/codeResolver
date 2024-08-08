@@ -9,7 +9,7 @@ import java.util.List;
 public class neo4jPre implements Serializable {
 
     neo4jNode node;
-    List<String> prePathList;//到达neo4jNode节点前的String路径。
+    List<String> prePathList;//到达neo4jNode节点的字段路径。
 
     public neo4jPre(neo4jNode node, List<String> prePathList) {
         this.node = node;

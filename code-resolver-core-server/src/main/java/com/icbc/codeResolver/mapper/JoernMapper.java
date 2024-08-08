@@ -42,5 +42,6 @@ public interface JoernMapper {
     public Collection<Map<String, Object>> getMethodByLine(String fileName,Integer lineNumber);
     public Collection<Map<String, Object>> getAstPath(String id);
     public boolean createDatabase(String databaseName);
+    public boolean changeDataBase(String databaseName);
 
 }

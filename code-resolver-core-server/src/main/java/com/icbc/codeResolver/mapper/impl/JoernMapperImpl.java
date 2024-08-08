@@ -57,6 +57,17 @@ public class JoernMapperImpl implements JoernMapper {
             return false; // 未成功创建数据库
         }
     }
+
+    /**
+     * 修改数据库
+     * @param databaseName
+     * @return
+     */
+    @Override
+    public boolean changeDataBase(String databaseName) {
+        this.newDataBase = databaseName;
+        return true;
+    }
     /**
      * 根据pack查找
      * @param packetName

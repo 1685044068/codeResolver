@@ -102,4 +102,6 @@ public interface CodeResolverService {
 
     public boolean createDatabase(String databaseName);
 
+    public boolean changeDataBase(String databaseName);
+
 }

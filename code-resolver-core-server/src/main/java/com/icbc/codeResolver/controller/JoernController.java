@@ -140,10 +140,17 @@ public class JoernController {
     }
 
     @GetMapping("/createDatabase")
-    @Operation(summary = "创建数据库", description = "需要文件全名和变动行数字")
+    @Operation(summary = "创建数据库", description = "需要数据库名字")
     public boolean createDatabase(@RequestParam("databaseName") String databaseName) {
         System.out.println("需要创建的数据库名称"+databaseName);
         return joernService.createDatabase(databaseName);
+    }
+
+    @PostMapping("/changeDatabase")
+    @Operation(summary = "切换数据库", description = "需要数据库名字")
+    public boolean changeDatabase(@RequestParam("databaseName") String databaseName) {
+        System.out.println("需要切换到"+databaseName+"数据库");
+        return joernService.changeDataBase(databaseName);
     }
 
 }
