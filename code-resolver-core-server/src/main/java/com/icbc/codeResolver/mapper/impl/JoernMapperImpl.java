@@ -59,6 +59,19 @@ public class JoernMapperImpl implements JoernMapper {
     }
 
     /**
+     * 显示数据库
+     * @return
+     */
+    @Override
+    public Collection<Map<String, Object>> showDataBase() {
+        String cypherQuery = "SHOW DATABASES";
+        return neo4jClient.query(cypherQuery)
+                .in(this.newDataBase)
+                .fetch()
+                .all();
+    }
+
+    /**
      * 修改数据库
      * @param databaseName
      * @return

@@ -33,6 +33,37 @@ public class JoernServiceImpl implements CodeResolverService {
     private JoernMapper joernMapper;
 
     /**
+     * 创建数据库
+     * @return
+     */
+    @Override
+    public boolean createDatabase(String databaseName){
+        return joernMapper.createDatabase(databaseName);
+    }
+
+    /**
+     * 切换数据库
+     * @return
+     */
+    @Override
+    public boolean changeDataBase(String databaseName){
+        return joernMapper.changeDataBase(databaseName);
+    }
+    /**
+     * 展示数据库
+     * @return
+     */
+    @Override
+    public List<String> showDataBase(){
+        Collection<Map<String, Object>> result = joernMapper.showDataBase();
+        List<Map<String, Object>> resultList = new ArrayList<>(result);
+        List<String> ans = new ArrayList<>();
+        for (Map<String, Object> record : resultList) {
+            ans.add(record.get("name").toString());
+        }
+        return ans;
+    }
+    /**
      * 前端传递包名返回类名
      * @param packetName
      * @return
@@ -416,16 +447,6 @@ public class JoernServiceImpl implements CodeResolverService {
             res.put(key,new neo4jAst(ans,strControl));//ans是list<node>,str是list<string>，size一样对应每个方法。
         }
         return ans;
-    }
-
-    @Override
-    public boolean createDatabase(String databaseName){
-        return joernMapper.createDatabase(databaseName);
-    }
-
-    @Override
-    public boolean changeDataBase(String databaseName){
-        return joernMapper.changeDataBase(databaseName);
     }
 
     /**

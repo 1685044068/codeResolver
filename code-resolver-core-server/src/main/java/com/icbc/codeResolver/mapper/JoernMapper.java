@@ -44,4 +44,6 @@ public interface JoernMapper {
     public boolean createDatabase(String databaseName);
     public boolean changeDataBase(String databaseName);
 
+    public Collection<Map<String, Object>> showDataBase();
+
 }

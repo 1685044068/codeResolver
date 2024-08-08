@@ -146,6 +146,10 @@ public class JoernController {
         return joernService.changeDataBase(databaseName);
     }
 
-
+    @GetMapping("/showDatabase")
+    @Operation(summary = "展示所有数据库", description = "需要数据库名字")
+    public List<String> showDatabase() {
+        return joernService.showDataBase();
+    }
 
 }

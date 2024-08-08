@@ -104,4 +104,6 @@ public interface CodeResolverService {
 
     public boolean changeDataBase(String databaseName);
 
+    public List<String> showDataBase();
+
 }
