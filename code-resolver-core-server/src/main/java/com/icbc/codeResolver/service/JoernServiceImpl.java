@@ -38,8 +38,6 @@ public class JoernServiceImpl implements CodeResolverService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
-    private Integer changeMethodNumber=0;
-
     /**
      * 创建数据库
      * @return
@@ -70,6 +68,10 @@ public class JoernServiceImpl implements CodeResolverService {
             ans.add(record.get("name").toString());
         }
         return ans;
+    }
+    @Override
+    public String showCurrentDataBase(){
+        return joernMapper.showCurrentDataBase();
     }
     /**
      * 前端传递包名返回类名
@@ -310,6 +312,8 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jNode> getDynamic(Map<String,List<Integer>> lineInformation){
+        //收到新请求就把之前的内容清空,批量清除
+        stringRedisTemplate.delete(stringRedisTemplate.keys("change:" + "*"));
         List<neo4jNode> res=new ArrayList<>();
         //遍历map,取文件名和方法
         HashSet<neo4jNode> menthodSet = new HashSet<>();
@@ -326,17 +330,18 @@ public class JoernServiceImpl implements CodeResolverService {
             String key="change:"+i;
             stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(node));
         }
-        changeMethodNumber=neo4jNodes.size();
         return res;
     }
     @Override
     public List<neo4jDynamic> getChangeMethodInfo(Integer id){
         String key="change:"+id;
         String json = stringRedisTemplate.opsForValue().get(key);
+        if(json.isEmpty()){
+            return null;
+        }
         neo4jNode node = JSONUtil.toBean(json, neo4jNode.class);
         return getDynamicInformation(node);
     }
-
 
     public neo4jNode getMethodByLine(String fileName,Integer lineNumber){
         //1、定位到方法

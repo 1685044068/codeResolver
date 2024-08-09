@@ -174,4 +174,10 @@ public class JoernController {
         return joernService.showDataBase();
     }
 
+    @GetMapping("/showCurrentDatabase")
+    @Operation(summary = "展示当前数据库", description = "")
+    public String showCurrentDatabase() {
+        return joernService.showCurrentDataBase();
+    }
+
 }

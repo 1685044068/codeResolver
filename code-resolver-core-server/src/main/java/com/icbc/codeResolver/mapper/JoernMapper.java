@@ -46,4 +46,6 @@ public interface JoernMapper {
 
     public Collection<Map<String, Object>> showDataBase();
 
+    public String showCurrentDataBase();
+
 }
