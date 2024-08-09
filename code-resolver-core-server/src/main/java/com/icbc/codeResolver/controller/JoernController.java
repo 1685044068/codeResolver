@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -97,10 +98,10 @@ public class JoernController {
         return ans;
     }
 
-    @GetMapping("/getMethodInformation")
-    @Operation(summary = "目标五六七前置操作", description = "需要方法名")
+    @GetMapping("/getMethodInfo")
+    @Operation(summary = "目标五六前置操作", description = "需要方法名")
     public List<neo4jNode> getMethodInformation(@RequestParam("methodName")String methodName) {
-        System.out.println("目标五六七前置操作：获取方法信息 方法名"+methodName);
+        System.out.println("目标五六前置操作：获取方法信息 方法名"+methodName);
         List<neo4jNode> ans=joernService.getMethodInformation(methodName);
         return ans;
     }
@@ -121,6 +122,17 @@ public class JoernController {
     public List<neo4jPath> getShortestPath(@RequestParam("methodFullName") String methodFullName) {
         System.out.println("目标六：获取最短路径 方法全路径" + methodFullName);
         List<neo4jPath> ans = joernService.getShortestPath(methodFullName);
+        return ans;
+    }
+
+    @GetMapping("/getMethodInformation")
+    @Operation(summary = "目标七前置操作", description = "需要方法名")
+    public List<neo4jNode> getMethodInformation(@RequestParam("methodNameList")List<String> methodNameList) {
+        List<neo4jNode> ans=new ArrayList<>();
+        for (int i = 0; i < methodNameList.size(); i++) {
+            System.out.println("目标五六七前置操作：获取方法信息 方法名"+methodNameList.get(i));
+            ans.addAll(joernService.getMethodInformation(methodNameList.get(i)));
+        }
         return ans;
     }
 

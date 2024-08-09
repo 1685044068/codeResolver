@@ -8,6 +8,7 @@ import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -99,7 +100,7 @@ public class JoernController {
 
 
     @GetMapping("/getMethodInformation")
-    @Operation(summary = "目标五六七前置操作", description = "需要方法名")
+    @Operation(summary = "目标五六前置操作", description = "需要方法名")
     public List<neo4jNode> getMethodInformation(@RequestParam("methodName")String methodName) {
         System.out.println("目标五六七前置操作：获取方法信息 方法名"+methodName);
         List<neo4jNode> ans=joernService.getMethodInformation(methodName);
@@ -124,6 +125,23 @@ public class JoernController {
         return ans;
     }
 
+    @GetMapping("/getMethodInformation")
+    @Operation(summary = "目标七前置操作", description = "需要方法名")
+    public List<neo4jNode> getMethodInformation(@RequestParam("methodNameList")List<String> methodNameList) {
+        List<neo4jNode> ans=new ArrayList<>();
+        for (int i = 0; i < methodNameList.size(); i++) {
+            System.out.println("目标五六七前置操作：获取方法信息 方法名"+methodNameList.get(i));
+            ans.addAll(joernService.getMethodInformation(methodNameList.get(i)));
+        }
+        return ans;
+    }
+    @GetMapping("/getCollectionPath")
+    @Operation(summary = "目标七 获取统一路径", description = "需要方法代码")
+    public List<neo4jPath> getCollectionPath(@RequestBody List<String> methodList) {
+        logger.info("目标七 获取统一路径 方法列表"+methodList);
+        return joernService.getCollectionPath(methodList);
+    }
+
     @PostMapping ("/getDynamic")
     @Operation(summary = "挑战目标 响应git", description = "需要行变动信息")
     public List<neo4jNode> getDynamic(@RequestBody Map<String,List<Integer>> lineInformation) {
@@ -134,13 +152,6 @@ public class JoernController {
     @Operation(summary = "挑战目标 响应前端", description = "需要缓存id")
     public List<neo4jDynamic> getChangeMethodInfo(@RequestParam("changeId") Integer changeId) {
         return joernService.getChangeMethodInfo(changeId);
-    }
-
-    @GetMapping("/getCollectionPath")
-    @Operation(summary = "目标七 获取统一路径", description = "需要方法代码")
-    public List<neo4jPath> getCollectionPath(@RequestBody List<String> methodList) {
-        logger.info("目标七 获取统一路径 方法列表"+methodList);
-        return joernService.getCollectionPath(methodList);
     }
 
     @GetMapping("/createDatabase")
