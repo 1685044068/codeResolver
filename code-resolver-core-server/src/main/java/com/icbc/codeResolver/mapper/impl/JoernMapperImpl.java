@@ -249,7 +249,7 @@ public class JoernMapperImpl implements JoernMapper {
     public Collection<Map<String, Object>> getShortestPath(String methodFullName){
         String cypherQuery="MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) " +
                 "where (not (prevNodes)<-[:CALL]-()) and (endNode.FULL_NAME starts with $FULL_NAME)  " +
-                "RETURN p order by length(p) limit 1";
+                "RETURN p order by length(p)";
         return neo4jClient.query(cypherQuery)
                 .in(this.newDataBase)
                 .bind(methodFullName).to("FULL_NAME")

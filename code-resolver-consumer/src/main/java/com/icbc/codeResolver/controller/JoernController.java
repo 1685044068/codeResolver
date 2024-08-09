@@ -1,9 +1,6 @@
 package com.icbc.codeResolver.controller;
 
-import com.icbc.codeResolver.entity.neo4jHotNode;
-import com.icbc.codeResolver.entity.neo4jNode;
-import com.icbc.codeResolver.entity.neo4jPath;
-import com.icbc.codeResolver.entity.neo4jSimilarNode;
+import com.icbc.codeResolver.entity.*;
 import com.icbc.codeResolver.service.CodeResolverService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +9,8 @@ import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+
 /**
  * 分布式调用controller
  */
@@ -123,6 +122,18 @@ public class JoernController {
         logger.info("目标六：获取最短路径 方法全路径"+methodFullName);
         List<neo4jPath> ans=joernService.getShortestPath(methodFullName);
         return ans;
+    }
+
+    @PostMapping ("/getDynamic")
+    @Operation(summary = "挑战目标 响应git", description = "需要行变动信息")
+    public List<neo4jNode> getDynamic(@RequestBody Map<String,List<Integer>> lineInformation) {
+        return joernService.getDynamic(lineInformation);
+    }
+
+    @GetMapping("/getChangeMethodInfo")
+    @Operation(summary = "挑战目标 响应前端", description = "需要缓存id")
+    public List<neo4jDynamic> getChangeMethodInfo(@RequestParam("changeId") Integer changeId) {
+        return joernService.getChangeMethodInfo(changeId);
     }
 
     @GetMapping("/getCollectionPath")

@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.service;
 
+import cn.hutool.json.JSONUtil;
 import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlSchemaStatVisitor;
@@ -9,6 +10,7 @@ import com.icbc.codeResolver.entity.*;
 import com.icbc.codeResolver.mapper.JoernMapper;
 import com.icbc.codeResolver.utils.CacheClient;
 
+import java.security.Key;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import jakarta.annotation.Resource;
@@ -17,6 +19,7 @@ import org.apache.log4j.Logger;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Path;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +34,11 @@ public class JoernServiceImpl implements CodeResolverService {
 
     @Resource
     private JoernMapper joernMapper;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
+    private Integer changeMethodNumber=0;
 
     /**
      * 创建数据库
@@ -295,10 +303,42 @@ public class JoernServiceImpl implements CodeResolverService {
         return ans;
     }
 
+
+    /**
+     * 传入map<fileName,list[Integer]>,进行
+     * @return
+     */
     @Override
-    public Map<neo4jPre, neo4jAst> getDynamicInformation(String fileName,Integer lineNumber){
-        Map<neo4jPre, neo4jAst> res = new HashMap<>();//最终的结果集
-        List<neo4jPre> ans;//调用者集合
+    public List<neo4jNode> getDynamic(Map<String,List<Integer>> lineInformation){
+        List<neo4jNode> res=new ArrayList<>();
+        //遍历map,取文件名和方法
+        HashSet<neo4jNode> menthodSet = new HashSet<>();
+        for (Map.Entry<String, List<Integer>> entry : lineInformation.entrySet()) {
+            for(Integer line:entry.getValue()){
+                menthodSet.add(getMethodByLine(entry.getKey(),line));
+            }
+        }
+        ArrayList<neo4jNode> neo4jNodes = new ArrayList<>(menthodSet);
+        //遍历hashset方法，向上查询ast
+        for(int i=0;i< neo4jNodes.size();i++){
+            neo4jNode node = neo4jNodes.get(i);
+            res.add(node);
+            String key="change:"+i;
+            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(node));
+        }
+        changeMethodNumber=neo4jNodes.size();
+        return res;
+    }
+    @Override
+    public List<neo4jDynamic> getChangeMethodInfo(Integer id){
+        String key="change:"+id;
+        String json = stringRedisTemplate.opsForValue().get(key);
+        neo4jNode node = JSONUtil.toBean(json, neo4jNode.class);
+        return getDynamicInformation(node);
+    }
+
+
+    public neo4jNode getMethodByLine(String fileName,Integer lineNumber){
         //1、定位到方法
         Collection<Map<String, Object>> result=joernMapper.getMethodByLine(fileName,lineNumber);
         List<Map<String, Object>> resultList = new ArrayList<>(result);
@@ -307,9 +347,15 @@ public class JoernServiceImpl implements CodeResolverService {
         if(n instanceof InternalNode){
             nNode=(InternalNode)n;
         }
-        //2、将方法加入到队列，广度优先搜索向上遍历每一级方法
-        Queue<neo4jPre> queue = new LinkedList<>();
         neo4jNode node = new neo4jNode(nNode.labels().iterator().next(), nNode.get("NAME").asString(), nNode.get("FULL_NAME").asString(), nNode.get("CODE").asString(), nNode.get("FILENAME").asString(), nNode.elementId());
+        return node;
+    }
+    //
+    public List<neo4jDynamic> getDynamicInformation(neo4jNode node){
+        //2、将方法加入到队列，广度优先搜索向上遍历每一级方法
+        List<neo4jDynamic> res = new ArrayList<>();//最终的结果集
+        List<neo4jPre> ans;//调用者集合
+        Queue<neo4jPre> queue = new LinkedList<>();
         List<String> firstPre=new ArrayList<>();
         firstPre.add("("+node.code+")");
         queue.add(new neo4jPre(node,firstPre));
@@ -320,7 +366,7 @@ public class JoernServiceImpl implements CodeResolverService {
                 neo4jPre nextNode=queue.poll();
                 ans=getAstPath(nextNode.getNode().id,res,nextNode.getPrePathList());
                 if(ans.size()==0){
-                    res.put(nextNode,new neo4jAst(new ArrayList<>(),new ArrayList<>()));
+                    res.add(new neo4jDynamic(nextNode,new neo4jAst(new ArrayList<>(),new ArrayList<>())));
                     System.out.println(nextNode.getPrePathList());
                 }
                 for(int i=0;i<ans.size();i++){
@@ -330,7 +376,7 @@ public class JoernServiceImpl implements CodeResolverService {
         }
         return res;
     }
-    public List<neo4jPre> getAstPath(String id,Map<neo4jPre, neo4jAst> res,List<String> pre){
+    public List<neo4jPre> getAstPath(String id,List<neo4jDynamic> res,List<String> pre){
         //1、根据方法id获取调用该方法的上一级ast。
         Collection<Map<String, Object>> result = joernMapper.getAstPath(id);
         List<Map<String, Object>> resultList = new ArrayList<>(result);
@@ -444,11 +490,10 @@ public class JoernServiceImpl implements CodeResolverService {
             ans.add(new neo4jPre(node,now));
         }
         if(ans.size()!=0){
-            res.put(key,new neo4jAst(ans,strControl));//ans是list<node>,str是list<string>，size一样对应每个方法。
+            res.add(new neo4jDynamic(key,new neo4jAst(ans,strControl)));//ans是list<node>,str是list<string>，size一样对应每个方法。
         }
         return ans;
     }
-
     /**
      * 查询调用
      * @return

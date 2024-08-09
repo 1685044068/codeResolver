@@ -97,13 +97,14 @@ public interface CodeResolverService {
     public List<neo4jNode> getMethodInformation(String methodName);
 
 
-    public Map<neo4jPre, neo4jAst> getDynamicInformation(String fileName, Integer lineNumber);
-
 
     public boolean createDatabase(String databaseName);
 
     public boolean changeDataBase(String databaseName);
 
     public List<String> showDataBase();
+
+    public List<neo4jNode> getDynamic(Map<String,List<Integer>> lineInformation);
+    public List<neo4jDynamic> getChangeMethodInfo(Integer id);
 
 }

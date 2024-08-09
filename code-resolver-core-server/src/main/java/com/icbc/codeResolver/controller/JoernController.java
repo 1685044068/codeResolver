@@ -132,11 +132,16 @@ public class JoernController {
         return joernService.getCollectionPath(methodList);
     }
 
-    @GetMapping("/getDynamicInformation")
-    @Operation(summary = "挑战目标", description = "需要文件全名和变动行数字")
-    public Map<neo4jPre, neo4jAst> getDynamicInformation(@RequestParam("fileName") String fileName, @RequestParam("lineNumber") Integer lineNumber) {
-        System.out.println(fileName+"   "+lineNumber);
-        return joernService.getDynamicInformation(fileName,lineNumber);
+    @PostMapping ("/getDynamic")
+    @Operation(summary = "挑战目标 响应git", description = "需要行变动信息")
+    public List<neo4jNode> getDynamic(@RequestBody Map<String,List<Integer>> lineInformation) {
+        return joernService.getDynamic(lineInformation);
+    }
+
+    @GetMapping("/getChangeMethodInfo")
+    @Operation(summary = "挑战目标 响应前端", description = "需要缓存id")
+    public List<neo4jDynamic> getChangeMethodInfo(@RequestParam("changeId") Integer changeId) {
+        return joernService.getChangeMethodInfo(changeId);
     }
 
     @GetMapping("/createDatabase")
