@@ -99,9 +99,9 @@ public class JoernController {
     }
 
 
-    @GetMapping("/getMethodInformation")
+    @GetMapping("/getMethodInfo")
     @Operation(summary = "目标五六前置操作", description = "需要方法名")
-    public List<neo4jNode> getMethodInformation(@RequestParam("methodName")String methodName) {
+    public List<neo4jNode> getMethodInfo(@RequestParam("methodName")String methodName) {
         System.out.println("目标五六七前置操作：获取方法信息 方法名"+methodName);
         List<neo4jNode> ans=joernService.getMethodInformation(methodName);
         return ans;

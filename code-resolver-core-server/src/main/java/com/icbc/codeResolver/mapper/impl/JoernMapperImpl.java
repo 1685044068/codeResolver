@@ -123,7 +123,7 @@ public class JoernMapperImpl implements JoernMapper {
                 .all();
     }
     /**
-     * 方法溯源
+     * 方法溯源【目标1】
      * @param methodFullName
      * @return
      */
@@ -139,7 +139,7 @@ public class JoernMapperImpl implements JoernMapper {
                 .all();
     }
     /**
-     * 方法追踪
+     * 方法追踪【目标1】
      * @param methodFullName
      * @return
      */
