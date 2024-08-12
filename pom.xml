@@ -16,6 +16,7 @@
         <module>code-resolver-consumer</module>
         <module>code-resolver-parser-server</module>
         <module>code-resolver-file-server</module>
+        <module>code-resolver-gitOperation-server</module>
     </modules>
 
     <properties>

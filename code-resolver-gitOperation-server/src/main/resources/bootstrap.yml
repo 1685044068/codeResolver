@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: git-service-provider
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yml
+        namespace: 1111
+dubbo:
+  application:
+    qos-enable: false
