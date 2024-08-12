@@ -416,6 +416,13 @@ public class CacheClient {
         }
     }
 
+    /**
+     * 存储变换的方法和对应的调用链路
+     */
+    public void cacheChange(){
+
+    }
+
 
 
 

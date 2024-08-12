@@ -17,6 +17,7 @@ import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.summary.ResultSummary;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Path;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.Mapping;
@@ -36,6 +37,7 @@ public class JoernMapperImpl implements JoernMapper {
 
     @Resource
     private Neo4jClient neo4jClient;
+    @Value("${spring.data.neo4j.database}")
     private String newDataBase;
 
     /**
@@ -81,6 +83,15 @@ public class JoernMapperImpl implements JoernMapper {
         this.newDataBase = databaseName;
         return true;
     }
+
+    /**
+     * 返回当前数据库
+     * @return
+     */
+    @Override
+    public String showCurrentDataBase() {
+        return this.newDataBase;
+    }
     /**
      * 根据pack查找
      * @param packetName
@@ -112,7 +123,7 @@ public class JoernMapperImpl implements JoernMapper {
                 .all();
     }
     /**
-     * 方法溯源
+     * 方法溯源【目标1】
      * @param methodFullName
      * @return
      */
@@ -128,7 +139,7 @@ public class JoernMapperImpl implements JoernMapper {
                 .all();
     }
     /**
-     * 方法追踪
+     * 方法追踪【目标1】
      * @param methodFullName
      * @return
      */

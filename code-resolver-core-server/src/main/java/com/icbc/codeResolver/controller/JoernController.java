@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +22,36 @@ public class JoernController {
     @Autowired
     CodeResolverService joernService;
 
+    @GetMapping("/showClassName")
+    @Operation(summary = "目标一优化：获取包下所有类名", description = "根据前端传递过来的包名获取到该包下的所有类名")
+    @WebLog("目标一优化：获取包下所有类名,根据前端传递过来的包名获取到该包下的所有类名")
+    public List<neo4jNode> showClassName(@RequestParam("packetName") String packetName) {
+        System.out.println("目标一优化：获取包下所有类名 包名" + packetName);
+        return joernService.showClassName(packetName);
+    }
+
+
+    @GetMapping("/showMethodName")
+    @Operation(summary = "目标一优化：获取类下所有方法名", description = "根据前端传递过来的类名获取到该类下的所有方法名以及参数")
+    @WebLog("目标一优化：获取类下所有方法名,根据前端传递过来的类名获取到该类下的所有方法名以及参数")
+    public List<neo4jNode> showMethodName(@RequestParam("classFullName") String classFullName) {
+        System.out.println("目标一优化：获取类下所有方法名 类名" + classFullName);
+        return joernService.showMethodName(classFullName);
+    }
+
+    /**
+     * @param methodFullName
+     * @return
+     */
+
+    @GetMapping("/showInvocationLink")
+    @Operation(summary = "目标一优化：获取唯一方法的调用链路", description = "根据前端传递过来的类名以及方法名及其参数获取到该唯一方法的调用链路")
+    @WebLog("目标一优化：获取唯一方法的调用链路,根据前端传递过来的类名以及方法名及其参数获取到该唯一方法的调用链路")
+    public List<neo4jPath> showInvocationLink(@RequestParam("methodFullName") String methodFullName, @RequestParam("isDown") String isDown) {
+        System.out.println("目标一优化：获取唯一方法的调用链路 类名" + methodFullName);
+        System.out.println("目标一优化：获取唯一方法的调用链路 isDown" + isDown);
+        return joernService.showInvocationLink(methodFullName, Boolean.valueOf(isDown));
+    }
     /**
      * url精确查找 url-》斜杠分割 List<String>
      * @return
@@ -50,36 +81,7 @@ public class JoernController {
     }
 
     
-    @GetMapping("/showClassName")
-    @Operation(summary = "目标一优化：获取包下所有类名", description = "根据前端传递过来的包名获取到该包下的所有类名")
-    @WebLog("目标一优化：获取包下所有类名,根据前端传递过来的包名获取到该包下的所有类名")
-    public List<neo4jNode> showClassName(@RequestParam("packetName") String packetName) {
-        System.out.println("目标一优化：获取包下所有类名 包名" + packetName);
-        return joernService.showClassName(packetName);
-    }
 
-    
-    @GetMapping("/showMethodName")
-    @Operation(summary = "目标一优化：获取类下所有方法名", description = "根据前端传递过来的类名获取到该类下的所有方法名以及参数")
-    @WebLog("目标一优化：获取类下所有方法名,根据前端传递过来的类名获取到该类下的所有方法名以及参数")
-    public List<neo4jNode> showMethodName(@RequestParam("classFullName") String classFullName) {
-        System.out.println("目标一优化：获取类下所有方法名 类名" + classFullName);
-        return joernService.showMethodName(classFullName);
-    }
-
-    /**
-     * @param methodFullName
-     * @return
-     */
-    
-    @GetMapping("/showInvocationLink")
-    @Operation(summary = "目标一优化：获取唯一方法的调用链路", description = "根据前端传递过来的类名以及方法名及其参数获取到该唯一方法的调用链路")
-    @WebLog("目标一优化：获取唯一方法的调用链路,根据前端传递过来的类名以及方法名及其参数获取到该唯一方法的调用链路")
-    public List<neo4jPath> showInvocationLink(@RequestParam("methodFullName") String methodFullName, @RequestParam("isDown") String isDown) {
-        System.out.println("目标一优化：获取唯一方法的调用链路 类名" + methodFullName);
-        System.out.println("目标一优化：获取唯一方法的调用链路 isDown" + isDown);
-        return joernService.showInvocationLink(methodFullName, Boolean.valueOf(isDown));
-    }
 
     /**
      * 获取热点节点
@@ -97,10 +99,10 @@ public class JoernController {
         return ans;
     }
 
-    @GetMapping("/getMethodInformation")
-    @Operation(summary = "目标五六七前置操作", description = "需要方法名")
+    @GetMapping("/getMethodInfo")
+    @Operation(summary = "目标五六前置操作", description = "需要方法名")
     public List<neo4jNode> getMethodInformation(@RequestParam("methodName")String methodName) {
-        System.out.println("目标五六七前置操作：获取方法信息 方法名"+methodName);
+        System.out.println("目标五六前置操作：获取方法信息 方法名"+methodName);
         List<neo4jNode> ans=joernService.getMethodInformation(methodName);
         return ans;
     }
@@ -124,12 +126,23 @@ public class JoernController {
         return ans;
     }
 
+    @GetMapping("/getMethodInformation")
+    @Operation(summary = "目标七前置操作", description = "需要方法名")
+    public List<neo4jNode> getMethodInformation(@RequestParam("methodNameList")List<String> methodNameList) {
+        List<neo4jNode> ans=new ArrayList<>();
+        for (int i = 0; i < methodNameList.size(); i++) {
+            System.out.println("目标七前置操作：获取方法信息 方法名"+methodNameList.get(i));
+            ans.addAll(joernService.getMethodInformation(methodNameList.get(i)));
+        }
+        return ans;
+    }
+
     @GetMapping("/getCollectionPath")
     @Operation(summary = "目标七 获取统一路径", description = "需要方法id list")
     @WebLog("目标七 获取统一路径,需要方法代码")
-    public List<neo4jPath> getCollectionPath(@RequestParam("methodList") List<String> methodList) {
-        System.out.println(methodList);
-        return joernService.getCollectionPath(methodList);
+    public List<neo4jPath> getCollectionPath(@RequestParam("methodIdList") List<String> methodIdList) {
+        System.out.println(methodIdList);
+        return joernService.getCollectionPath(methodIdList);
     }
 
     @PostMapping ("/getDynamic")
@@ -163,5 +176,14 @@ public class JoernController {
     public List<String> showDatabase() {
         return joernService.showDataBase();
     }
+
+
+    @GetMapping("/showCurrentDatabase")
+    @Operation(summary = "展示当前数据库", description = "")
+    public String showCurrentDatabase() {
+        return joernService.showCurrentDataBase();
+    }
+
+
 
 }

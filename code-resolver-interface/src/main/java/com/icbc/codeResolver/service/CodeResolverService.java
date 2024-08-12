@@ -104,6 +104,8 @@ public interface CodeResolverService {
 
     public List<String> showDataBase();
 
+    public String showCurrentDataBase();
+
     public List<neo4jNode> getDynamic(Map<String,List<Integer>> lineInformation);
     public List<neo4jDynamic> getChangeMethodInfo(Integer id);
 
