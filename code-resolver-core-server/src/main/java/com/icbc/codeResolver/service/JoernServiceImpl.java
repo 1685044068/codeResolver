@@ -69,6 +69,24 @@ public class JoernServiceImpl implements CodeResolverService {
         }
         return ans;
     }
+
+    @Override
+    public List<neo4jNode> getMeteData(){
+        Collection<Map<String, Object>> result=joernMapper.getMeteData();
+        System.out.println("获取到元数据");
+        List<Map<String, Object>> resultList = new ArrayList<>(result);
+        List<neo4jNode> ans = new ArrayList<>();
+        InternalNode class_node=null;
+        for (Map<String, Object> record : resultList) {
+            Object nodeObject = record.get("n");
+            if (nodeObject instanceof InternalNode) {
+                class_node = (InternalNode) nodeObject;
+            }
+            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),"",class_node.get("FILENAME").asString(),class_node.elementId());
+            ans.add(node);
+        }
+        return ans;
+    }
     @Override
     public String showCurrentDataBase(){
         return joernMapper.showCurrentDataBase();
@@ -155,6 +173,7 @@ public class JoernServiceImpl implements CodeResolverService {
      */
     @Override
     public List<neo4jPath> getDataBaseInfo(String tableName, String fieldName) {
+
         Collection<Map<String, Object>> result=joernMapper.getDataBaseInfo();
         List<Map<String, Object>> resultList = new ArrayList<>(result);
         List<neo4jNode> ans = new ArrayList<>();
@@ -189,21 +208,26 @@ public class JoernServiceImpl implements CodeResolverService {
                     break;
                 }
             }
-            Collection<TableStat.Column> columns_first=visitor.getColumns();
-            Set<TableStat.Column> columns=new HashSet<>(columns_first);
-            Iterator iterator = columns.iterator();
-            while(iterator.hasNext()){
-                String str=iterator.next().toString();
-                System.out.println("列名 = " + str);
-                if(str.equals(tableName+"."+fieldName)||str.equals(tableName+".*")){
-                    flag_field=true;
-                    break;
+            //下面修改了，如果字段为空，则只查找涵盖了table名字的注解
+            if(fieldName.length()==0){
+                flag_field=true;
+            }else{
+                Collection<TableStat.Column> columns_first=visitor.getColumns();
+                Set<TableStat.Column> columns=new HashSet<>(columns_first);
+                Iterator iterator = columns.iterator();
+                while(iterator.hasNext()){
+                    String str=iterator.next().toString();
+                    System.out.println("列名 = " + str);
+                    if(str.contains(tableName+"."+fieldName)||str.equals(tableName+".*")){
+                        flag_field=true;
+                        break;
+                    }
                 }
             }
             if(flag_table&&flag_field){
                 //然后向上搜索
                 String methodFullName=method_node.get("FULL_NAME").asString();
-                result = joernMapper.getMethodUp(methodFullName);
+                result = joernMapper.getAnnotationInfo(methodFullName,code);
                 List<neo4jNode> res = findRelation(result);//这里的res是以$method_name结尾的方法调用
                 ans.addAll(res);
             }
@@ -229,7 +253,7 @@ public class JoernServiceImpl implements CodeResolverService {
             if (nodeObject instanceof InternalNode) {
                 class_node = (InternalNode) nodeObject;
             }
-            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),"",class_node.get("FILENAME").asString(),class_node.elementId());
             Long number =(Long) record.get("number");
             //获取列表follower
             List<?> list_followers=new ArrayList<>();
@@ -242,7 +266,7 @@ public class JoernServiceImpl implements CodeResolverService {
                 nodeObject=list_followers.get(i);
                 if(nodeObject instanceof InternalNode){
                     class_node = (InternalNode) nodeObject;
-                    neo4jNode node1=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+                    neo4jNode node1=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),"",class_node.get("FILENAME").asString(),class_node.elementId());
                     followers_node.add(node1);
                 }
             }
@@ -299,7 +323,7 @@ public class JoernServiceImpl implements CodeResolverService {
             if (nodeObject instanceof InternalNode) {
                 class_node = (InternalNode) nodeObject;
             }
-            neo4jNode node = new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(), class_node.get("FULL_NAME").asString(), class_node.get("CODE").asString(), class_node.get("FILENAME").asString(), class_node.elementId());
+            neo4jNode node = new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(), class_node.get("FULL_NAME").asString(), "", class_node.get("FILENAME").asString(), class_node.elementId());
             ans.add(node);
         }
         return ans;
@@ -344,6 +368,7 @@ public class JoernServiceImpl implements CodeResolverService {
     }
 
     public neo4jNode getMethodByLine(String fileName,Integer lineNumber){
+        fileName=fileName.replace("/","\\");
         //1、定位到方法
         Collection<Map<String, Object>> result=joernMapper.getMethodByLine(fileName,lineNumber);
         List<Map<String, Object>> resultList = new ArrayList<>(result);
@@ -352,7 +377,7 @@ public class JoernServiceImpl implements CodeResolverService {
         if(n instanceof InternalNode){
             nNode=(InternalNode)n;
         }
-        neo4jNode node = new neo4jNode(nNode.labels().iterator().next(), nNode.get("NAME").asString(), nNode.get("FULL_NAME").asString(), nNode.get("CODE").asString(), nNode.get("FILENAME").asString(), nNode.elementId());
+        neo4jNode node = new neo4jNode(nNode.labels().iterator().next(), nNode.get("NAME").asString(), nNode.get("FULL_NAME").asString(), "", nNode.get("FILENAME").asString(), nNode.elementId());
         return node;
     }
     //
@@ -422,7 +447,7 @@ public class JoernServiceImpl implements CodeResolverService {
                 Object objectNode=objectList.get(i);
                 if(objectNode instanceof InternalNode){
                     methodNode = (InternalNode) objectNode;
-                    node = new neo4jNode(methodNode.labels().iterator().next(), methodNode.get("NAME").asString(), methodNode.get("FULL_NAME").asString(), methodNode.get("CODE").asString(), methodNode.get("FILENAME").asString(), methodNode.elementId());
+                    node = new neo4jNode(methodNode.labels().iterator().next(), methodNode.get("NAME").asString(), methodNode.get("FULL_NAME").asString(), "", methodNode.get("FILENAME").asString(), methodNode.elementId());
                 }
                 if(i==0){
                     //把头节点加入
@@ -518,24 +543,31 @@ public class JoernServiceImpl implements CodeResolverService {
                     startNode = segment.start();
                     label = startNode.labels().iterator().next();
                     if(label.equals("ANNOTATION")){
-                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),startNode.get("CODE").asString(),startNode.elementId());
+                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),"",startNode.elementId());
+                        cur = cur.next;
+                        x = 1;
                     }
-                    else{
-                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),startNode.get("CODE").asString(),startNode.get("FILENAME").asString(), startNode.elementId());
+                    //if(!startNode.get("FULL_NAME").asString().contains("com.wanxin"))
+                    else if(startNode.get("FULL_NAME").asString().contains("com.wanxin")){
+                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),"",startNode.get("FILENAME").asString(), startNode.elementId());
+                        cur = cur.next;
+                        x = 1;
                     }
-                    cur = cur.next;
-                    x = 1;
+
                 }
                 Node endNode = segment.end();
                 label = endNode.labels().iterator().next();
                 if(label.equals("METHOD")||label.equals("ANNOTATION")){
                     if(label.equals("ANNOTATION")){
-                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),endNode.get("CODE").asString(),endNode.elementId());
+                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),"",endNode.elementId());
+                        cur = cur.next;
                     }
-                    else{
-                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),endNode.get("CODE").asString(),endNode.get("FILENAME").asString(),endNode.elementId());
+                    //if(!endNode.get("FULL_NAME").asString().contains("com.wanxin"))
+                    else if(endNode.get("FULL_NAME").asString().contains("com.wanxin")){
+                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),"",endNode.get("FILENAME").asString(),endNode.elementId());
+                        cur = cur.next;
                     }
-                    cur = cur.next;
+
                 }
             }
             ans.add(head.next);

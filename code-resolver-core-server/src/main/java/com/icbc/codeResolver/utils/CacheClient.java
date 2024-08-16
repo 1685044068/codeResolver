@@ -119,7 +119,9 @@ public class CacheClient {
             }
 
             //4.存入到缓存
-            this.setWithLogicalExpire(packetName,classNeo4j,time,unit);
+            if(classNeo4j!=null){
+                this.setWithLogicalExpire(packetName,classNeo4j,time,unit);
+            }
             //5.返回
             return classNeo4j;
         }else{//6.如果存在
@@ -153,7 +155,9 @@ public class CacheClient {
                             classNeo4jRebuild.add(node);
                         }
                         //2.存储到缓存中
-                        this.setWithLogicalExpire(packetName,classNeo4jRebuild,time,unit);
+                        if(classNeo4jRebuild!=null){
+                            this.setWithLogicalExpire(packetName,classNeo4jRebuild,time,unit);
+                        }
                     }catch (Exception e){
                         throw new RuntimeException(e);
                     }finally {
@@ -188,12 +192,14 @@ public class CacheClient {
                 if (nodeObject instanceof InternalNode) {
                     class_node = (InternalNode) nodeObject;
                 }
-                neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+                neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),"",class_node.get("FILENAME").asString(),class_node.elementId());
                 methodNeo4j.add(node);
             }
 
             //4.存入到缓存
-            this.setWithLogicalExpire(className,methodNeo4j,time,unit);
+            if(methodNeo4j!=null){
+                this.setWithLogicalExpire(className,methodNeo4j,time,unit);
+            }
             //5.返回
             return methodNeo4j;
         }else{//6.如果存在
@@ -224,12 +230,13 @@ public class CacheClient {
                             if (nodeObject instanceof InternalNode) {
                                 class_node = (InternalNode) nodeObject;
                             }
-                            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+                            neo4jNode node=new neo4jNode(class_node.labels().iterator().next(),class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),"",class_node.get("FILENAME").asString(),class_node.elementId());
                             methodNeo4jRebuild.add(node);
                         }
-
                         //2.存储到缓存中
-                        this.setWithLogicalExpire(className,methodNeo4jRebuild,time,unit);
+                        if(methodNeo4jRebuild!=null){
+                            this.setWithLogicalExpire(className,methodNeo4jRebuild,time,unit);
+                        }
                     }catch (Exception e){
                         throw new RuntimeException(e);
                     }finally {
@@ -446,12 +453,12 @@ public class CacheClient {
             if (nodeObject instanceof InternalNode) {
                 class_node = (InternalNode) nodeObject;
             }
-            neo4jNode nodeFrom=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+            neo4jNode nodeFrom=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),"",class_node.get("FILENAME").asString(),class_node.elementId());
             nodeObject = record.get("to");
             if (nodeObject instanceof InternalNode) {
                 class_node = (InternalNode) nodeObject;
             }
-            neo4jNode nodeTo=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),class_node.get("CODE").asString(),class_node.get("FILENAME").asString(),class_node.elementId());
+            neo4jNode nodeTo=new neo4jNode(class_node.labels().iterator().next(), class_node.get("NAME").asString(),class_node.get("FULL_NAME").asString(),"",class_node.get("FILENAME").asString(),class_node.elementId());
             Object object=record.get("similarity");
             if(object instanceof Double){
                 similarity=(Double)object;
@@ -501,10 +508,10 @@ public class CacheClient {
                     startNode = segment.start();
                     label = startNode.labels().iterator().next();
                     if(label.equals("ANNOTATION")){
-                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),startNode.get("CODE").asString(),startNode.elementId());
+                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),"",startNode.elementId());
                     }
                     else{
-                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),startNode.get("CODE").asString(),startNode.get("FILENAME").asString(), startNode.elementId());
+                        cur.next = new neo4jNode(label, startNode.get("NAME").asString(),startNode.get("FULL_NAME").asString(),"",startNode.get("FILENAME").asString(), startNode.elementId());
                     }
                     cur = cur.next;
                     x = 1;
@@ -513,10 +520,10 @@ public class CacheClient {
                 label = endNode.labels().iterator().next();
                 if(label.equals("METHOD")||label.equals("ANNOTATION")){
                     if(label.equals("ANNOTATION")){
-                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),endNode.get("CODE").asString(),endNode.elementId());
+                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),"",endNode.elementId());
                     }
                     else{
-                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),endNode.get("CODE").asString(),endNode.get("FILENAME").asString(),endNode.elementId());
+                        cur.next = new neo4jNode(label, endNode.get("NAME").asString(),endNode.get("FULL_NAME").asString(),"",endNode.get("FILENAME").asString(),endNode.elementId());
                     }
                     cur = cur.next;
                 }

@@ -10,7 +10,7 @@ spring:
       config:
         server-addr: 127.0.0.1:8848
         file-extension: yml
-        namespace: 1111
+        namespace: 064b4506-4fec-4e97-b5d9-45a60d7771bf
 dubbo:
   application:
     qos-enable: false

@@ -22,6 +22,15 @@ public class JoernController {
     @Autowired
     CodeResolverService joernService;
 
+
+    @GetMapping("/getMeteData")
+    @Operation(summary = "初始化操作", description = "返回hmdp包下的方法")
+    @WebLog("初始化操作")
+    public List<neo4jNode> getMeteData() {
+        System.out.println("准备获取初始化数据");
+        return joernService.getMeteData();
+    }
+
     @GetMapping("/showClassName")
     @Operation(summary = "目标一优化：获取包下所有类名", description = "根据前端传递过来的包名获取到该包下的所有类名")
     @WebLog("目标一优化：获取包下所有类名,根据前端传递过来的包名获取到该包下的所有类名")
@@ -50,6 +59,7 @@ public class JoernController {
     public List<neo4jPath> showInvocationLink(@RequestParam("methodFullName") String methodFullName, @RequestParam("isDown") String isDown) {
         System.out.println("目标一优化：获取唯一方法的调用链路 类名" + methodFullName);
         System.out.println("目标一优化：获取唯一方法的调用链路 isDown" + isDown);
+        System.out.println("查询完成");
         return joernService.showInvocationLink(methodFullName, Boolean.valueOf(isDown));
     }
     /**
@@ -79,9 +89,6 @@ public class JoernController {
         System.out.println("目标三：数据库表字段关系 字段名查询" + fieldName);
         return joernService.getDataBaseInfo(tableName, fieldName);
     }
-
-    
-
 
     /**
      * 获取热点节点
@@ -157,7 +164,7 @@ public class JoernController {
         return joernService.getChangeMethodInfo(changeId);
     }
 
-    @GetMapping("/createDatabase")
+    @PostMapping("/createDatabase")
     @Operation(summary = "创建数据库", description = "需要数据库名字")
     public boolean createDatabase(@RequestParam("databaseName") String databaseName) {
         System.out.println("需要创建的数据库名称"+databaseName);

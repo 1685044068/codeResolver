@@ -109,4 +109,6 @@ public interface CodeResolverService {
     public List<neo4jNode> getDynamic(Map<String,List<Integer>> lineInformation);
     public List<neo4jDynamic> getChangeMethodInfo(Integer id);
 
+    public List<neo4jNode> getMeteData();
+
 }

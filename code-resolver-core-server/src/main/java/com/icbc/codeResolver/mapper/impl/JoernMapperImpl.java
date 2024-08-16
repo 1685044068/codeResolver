@@ -92,6 +92,21 @@ public class JoernMapperImpl implements JoernMapper {
     public String showCurrentDataBase() {
         return this.newDataBase;
     }
+
+
+    /**
+     * 返回初始化数据
+     * @return
+     */
+    @Override
+    public Collection<Map<String, Object>> getMeteData(){
+        String cypherQuery = "MATCH (n:TYPE_DECL) WHERE not n.NAME contains \"<\" and n.FULL_NAME STARTS WITH \"com.hmdp\" RETURN n";
+        return neo4jClient.query(cypherQuery)
+                .in("hmdp")
+                .fetch()
+                .all();
+    }
+
     /**
      * 根据pack查找
      * @param packetName
@@ -99,7 +114,9 @@ public class JoernMapperImpl implements JoernMapper {
      */
     @Override
     public Collection<Map<String, Object>> getClassName(String packetName) {
-        String cypherQuery = "MATCH (n:TYPE_DECL) WHERE n.FULL_NAME STARTS WITH $PACK RETURN n";
+        //筛选类的名字不带_ $
+        String cypherQuery = "MATCH (n:TYPE_DECL) WHERE n.FULL_NAME STARTS WITH $PACK and not n.NAME contains \"_\" and not n.NAME contains \"$\" and not n.NAME contains \"<\" RETURN n";
+        //String cypherQuery = "MATCH (n:TYPE_DECL) WHERE n.FULL_NAME STARTS WITH $PACK RETURN n";
         return neo4jClient.query(cypherQuery)
                 .in(this.newDataBase)
                 .bind(packetName).to("PACK")
@@ -114,8 +131,8 @@ public class JoernMapperImpl implements JoernMapper {
      */
     @Override
     public Collection<Map<String, Object>> getMethodName(String classFullName) {
-
-        String cypherQuery = "MATCH (n:METHOD)<-[:AST]-(m:TYPE_DECL) WHERE m.FULL_NAME = $FULL_NAME RETURN m,n";
+        //筛选方法的名字不带_ $
+        String cypherQuery = "MATCH (n:METHOD)<-[:AST]-(m:TYPE_DECL) WHERE m.FULL_NAME = $FULL_NAME and not n.NAME contains \"_\" and not n.NAME contains \"$\" and not n.NAME contains \"<\"RETURN m,n";
         return neo4jClient.query(cypherQuery)
                 .in(this.newDataBase)
                 .bind(classFullName).to("FULL_NAME")
@@ -127,6 +144,7 @@ public class JoernMapperImpl implements JoernMapper {
      * @param methodFullName
      * @return
      */
+    //搜索头尾路径时没有办法去找到尾节点是业务的清空，只能在加入的时候清除。
     @Override
     public Collection<Map<String, Object>> getMethodUp(String methodFullName) {
         String cypherQuery = "MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) " +
@@ -145,8 +163,10 @@ public class JoernMapperImpl implements JoernMapper {
      */
     @Override
     public Collection<Map<String, Object>> getMethodDown(String methodFullName) {
+        //往下才会出现一些不到的情况，像< $，筛选，不能在这里筛选nextNode="com.wanxin"
         String cypherQuery = "MATCH p = (startNode:METHOD)-[:CALL|CONTAINS*]->(nextNodes:METHOD) " +
                 "WHERE (NOT (nextNodes)-[:CONTAINS]->(:CALL)) and (startNode.FULL_NAME starts with $FULL_NAME) " +
+                "AND not nextNodes.NAME contains \"<\" and not nextNodes.NAME contains \"$\""+
                 "RETURN p";
         return neo4jClient.query(cypherQuery)
                 .in(this.newDataBase)
@@ -162,33 +182,46 @@ public class JoernMapperImpl implements JoernMapper {
      */
     @Override
     public Collection<Map<String, Object>> getUrlPath(String url) {
-        String name="RequestMapping";//要查找的注解名称
-        String like="Mapping";//要查找的注解名称包含该字符串
-        String n_code= "@RequestMapping\\(\"([^\"]+)\"\\)";//正则表达式, 用于匹配 @RequestMapping("XXX")
-        String n1_code="@[a-zA-Z]+Mapping\\(\"([^\"]+)\"\\)";//正则表达式, 用于匹配 @XXXMapping("XXX")
-        String cypherQuery = "WITH $URL AS str"+//使用 WITH 子句定义了一个名为 $URL 的参数
-                " MATCH (n:ANNOTATION)<-[:AST]-(c:TYPE_DECL)-[:AST]->(m:METHOD)-[:AST]->(n1:ANNOTATION)"+//使用 MATCH 子句查找满足以下条件的节点,存在一个 ANNOTATION 节点 n, 它有一条 AST 关系指向一个 TYPE_DECL 节点 c,c 节点有一条 AST 关系指向一个 METHOD 节点 m,m 节点有一条 AST 关系指向一个 ANNOTATION 节点 n1
-                " WHERE n.NAME = $NAME"+//n 的 NAME 属性等于 $NAME (即 "RequestMapping")
-                " AND n1.NAME contains $LIKE"+//n1 的 NAME 属性包含 $LIKE (即 "Mapping")
-                " AND n.CODE =~$N_CODE"+//n 的 CODE 属性匹配 $N_CODE 正则表达式
-                " AND n1.CODE =~$N1_CODE"+//n1 的 CODE 属性匹配 $N1_CODE 正则表达式
-                " WITH n, n1, m,"+//接下来使用 WITH 子句提取 n, n1, m 节点, 以及从它们的 CODE 属性中提取的 code1 和 code2 字符串
-                " substring(n.CODE, apoc.text.indexOf(n.CODE, '\"') + 1, apoc.text.indexOf(n.CODE, '\")') - apoc.text.indexOf(n.CODE, '\"') - 1) AS code1,"+
-                " substring(n1.CODE, apoc.text.indexOf(n1.CODE, '\"') + 1, apoc.text.indexOf(n1.CODE, '\")') - apoc.text.indexOf(n1.CODE, '\"') - 1) AS code2"+
-                " WHERE code1 + code2 = str"+
-                " MATCH p=(m)-[:CALL|CONTAINS*]->(nextNodes:METHOD)"+//最后使用 MATCH 子句查找从 m 节点开始, 通过 CALL 或 CONTAINS 关系到达的nextNodes:METHOD 节点,
-                " WHERE NOT (nextNodes)-[:CONTAINS]->(:CALL)"+//并且这些 nextNodes 节点没有 CONTAINS 关系指向其他 CALL 节点
-                " RETURN p";
 
+        String cypherQuery = "match (m:METHOD)-[:AST]->(n:ANNOTATION) where n.NAME contains \"Mapping\" and  n.CODE contains $URL "
+                +" with m"
+                +" MATCH p=(m)-[:CALL|CONTAINS*]->(nextNodes:METHOD)"+//最后使用 MATCH 子句查找从 m 节点开始, 通过 CALL 或 CONTAINS 关系到达的nextNodes:METHOD 节点,
+                " WHERE NOT (nextNodes)-[:CONTAINS]->(:CALL)"+//并且这些 nextNodes 节点没有 CONTAINS 关系指向其他 CALL 节点
+                "AND not nextNodes.NAME contains \"<\" and not nextNodes.NAME contains \"$\""+
+                " RETURN p";
         return neo4jClient.query(cypherQuery)
                 .in(this.newDataBase)
                 .bind(url).to("URL")
-                .bind(n_code).to("N_CODE")
-                .bind(n1_code).to("N1_CODE")
-                .bind(name).to("NAME")
-                .bind(like).to("LIKE")
                 .fetch()
                 .all();
+
+//        String name="RequestMapping";//要查找的注解名称
+//        String like="Mapping";//要查找的注解名称包含该字符串
+//        String n_code= "@RequestMapping\\(\"([^\"]+)\"\\)";//正则表达式, 用于匹配 @RequestMapping("XXX")
+//        String n1_code="@[a-zA-Z]+Mapping\\(\"([^\"]+)\"\\)";//正则表达式, 用于匹配 @XXXMapping("XXX")
+//        String cypherQuery = "WITH $URL AS str"+//使用 WITH 子句定义了一个名为 $URL 的参数
+//                " MATCH (n:ANNOTATION)<-[:AST]-(c:TYPE_DECL)-[:AST]->(m:METHOD)-[:AST]->(n1:ANNOTATION)"+//使用 MATCH 子句查找满足以下条件的节点,存在一个 ANNOTATION 节点 n, 它有一条 AST 关系指向一个 TYPE_DECL 节点 c,c 节点有一条 AST 关系指向一个 METHOD 节点 m,m 节点有一条 AST 关系指向一个 ANNOTATION 节点 n1
+//                " WHERE n.NAME = $NAME"+//n 的 NAME 属性等于 $NAME (即 "RequestMapping")
+//                " AND n1.NAME contains $LIKE"+//n1 的 NAME 属性包含 $LIKE (即 "Mapping")
+//                " AND n.CODE =~$N_CODE"+//n 的 CODE 属性匹配 $N_CODE 正则表达式
+//                " AND n1.CODE =~$N1_CODE"+//n1 的 CODE 属性匹配 $N1_CODE 正则表达式
+//                " WITH n, n1, m,"+//接下来使用 WITH 子句提取 n, n1, m 节点, 以及从它们的 CODE 属性中提取的 code1 和 code2 字符串
+//                " substring(n.CODE, apoc.text.indexOf(n.CODE, '\"') + 1, apoc.text.indexOf(n.CODE, '\")') - apoc.text.indexOf(n.CODE, '\"') - 1) AS code1,"+
+//                " substring(n1.CODE, apoc.text.indexOf(n1.CODE, '\"') + 1, apoc.text.indexOf(n1.CODE, '\")') - apoc.text.indexOf(n1.CODE, '\"') - 1) AS code2"+
+//                " WHERE code1 + code2 = str"+
+//                " MATCH p=(m)-[:CALL|CONTAINS*]->(nextNodes:METHOD)"+//最后使用 MATCH 子句查找从 m 节点开始, 通过 CALL 或 CONTAINS 关系到达的nextNodes:METHOD 节点,
+//                " WHERE NOT (nextNodes)-[:CONTAINS]->(:CALL)"+//并且这些 nextNodes 节点没有 CONTAINS 关系指向其他 CALL 节点
+//                " RETURN p";
+//
+//        return neo4jClient.query(cypherQuery)
+//                .in(this.newDataBase)
+//                .bind(url).to("URL")
+//                .bind(n_code).to("N_CODE")
+//                .bind(n1_code).to("N1_CODE")
+//                .bind(name).to("NAME")
+//                .bind(like).to("LIKE")
+//                .fetch()
+//                .all();
     }
 
     /**
@@ -197,11 +230,27 @@ public class JoernMapperImpl implements JoernMapper {
      */
     @Override
     public Collection<Map<String, Object>> getDataBaseInfo() {
+
         String cypherQuery = "match (n:ANNOTATION)<-[:AST]-(m:METHOD)<-[:AST]-(c:TYPE_DECL) " +
-                "where EXISTS { MATCH (c)-[:AST]->(nn:ANNOTATION) WHERE nn.NAME=\"Mapper\"} and (n.CODE starts with '@Insert(' or n.CODE starts with '@Delete(' or n.CODE starts with '@Select(' or n.CODE starts with '@Update(') " +
+                "where EXISTS { MATCH (c)-[:AST]->(nn:ANNOTATION) WHERE nn.NAME=\"Mapper\" or nn.NAME=\"Repository\"} and (n.CODE starts with '@Insert(' or n.CODE starts with '@Delete(' or n.CODE starts with '@Select(' or n.CODE starts with '@Update(') " +
                 "RETURN n,m";
         return neo4jClient.query(cypherQuery)
-                .in(this.newDataBase)
+                .in("mybatis")
+                .fetch()
+                .all();
+    }
+
+    /**
+     * 从找到注解
+     * @return 查询结果
+     */
+    @Override
+    public Collection<Map<String, Object>> getAnnotationInfo(String methodFullName,String code) {
+        String cypherQuery = "MATCH p = (n:ANNOTATION)<-[:AST]-(endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) where (not (prevNodes)<-[:CALL]-()) and (endNode.FULL_NAME=$methodFullName) and n.CODE=$CODE RETURN p";
+        return neo4jClient.query(cypherQuery)
+                .in("mybatis")
+                .bind(methodFullName).to("methodFullName")
+                .bind(code).to("CODE")
                 .fetch()
                 .all();
     }
@@ -215,16 +264,14 @@ public class JoernMapperImpl implements JoernMapper {
      */
     @Override
     public Collection<Map<String, Object>> getHotNode(String packetName, String maxNumber) {
-        String init=".<init>:";
         Long num=Long.valueOf(maxNumber);
         String cypherQuery="MATCH p=(n:METHOD)<-[:CALL]-(:CALL)<-[:CONTAINS]-(m:METHOD) " +
-                "WHERE ALL(r IN NODES(p) where (r.FULL_NAME starts with $PACK OR r.METHOD_FULL_NAME starts with $PACK) and (NOT r.FULL_NAME CONTAINS $INIT OR NOT r.METHOD_FULL_NAME CONTAINS $INIT)) " +
+                "WHERE ALL(r IN NODES(p) where (r.FULL_NAME starts with $PACK OR r.METHOD_FULL_NAME starts with $PACK) and (NOT r.FULL_NAME CONTAINS \"<\" OR NOT r.METHOD_FULL_NAME CONTAINS \"<\")) " +
                 "RETURN n,collect(m) as follower,count(*) as number order by number desc limit $MAXNUMBER";
         return neo4jClient.query(cypherQuery)
                 .in(this.newDataBase)
                 .bind(packetName).to("PACK")
                 .bind(num).to("MAXNUMBER")
-                .bind(init).to("INIT")
                 .fetch()
                 .all();
     }
@@ -259,7 +306,7 @@ public class JoernMapperImpl implements JoernMapper {
     @Override
     public Collection<Map<String, Object>> getShortestPath(String methodFullName){
         String cypherQuery="MATCH p = (endNode:METHOD)<-[:CALL|CONTAINS*]-(prevNodes:METHOD) " +
-                "where (not (prevNodes)<-[:CALL]-()) and (endNode.FULL_NAME starts with $FULL_NAME)  " +
+                "where (not (prevNodes)<-[:CALL]-()) and (endNode.FULL_NAME starts with $FULL_NAME) and prevNodes.FULL_NAME contains \"controller\"" +
                 "RETURN p order by length(p)";
         return neo4jClient.query(cypherQuery)
                 .in(this.newDataBase)

@@ -25,6 +25,8 @@ public interface JoernMapper {
 
     public Collection<Map<String, Object>> getDataBaseInfo();
 
+    public Collection<Map<String, Object>> getAnnotationInfo(String methodFullName,String code);
+
     public Collection<Map<String, Object>> getClassName(String packetName);
 
     public Collection<Map<String, Object>> getMethodName(String classFullName);
@@ -47,5 +49,7 @@ public interface JoernMapper {
     public Collection<Map<String, Object>> showDataBase();
 
     public String showCurrentDataBase();
+
+    public Collection<Map<String, Object>> getMeteData();
 
 }

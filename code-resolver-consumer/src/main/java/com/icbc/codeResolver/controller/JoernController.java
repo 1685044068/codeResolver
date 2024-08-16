@@ -1,5 +1,6 @@
 package com.icbc.codeResolver.controller;
 
+import com.icbc.codeResolver.aop.WebLog;
 import com.icbc.codeResolver.entity.*;
 import com.icbc.codeResolver.service.CodeResolverService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,6 +9,8 @@ import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,15 +29,22 @@ public class JoernController {
     @DubboReference(group = "joern")
     CodeResolverService joernService;
 
+    @GetMapping("/getMeteData")
+    @Operation(summary = "初始化操作", description = "返回hmdp包下的方法")
+    @WebLog("初始化操作")
+    public List<neo4jNode> getMeteData() {
+        System.out.println("准备获取初始化数据");
+        return joernService.getMeteData();
+    }
+
     /**
      * url精确查找 url-》斜杠分割 List<String>
      * @return
      */
     @GetMapping("/urlPath")
-
     @Operation(summary = "目标二：url查找", description = "url的形式为/*/*/*")
     public List<neo4jPath> getUrlPath(@RequestParam("url") String url) {
-        logger.info("目标二：url查找");
+        logger.info("目标二：url查找: "+url);
         return joernService.getUrlPath(url);
     }
 
@@ -76,6 +86,7 @@ public class JoernController {
 
     @GetMapping("/showInvocationLink")
     @Operation(summary = "目标一优化：获取唯一方法的调用链路", description = "根据前端传递过来的类名以及方法名及其参数获取到该唯一方法的调用链路")
+    @WebLog("获取唯一方法的调用链路")
     public List<neo4jPath> showInvocationLink(@RequestParam("methodFullName")String methodFullName,@RequestParam("isDown")String isDown) {
         logger.info("目标一优化：获取唯一方法的调用链路 类名"+methodFullName);
         logger.info("目标一优化：获取唯一方法的调用链路 isDown"+isDown);
@@ -120,6 +131,8 @@ public class JoernController {
     @GetMapping("/getShortestPath")
     @Operation(summary = "目标六 获取最短路径", description = "需要方法代码")
     public List<neo4jPath> getShortestPath(@RequestParam("methodFullName")String methodFullName) {
+        methodFullName = URLDecoder.decode(methodFullName, StandardCharsets.UTF_8);
+        methodFullName = methodFullName.substring(1,methodFullName.length()-1);
         logger.info("目标六：获取最短路径 方法全路径"+methodFullName);
         List<neo4jPath> ans=joernService.getShortestPath(methodFullName);
         return ans;
@@ -154,7 +167,7 @@ public class JoernController {
         return joernService.getChangeMethodInfo(changeId);
     }
 
-    @GetMapping("/createDatabase")
+    @PostMapping("/createDatabase")
     @Operation(summary = "创建数据库", description = "需要数据库名字")
     public boolean createDatabase(@RequestParam("databaseName") String databaseName) {
         System.out.println("需要创建的数据库名称"+databaseName);
