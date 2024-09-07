@@ -9,5 +9,5 @@ spring:
         server-addr: 127.0.0.1:8848
       config:
         server-addr: 127.0.0.1:8848
-        file-extension: yml
-        namespace: 064b4506-4fec-4e97-b5d9-45a60d7771bf
+        file-extension: yaml
+        namespace: f4a183c5-ca53-4efe-be87-e7fa0c44e956

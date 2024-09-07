@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-@RestController
+//@RestController
 @RequestMapping("/git")
 public class GitOperationController {
     @DubboReference(group = "git")

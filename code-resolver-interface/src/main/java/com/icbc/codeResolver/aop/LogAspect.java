@@ -2,9 +2,7 @@ package com.icbc.codeResolver.aop;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.log4j.Log4j;
-import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;

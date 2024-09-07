@@ -120,16 +120,24 @@ public class JoernParseServiceImpl implements JoernParseService {
         System.setProperty("joern",joern_dir);
         System.setProperty("import_db",toDb_dir);
 
-        commands.add("rmdir " + joern_dir + "\\out" );//这里需要先把out删了再后面创建
+        //暂时去掉
+        File file = new File(joern_dir + "\\out");
+        if (file.exists()) {
+            file.mkdirs();
+            commands.add("rmdir " + joern_dir + "\\out" );
+        }
         commands.add("joern-parse "+url+" -o "+cpg_dir);
-        commands.add("joern-export.bat --repr=all --format=neo4jcsv "+cpg_dir);//joern-export.bat --repr=all --format=neo4jcsv E:\software\Joern\joern\workspace\hmdp\cpg.bin
+        commands.add("joern-export.bat --repr=all --format=neo4jcsv "+cpg_dir);
         commands.add("move "+source_dir+" "+import_dir);
+
+
         //初始化redis中的数据
         taskProgress.set(SetAndSaveProgress(taskProgress.get(), taskId, success,1));
 
-        //执行前4条命令
+        //暂时去掉
+        //执行前几条命令
         try{
-            //前三条命令执行
+            //前几条命令执行
             for (String command : commands){
                 logger.info(command);
                 String result=doCommand("joern",command);
@@ -140,6 +148,7 @@ public class JoernParseServiceImpl implements JoernParseService {
         }
         //导入数据库
         //获取node和edge文件的路径
+        logger.info("csv文件夹为"+import_dir);
         List<List<File>> nodeAndEdge=GetNodeAndEdge(import_dir);
         logger.info("开始导入");
         int len=nodeAndEdge.get(0).size()+nodeAndEdge.get(1).size();
@@ -174,7 +183,7 @@ public class JoernParseServiceImpl implements JoernParseService {
                     }
                 }, AsyncThreadPoolConfig.getExecutor());
             }
-        });
+        },AsyncThreadPoolConfig.getExecutor());
     }
 
 
@@ -203,6 +212,7 @@ public class JoernParseServiceImpl implements JoernParseService {
         if (taskProgress == null) {
             throw new RuntimeException("无法获取异步任务进度，可能已经过期或不存在！"); // 如果获取不到，抛出异常
         }
+        //logger.info("当前进度为"+taskProgress.getProgress().toString());
         return taskProgress;
     }
 
@@ -265,7 +275,9 @@ public class JoernParseServiceImpl implements JoernParseService {
             }
             String start=file1.getName().substring(0,5);
             if(start.equals("edges")){
-                edges.add(file1);
+                logger.info(file1.getName());
+                if(file1.getName().equals("edges_CONTAINS_cypher.csv") ||file1.getName().equals("edges_CALL_cypher.csv")||file1.getName().equals("edges_AST_cypher.csv"))
+                    edges.add(file1);
             }else {
                 nodes.add(file1);
             }
